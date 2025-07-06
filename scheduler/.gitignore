@@ -1,10 +1,18 @@
 # Ignore compiled scheduler binaries
 sche_bin/
 
+# Ignore generated documentation
+sche_description/
+
+# Ignore tools directory
+tools/
+
 # Ignore build directories
 scx/build/
 scx/target/
 scx/scheds/rust/*/target/
+scx/rust/scx_loader/target/
+scx/tools/*/target/
 
 # Ignore temporary files
 *.tmp

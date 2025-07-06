@@ -1,9 +1,9 @@
 # Makefile for building SCX schedulers
 
-.PHONY: all build build-c build-rust clean help update
+.PHONY: all build build-c build-rust build-tools clean help update doc
 
 # Default target
-all: build
+all: build build-tools
 
 # Build all SCX schedulers (C and Rust)
 build: build-c build-rust
@@ -50,11 +50,54 @@ build-rust:
 	fi
 	@echo "Rust schedulers build complete!"
 
+# Build tools (scx_loader, scxctl, scxtop)
+build-tools:
+	@echo "Building SCX tools..."
+	@mkdir -p tools
+	@cd scx && \
+	echo "Building tools via meson..."; \
+	if [ ! -d build ]; then \
+		meson setup build --prefix=~ || exit 1; \
+	fi; \
+	echo "Building scx_loader..."; \
+	cd rust/scx_loader && cargo build --release 2>&1 | grep -E "Compiling|Building|Finished|error" || true; \
+	cd ../.. && \
+	echo "Building scxctl..."; \
+	cd tools/scxctl && cargo build --release 2>&1 | grep -E "Compiling|Building|Finished|error" || true; \
+	cd ../.. && \
+	echo "Building scxtop..."; \
+	cd tools/scxtop && cargo build --release 2>&1 | grep -E "Compiling|Building|Finished|error" || true; \
+	cd ../.. && \
+	echo "Copying tools to tools/ directory..."; \
+	if [ -d target/release ]; then \
+		for tool in scx_loader scxctl scxtop; do \
+			if [ -f "target/release/$$tool" ]; then \
+				cp "target/release/$$tool" ../tools/ && \
+				echo "  ✓ $$tool copied to tools/"; \
+			else \
+				echo "  ✗ $$tool not found"; \
+			fi; \
+		done; \
+	fi; \
+	echo "Looking for other tools in meson build..."; \
+	if [ -d build ]; then \
+		find build -name "dsq_lat" -o -name "runq_lat" -o -name "veristat*" -type f -executable | while read tool; do \
+			cp "$$tool" ../tools/ 2>/dev/null && \
+			echo "  ✓ $$(basename $$tool) copied to tools/"; \
+		done; \
+	fi
+	@echo "Tools build complete!"
+	@echo "Available tools:"
+	@ls -la tools/ 2>/dev/null || echo "No tools found"
+
 # Clean build artifacts
 clean:
 	@echo "Cleaning SCX build artifacts..."
 	@cd scx && rm -rf build target
-	@rm -rf sche_bin sche_description
+	@cd scx/rust/scx_loader && rm -rf target 2>/dev/null || true
+	@cd scx/tools/scxctl && rm -rf target 2>/dev/null || true
+	@cd scx/tools/scxtop && rm -rf target 2>/dev/null || true
+	@rm -rf sche_bin sche_description tools
 	@echo "Clean complete!"
 
 # Update submodule
@@ -111,9 +154,11 @@ doc:
 # Help target
 help:
 	@echo "Available targets:"
+	@echo "  make            - Build all schedulers and tools"
 	@echo "  make build      - Build all SCX schedulers (C and Rust) and copy to sche_bin/"
 	@echo "  make build-c    - Build only C schedulers"
 	@echo "  make build-rust - Build only Rust schedulers"
+	@echo "  make build-tools- Build tools (scx_loader, scxctl, scxtop) and copy to tools/"
 	@echo "  make doc        - Generate documentation for all schedulers in sche_description/"
 	@echo "  make clean      - Clean all build artifacts"
 	@echo "  make update     - Update SCX submodule to latest version"
