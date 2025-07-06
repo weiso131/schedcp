@@ -3,6 +3,7 @@ sche_bin/
 
 # Ignore build directories
 scx/build/
+scx/target/
 scx/scheds/rust/*/target/
 
 # Ignore temporary files

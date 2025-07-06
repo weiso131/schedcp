@@ -8,16 +8,34 @@ The `scx` subdirectory contains the sched-ext project, which provides extensible
 
 ### Building
 
-To build all SCX schedulers and components:
+To build all SCX schedulers (C and Rust) and copy binaries to `sche_bin/`:
 
 ```bash
 make build
+```
+
+To build only C schedulers:
+
+```bash
+make build-c
+```
+
+To build only Rust schedulers:
+
+```bash
+make build-rust
 ```
 
 To clean build artifacts:
 
 ```bash
 make clean
+```
+
+To update the SCX submodule:
+
+```bash
+make update
 ```
 
 ### Available Schedulers

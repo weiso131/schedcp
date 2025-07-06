@@ -23,37 +23,37 @@ build-c:
 	echo "Compiling all C schedulers..."; \
 	meson compile -C build 2>&1 | grep -E "Building|Compiling|Linking|FAILED" || true; \
 	echo "Copying C schedulers to sche_bin..."; \
-	find build/scheds/c -name "scx_*" -type f -executable ! -name "*.o" ! -name "*.a" -exec cp {} ../sche_bin/ \; 2>/dev/null || true
+	find build/scheds/c -name "scx_*" -type f -executable ! -name "*.o" ! -name "*.a" ! -name "*_test" -exec cp {} ../sche_bin/ \; 2>/dev/null || true
 	@echo "C schedulers built successfully!"
 
 # Build Rust schedulers
 build-rust:
 	@echo "Building Rust SCX schedulers..."
 	@mkdir -p sche_bin
-	@cd scx/scheds/rust && \
-	echo "Found Rust schedulers:"; \
-	ls -d scx_*/ 2>/dev/null || echo "No Rust schedulers found"; \
-	for sched in scx_*/; do \
-		if [ -d "$$sched" ] && [ -f "$$sched/Cargo.toml" ]; then \
-			sched_name=$$(basename $$sched); \
-			echo "Building $$sched_name..."; \
-			cd "$$sched" && \
-			cargo build --release 2>&1 | grep -E "Compiling|Building|Finished|error" || true; \
-			if [ -f "target/release/$$sched_name" ]; then \
-				cp "target/release/$$sched_name" ../../../../sche_bin/ && \
-				echo "  ✓ $$sched_name copied to sche_bin"; \
-			else \
-				echo "  ✗ $$sched_name build failed or binary not found"; \
+	@cd scx && \
+	echo "Setting up full meson build for Rust schedulers..."; \
+	if [ ! -d build ]; then \
+		meson setup build --prefix=~ || exit 1; \
+	fi; \
+	echo "Building Rust schedulers via meson..."; \
+	meson compile -C build rust_all 2>&1 | grep -E "Compiling|Building|Finished|error|FAILED" || true; \
+	echo "Copying Rust schedulers from target/release to sche_bin..."; \
+	if [ -d target/release ]; then \
+		for binary in target/release/scx_*; do \
+			if [ -f "$$binary" ] && [ -x "$$binary" ] && ! echo "$$binary" | grep -E "\.d$$|\.rlib$$"; then \
+				cp "$$binary" ../sche_bin/ 2>/dev/null && \
+				echo "  ✓ $$(basename $$binary) copied to sche_bin"; \
 			fi; \
-			cd ..; \
-		fi; \
-	done
+		done; \
+	else \
+		echo "  No target/release directory found"; \
+	fi
 	@echo "Rust schedulers build complete!"
 
 # Clean build artifacts
 clean:
 	@echo "Cleaning SCX build artifacts..."
-	@cd scx && rm -rf build
+	@cd scx && rm -rf build target
 	@rm -rf sche_bin
 	@echo "Clean complete!"
 
