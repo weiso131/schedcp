@@ -26,6 +26,12 @@ To build only Rust schedulers:
 make build-rust
 ```
 
+To generate documentation for all schedulers in `sche_description/`:
+
+```bash
+make doc
+```
+
 To clean build artifacts:
 
 ```bash
