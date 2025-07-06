@@ -8,6 +8,12 @@ The `scx` subdirectory contains the sched-ext project, which provides extensible
 
 ### Building
 
+To build everything (schedulers and tools):
+
+```bash
+make
+```
+
 To build all SCX schedulers (C and Rust) and copy binaries to `sche_bin/`:
 
 ```bash
@@ -24,6 +30,12 @@ To build only Rust schedulers:
 
 ```bash
 make build-rust
+```
+
+To build tools (scx_loader, scxctl, scxtop) and copy to `tools/`:
+
+```bash
+make build-tools
 ```
 
 To generate documentation for all schedulers in `sche_description/`:
@@ -43,6 +55,14 @@ To update the SCX submodule:
 ```bash
 make update
 ```
+
+### Tools
+
+The following tools are built and available in the `tools/` directory:
+
+- **scx_loader**: Service to manage sched_ext schedulers
+- **scxctl**: Command-line tool to control and monitor schedulers
+- **scxtop**: Real-time scheduler statistics viewer
 
 ### Available Schedulers
 
