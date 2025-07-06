@@ -1,0 +1,12 @@
+# Ignore compiled scheduler binaries
+sche_bin/
+
+# Ignore build directories
+scx/build/
+scx/scheds/rust/*/target/
+
+# Ignore temporary files
+*.tmp
+*.swp
+*~
+.DS_Store
