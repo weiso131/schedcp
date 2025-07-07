@@ -199,7 +199,7 @@ class SchedulerRunner:
     
     def run_command_with_scheduler(self, scheduler_name: str, command: List[str], 
                                   scheduler_args: List[str] = None,
-                                  timeout: int = 60) -> Tuple[int, str, str]:
+                                  timeout: int = 60, env: dict = None) -> Tuple[int, str, str]:
         """
         Run a command with a specific scheduler active.
         
@@ -208,6 +208,7 @@ class SchedulerRunner:
             command: Command to run
             scheduler_args: Additional arguments for the scheduler
             timeout: Command timeout in seconds
+            env: Environment variables to pass to the command
             
         Returns:
             Tuple of (exit_code, stdout, stderr)
@@ -222,7 +223,8 @@ class SchedulerRunner:
                 command,
                 capture_output=True,
                 text=True,
-                timeout=timeout
+                timeout=timeout,
+                env=env
             )
             
             return result.returncode, result.stdout, result.stderr

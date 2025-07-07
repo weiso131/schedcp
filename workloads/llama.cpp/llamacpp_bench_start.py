@@ -58,9 +58,11 @@ class LlamaBenchmarkTester(SchedulerBenchmark):
             "timeout": 300,
         }
         
-        # Environment setup
+        # Environment setup - change to the directory containing llama-bench
+        # This ensures all shared libraries are found correctly
+        self.cpu_bin_dir = os.path.dirname(self.llama_bench_path)
         self.env = os.environ.copy()
-        lib_path = os.path.dirname(self.llama_bench_path)
+        lib_path = self.cpu_bin_dir
         if 'LD_LIBRARY_PATH' in self.env:
             self.env['LD_LIBRARY_PATH'] = f"{lib_path}:{self.env['LD_LIBRARY_PATH']}"
         else:
@@ -152,26 +154,34 @@ class LlamaBenchmarkTester(SchedulerBenchmark):
         cmd = self._build_llama_bench_command()
         timeout = self.test_params["timeout"]
         
-        if scheduler_name:
-            # Run with specific scheduler
-            exit_code, stdout, stderr = self.runner.run_command_with_scheduler(
-                scheduler_name, cmd, timeout=timeout
-            )
-        else:
-            # Run with default scheduler
-            try:
-                result = subprocess.run(
-                    cmd, 
-                    capture_output=True, 
-                    text=True, 
-                    timeout=timeout,
-                    env=self.env
+        # Save current directory and change to cpu_bin directory
+        original_dir = os.getcwd()
+        os.chdir(self.cpu_bin_dir)
+        
+        try:
+            if scheduler_name:
+                # Run with specific scheduler
+                exit_code, stdout, stderr = self.runner.run_command_with_scheduler(
+                    scheduler_name, cmd, timeout=timeout, env=self.env
                 )
-                exit_code, stdout, stderr = result.returncode, result.stdout, result.stderr
-            except subprocess.TimeoutExpired:
-                exit_code, stdout, stderr = -1, "", "Command timed out"
-            except Exception as e:
-                exit_code, stdout, stderr = -1, "", str(e)
+            else:
+                # Run with default scheduler
+                try:
+                    result = subprocess.run(
+                        cmd, 
+                        capture_output=True, 
+                        text=True, 
+                        timeout=timeout,
+                        env=self.env
+                    )
+                    exit_code, stdout, stderr = result.returncode, result.stdout, result.stderr
+                except subprocess.TimeoutExpired:
+                    exit_code, stdout, stderr = -1, "", "Command timed out"
+                except Exception as e:
+                    exit_code, stdout, stderr = -1, "", str(e)
+        finally:
+            # Restore original directory
+            os.chdir(original_dir)
         
         if exit_code != 0:
             print(f"Warning: llama-bench exited with code {exit_code}")
