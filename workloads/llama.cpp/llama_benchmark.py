@@ -31,11 +31,18 @@ def run_benchmark(threads, batch_size):
         "-b", str(batch_size),
         "-r", str(REPETITIONS),
         "-o", "json",
-        "--no-warmup"
     ]
     
+    # Set LD_LIBRARY_PATH to include the cpu_bin directory
+    env = os.environ.copy()
+    lib_path = "/home/yunwei37/ai-os/workloads/llama.cpp/cpu_bin"
+    if 'LD_LIBRARY_PATH' in env:
+        env['LD_LIBRARY_PATH'] = f"{lib_path}:{env['LD_LIBRARY_PATH']}"
+    else:
+        env['LD_LIBRARY_PATH'] = lib_path
+    
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300, env=env)
         if result.returncode == 0:
             return json.loads(result.stdout)
         else:
@@ -50,15 +57,41 @@ def run_benchmark(threads, batch_size):
 
 def extract_metrics(benchmark_result):
     """Extract performance metrics from benchmark result."""
-    if not benchmark_result or not benchmark_result.get('results'):
+    if not benchmark_result:
         return None
-    
-    result = benchmark_result['results'][0]
+
+    # llama-bench may return either a raw list or a dict containing "results"
+    if isinstance(benchmark_result, dict):
+        benchmark_result = benchmark_result.get("results", [])
+
+    # At this point we expect a list of result objects
+    if not isinstance(benchmark_result, list) or not benchmark_result:
+        return None
+
+    # Identify prompt-processing (PP) and text-generation (TG) runs
+    pp_obj = next((r for r in benchmark_result if r.get("n_prompt", 0) > 0), None)
+    tg_obj = next((r for r in benchmark_result if r.get("n_gen", 0) > 0), None)
+
+    # Helper to safely extract average tokens / second ("avg_ts")
+    def _tps(obj):
+        return float(obj.get("avg_ts", 0)) if obj else 0.0
+
+    # Helper to compute total time in seconds from avg_ns and token count
+    def _time(obj, n_tokens_key):
+        if not obj:
+            return 0.0
+        avg_ns = obj.get("avg_ns", 0)
+        n_tokens = obj.get(n_tokens_key, 0)
+        try:
+            return (avg_ns * n_tokens) / 1e9  # convert ns-per-token × tokens → seconds
+        except Exception:
+            return 0.0
+
     return {
-        'pp_tps': result.get('pp_tps', 0),  # Prompt processing tokens per second
-        'tg_tps': result.get('tg_tps', 0),  # Text generation tokens per second
-        'pp_time': result.get('pp_time', 0),  # Prompt processing time
-        'tg_time': result.get('tg_time', 0),  # Text generation time
+        "pp_tps": _tps(pp_obj),
+        "tg_tps": _tps(tg_obj),
+        "pp_time": _time(pp_obj, "n_prompt"),
+        "tg_time": _time(tg_obj, "n_gen"),
     }
 
 def main():
