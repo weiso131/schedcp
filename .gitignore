@@ -1,2 +1,4 @@
 cpu_bin
 venv/
+__pycache__
+       
