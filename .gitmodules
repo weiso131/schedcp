@@ -1,3 +1,6 @@
 [submodule "scheduler/scx"]
 	path = scheduler/scx
 	url = https://github.com/sched-ext/scx/
+[submodule "/home/yunwei37/ai-os/workloads/basic/schbench"]
+	path = /home/yunwei37/ai-os/workloads/basic/schbench
+	url = https://github.com/masoncl/schbench.git
