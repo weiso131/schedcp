@@ -17,13 +17,12 @@ build-c:
 	@mkdir -p sche_bin
 	@cd scx && \
 	echo "Setting up meson build..."; \
-	if [ ! -d build ]; then \
-		meson setup build --prefix=~ -Denable_rust=false || exit 1; \
-	fi; \
-	echo "Compiling all C schedulers..."; \
-	meson compile -C build 2>&1 | grep -E "Building|Compiling|Linking|FAILED" || true; \
+	rm -rf build; \
+	meson setup build --prefix=~ || exit 1; \
+	echo "Building all C schedulers..."; \
+	meson compile -C build 2>/dev/null || meson compile -C build || exit 1; \
 	echo "Copying C schedulers to sche_bin..."; \
-	find build/scheds/c -name "scx_*" -type f -executable ! -name "*.o" ! -name "*.a" ! -name "*_test" -exec cp {} ../sche_bin/ \; 2>/dev/null || true
+	find build -name "scx_*" -type f -executable ! -name "*.o" ! -name "*.a" ! -name "*_test" ! -name "*.d" -exec cp {} ../sche_bin/ \; 2>/dev/null || true
 	@echo "C schedulers built successfully!"
 
 # Build Rust schedulers
@@ -36,8 +35,10 @@ build-rust:
 		meson setup build --prefix=~ || exit 1; \
 	fi; \
 	echo "Building Rust schedulers via meson..."; \
-	meson compile -C build rust_all 2>&1 | grep -E "Compiling|Building|Finished|error|FAILED" || true; \
-	echo "Copying Rust schedulers from target/release to sche_bin..."; \
+	meson compile -C build || exit 1; \
+	echo "Copying Rust schedulers from build to sche_bin..."; \
+	find build -name "scx_*" -type f -executable ! -name "*.o" ! -name "*.a" ! -name "*_test" ! -name "*.d" -exec cp {} ../sche_bin/ \; 2>/dev/null || true; \
+	echo "Also copying from target/release if available..."; \
 	if [ -d target/release ]; then \
 		for binary in target/release/scx_*; do \
 			if [ -f "$$binary" ] && [ -x "$$binary" ] && ! echo "$$binary" | grep -E "\.d$$|\.rlib$$"; then \
@@ -45,8 +46,6 @@ build-rust:
 				echo "  ✓ $$(basename $$binary) copied to sche_bin"; \
 			fi; \
 		done; \
-	else \
-		echo "  No target/release directory found"; \
 	fi
 	@echo "Rust schedulers build complete!"
 
@@ -97,7 +96,7 @@ clean:
 	@cd scx/rust/scx_loader && rm -rf target 2>/dev/null || true
 	@cd scx/tools/scxctl && rm -rf target 2>/dev/null || true
 	@cd scx/tools/scxtop && rm -rf target 2>/dev/null || true
-	@rm -rf sche_bin sche_description tools
+	@rm -rf sche_bin tools
 	@echo "Clean complete!"
 
 # Update submodule
