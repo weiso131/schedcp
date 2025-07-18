@@ -8,8 +8,8 @@
 	path = workloads/basic/schbench
 	url = https://github.com/masoncl/schbench
 [submodule "workloads/stress-ng"]
-	path = workloads/stress-ng
+	path = workloads/basic/stress-ng
 	url = https://github.com/ColinIanKing/stress-ng
 [submodule "workloads/cachyos-benchmarker"]
-	path = workloads/cachyos-benchmarker
+	path = workloads/basic/cachyos-benchmarker
 	url = https://github.com/CachyOS/cachyos-benchmarker
