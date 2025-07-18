@@ -1,6 +1,6 @@
 # Makefile for building SCX schedulers
 
-.PHONY: all build build-c build-rust build-tools clean help update doc
+.PHONY: all build build-c build-rust build-tools clean help update doc deps install-deps
 
 # Default target
 all: build build-tools
@@ -89,6 +89,97 @@ build-tools:
 	@echo "Available tools:"
 	@ls -la tools/ 2>/dev/null || echo "No tools found"
 
+# Install dependencies
+deps: install-deps
+
+install-deps:
+	@echo "Installing required dependencies for SCX build..."
+	@echo "Detecting package manager..."
+	@if command -v apt-get >/dev/null 2>&1; then \
+		echo "Using apt-get (Debian/Ubuntu)..."; \
+		sudo apt-get update && sudo apt-get install -y \
+			build-essential \
+			clang \
+			llvm \
+			libelf-dev \
+			libz-dev \
+			libzstd-dev \
+			libseccomp-dev \
+			pkg-config \
+			cmake \
+			ninja-build \
+			python3-pip \
+			python3-dev \
+			meson \
+			bpftool \
+			jq \
+			protobuf-compiler; \
+		echo "Installing Rust if not present..."; \
+		if ! command -v cargo >/dev/null 2>&1; then \
+			curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; \
+			source $$HOME/.cargo/env; \
+		fi; \
+	elif command -v dnf >/dev/null 2>&1; then \
+		echo "Using dnf (Fedora/RHEL)..."; \
+		sudo dnf install -y \
+			clang \
+			llvm \
+			elfutils-libelf-devel \
+			zlib-devel \
+			libzstd-devel \
+			libseccomp-devel \
+			pkgconfig \
+			cmake \
+			ninja-build \
+			python3-pip \
+			python3-devel \
+			meson \
+			bpftool \
+			jq \
+			protobuf-compiler \
+			rust \
+			cargo; \
+	elif command -v pacman >/dev/null 2>&1; then \
+		echo "Using pacman (Arch Linux)..."; \
+		sudo pacman -S --needed --noconfirm \
+			base-devel \
+			clang \
+			llvm \
+			libelf \
+			zlib \
+			zstd \
+			libseccomp \
+			pkgconf \
+			cmake \
+			ninja \
+			python-pip \
+			meson \
+			bpf \
+			jq \
+			protobuf \
+			rust; \
+	else \
+		echo "ERROR: Unsupported package manager. Please install dependencies manually."; \
+		echo "Required packages:"; \
+		echo "  - Clang/LLVM >= 16 (17 recommended)"; \
+		echo "  - Rust toolchain >= 1.82"; \
+		echo "  - Meson >= 1.2.0"; \
+		echo "  - libbpf >= 1.2.2 (1.3 recommended)"; \
+		echo "  - libelf, libz, libzstd, libseccomp"; \
+		echo "  - pkg-config, cmake, ninja-build"; \
+		echo "  - bpftool, jq, protobuf-compiler"; \
+		exit 1; \
+	fi; \
+	@echo "Checking kernel version..."; \
+	@KERNEL_VERSION=$$(uname -r | cut -d. -f1-2 | sed 's/\.//'); \
+	if [ $$KERNEL_VERSION -lt 612 ]; then \
+		echo "WARNING: Kernel version $$(uname -r) detected."; \
+		echo "sched-ext requires Linux kernel 6.12+ for proper operation."; \
+	else \
+		echo "Kernel version $$(uname -r) is compatible."; \
+	fi; \
+	@echo "Dependencies installation complete!"
+
 # Clean build artifacts
 clean:
 	@echo "Cleaning SCX build artifacts..."
@@ -154,6 +245,7 @@ doc:
 help:
 	@echo "Available targets:"
 	@echo "  make            - Build all schedulers and tools"
+	@echo "  make deps       - Install required dependencies for building SCX"
 	@echo "  make build      - Build all SCX schedulers (C and Rust) and copy to sche_bin/"
 	@echo "  make build-c    - Build only C schedulers"
 	@echo "  make build-rust - Build only Rust schedulers"
