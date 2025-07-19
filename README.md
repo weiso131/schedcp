@@ -1,6 +1,6 @@
 # KernCP
 
-KernCP is an AI-driven control-plane for the Linux kernel: a lightweight management daemon plus an eBPF-/MCP-based policy server that watches live workload signals (perf, DAMON, energy, sched_ext events) and learns how to tweak schedulers, sysctls and other kernel knobs in real timeso your laptop stays quiet, your CI box stays fast, and your cluster stays self-healing, all without hand-tuning conf files.
+KernCP is an AI-driven control-plane for the Linux kernel: a lightweight management daemon plus an eBPF-/MCP-based server that watches live workload signals (perf, DAMON, energy, sched_ext events) and allow your AI Agents like claude-code to learns how to tweak schedulers, sysctls and other kernel knobs in real time.
 
 ## Quick Start
 
@@ -22,7 +22,7 @@ KernCP combines multiple technologies to create an intelligent kernel control sy
 - **eBPF/sched_ext**: Runtime kernel programmability for schedulers and monitoring
 - **MCP (Model Context Protocol)**: AI-driven policy decisions based on system state
 - **Real-time telemetry**: Performance counters, DAMON memory stats, energy monitoring
-- **Adaptive control loops**: Observe ’ Decide ’ Apply ’ Verify
+- **Adaptive control loops**: Observe ï¿½ Decide ï¿½ Apply ï¿½ Verify
 
 ## Key Features
 
