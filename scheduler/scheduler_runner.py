@@ -50,14 +50,27 @@ class SchedulerRunner:
                 config = json.load(f)
                 # Extract schedulers from nested structure and convert to expected format
                 schedulers = {}
-                for name, info in config.get("schedulers", {}).items():
-                    # Convert the config format to expected format with binary field
-                    schedulers[name] = {
-                        "binary": name,  # Use scheduler name as binary name
-                        "production": info.get("production_ready", False),
-                        "description": info.get("description", ""),
-                        "parameters": info.get("parameters", {})
-                    }
+                scheduler_list = config.get("schedulers", [])
+                
+                # Handle both list and dict formats
+                if isinstance(scheduler_list, list):
+                    for sched in scheduler_list:
+                        name = sched.get("name")
+                        if name:
+                            schedulers[name] = {
+                                "binary": name,  # Use scheduler name as binary name
+                                "production": sched.get("production_ready", False),
+                                "description": sched.get("description", ""),
+                                "parameters": sched.get("tuning_parameters", {})
+                            }
+                elif isinstance(scheduler_list, dict):
+                    for name, info in scheduler_list.items():
+                        schedulers[name] = {
+                            "binary": name,  # Use scheduler name as binary name
+                            "production": info.get("production_ready", False),
+                            "description": info.get("description", ""),
+                            "parameters": info.get("parameters", {})
+                        }
                 return schedulers
         except FileNotFoundError:
             print(f"Warning: Could not find scheduler config at {self.scheduler_config_path}")

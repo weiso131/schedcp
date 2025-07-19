@@ -147,7 +147,7 @@ class StressNgTester(SchedulerBenchmark):
     
     def run_all_tests(self, skip_baseline=False, specific_schedulers=None):
         """Run tests with all schedulers"""
-        schedulers = self.runner.get_scheduler_names()
+        schedulers = self.runner.get_available_schedulers()
         
         if specific_schedulers:
             schedulers = [s for s in schedulers if s in specific_schedulers]

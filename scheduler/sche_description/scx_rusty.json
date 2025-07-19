@@ -1,0 +1,56 @@
+{
+  "scheduler": {
+    "name": "scx_rusty",
+    "production_ready": true,
+    "description": "A production-ready multi-domain scheduler with intelligent load balancing. Creates separate scheduling domains per LLC with user-space load balancing. Features configurable thresholds, greedy task stealing, and support for both FIFO and priority-based scheduling within domains. Architecture-flexible design suitable for various CPU topologies.",
+    "use_cases": [
+      "general_purpose",
+      "multi_architecture",
+      "server_workloads"
+    ],
+    "algorithm": "multi_domain_round_robin",
+    "characteristics": "multi domain support, per llc domains, user space load balancing, configurable thresholds, architecture flexibility, greedy task stealing, fifo mode support",
+    "tuning_parameters": {
+      "slice_us": {
+        "type": "integer",
+        "description": "Time slice duration in microseconds",
+        "default": 20000,
+        "range": [
+          1000,
+          100000
+        ]
+      },
+      "greedy_threshold": {
+        "type": "integer",
+        "description": "Threshold for greedy task stealing",
+        "default": 2,
+        "range": [
+          1,
+          10
+        ]
+      },
+      "kthreads": {
+        "type": "boolean",
+        "description": "Schedule kernel threads",
+        "default": false
+      },
+      "fifo_sched": {
+        "type": "boolean",
+        "description": "Use FIFO scheduling within domains",
+        "default": false
+      },
+      "load_half_life": {
+        "type": "float",
+        "description": "Load averaging half-life in seconds",
+        "default": 0.5
+      },
+      "numa_migration": {
+        "type": "boolean",
+        "description": "Allow NUMA node migrations",
+        "default": true
+      }
+    },
+    "limitations": "May not distinguish NUMA nodes well, potential infeasible weights issue",
+    "performance_profile": "balanced general-purpose performance"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "scheduler": {
+    "name": "scx_layered",
+    "production_ready": true,
+    "description": "A highly configurable multi-layer scheduler that allows creating custom layers with different scheduling policies. Tasks are classified into layers based on matches (cgroup, comm, nice, etc.) and each layer can have different policies (Confined, Grouped, Open) with specific CPU utilization guarantees and topology awareness.",
+    "use_cases": [
+      "custom_applications",
+      "priority_services",
+      "complex_workloads"
+    ],
+    "algorithm": "layer_based",
+    "characteristics": "task classification, multiple scheduling policies, cpu utilization guarantees, topology awareness, performance control, numa node affinity, llc affinity, dynamic layer sizing",
+    "tuning_parameters": {
+      "config_file": {
+        "type": "string",
+        "description": "JSON configuration file defining layers",
+        "default": "none"
+      },
+      "slice_us": {
+        "type": "integer",
+        "description": "Default scheduling slice duration",
+        "default": 20000,
+        "range": [
+          1000,
+          100000
+        ]
+      },
+      "max_exec_us": {
+        "type": "integer",
+        "description": "Maximum consecutive execution time",
+        "default": 0
+      },
+      "interval": {
+        "type": "float",
+        "description": "Scheduling interval in seconds",
+        "default": 0.1
+      },
+      "disable_topology": {
+        "type": "boolean",
+        "description": "Disable topology awareness",
+        "default": false
+      },
+      "xnuma_preemption": {
+        "type": "boolean",
+        "description": "Enable cross NUMA preemption",
+        "default": false
+      },
+      "antistall_sec": {
+        "type": "integer",
+        "description": "Maximum runnable_at delay before antistall",
+        "default": 3
+      }
+    },
+    "limitations": "Complex configuration required, potential infeasible weights issue",
+    "performance_profile": "highly customizable based on layer configuration"
+  }
+}

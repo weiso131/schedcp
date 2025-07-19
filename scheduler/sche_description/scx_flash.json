@@ -1,0 +1,72 @@
+{
+  "scheduler": {
+    "name": "scx_flash",
+    "production_ready": true,
+    "description": "An EDF (Earliest Deadline First) scheduler that assigns dynamic latency weights based on CPU usage patterns. Tasks that release CPU early receive higher latency weights, prioritizing them over tasks that consume full time slices. Deadlines are calculated as vruntime + exec_vruntime, ensuring fairness while prioritizing latency-sensitive tasks.",
+    "use_cases": [
+      "multimedia",
+      "real_time_audio",
+      "predictable_performance",
+      "latency_sensitive"
+    ],
+    "algorithm": "EDF",
+    "characteristics": "dynamic latency weights, early cpu release priority, fairness focused, vruntime tracking, exec_vruntime accounting, voluntary context switch credits",
+    "tuning_parameters": {
+      "slice_us": {
+        "type": "integer",
+        "description": "Maximum scheduling slice duration",
+        "default": 4096,
+        "range": [
+          128,
+          20000
+        ]
+      },
+      "slice_us_min": {
+        "type": "integer",
+        "description": "Minimum scheduling slice duration",
+        "default": 128,
+        "range": [
+          32,
+          4096
+        ]
+      },
+      "slice_us_lag": {
+        "type": "integer",
+        "description": "Maximum runtime budget accumulation while sleeping",
+        "default": 4096
+      },
+      "run_us_lag": {
+        "type": "integer",
+        "description": "Maximum runtime penalty accumulation while running",
+        "default": 32768
+      },
+      "max_avg_nvcsw": {
+        "type": "integer",
+        "description": "Maximum rate of voluntary context switches",
+        "default": 128
+      },
+      "cpu_busy_thresh": {
+        "type": "integer",
+        "description": "CPU utilization threshold for busy detection (-1 = auto)",
+        "default": -1
+      },
+      "tickless": {
+        "type": "boolean",
+        "description": "Enable tickless mode",
+        "default": false
+      },
+      "rr_sched": {
+        "type": "boolean",
+        "description": "Enable round-robin scheduling",
+        "default": false
+      },
+      "local_pcpu": {
+        "type": "boolean",
+        "description": "Enable per-CPU tasks prioritization",
+        "default": false
+      }
+    },
+    "limitations": "May not optimize for pure throughput, complex latency weight tuning",
+    "performance_profile": "optimized for low latency and predictable performance"
+  }
+}

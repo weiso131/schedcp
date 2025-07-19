@@ -1,0 +1,56 @@
+{
+  "scheduler": {
+    "name": "scx_chaos",
+    "production_ready": false,
+    "description": "A chaos testing scheduler based on scx_p2dq that introduces controlled randomness to stress test scheduling behavior and identify race conditions. Designed to amplify race conditions and test system stability under adverse scheduling conditions.",
+    "use_cases": [
+      "stress_testing",
+      "debugging",
+      "race_condition_detection"
+    ],
+    "algorithm": "p2dq_with_chaos",
+    "characteristics": "chaos injection, random delays, performance degradation, cpu frequency manipulation, kprobe-based delays",
+    "tuning_parameters": {
+      "random_delay_frequency": {
+        "type": "float",
+        "description": "Chance of randomly delaying a process",
+        "default": 0.0,
+        "range": [
+          0.0,
+          1.0
+        ]
+      },
+      "random_delay_min_us": {
+        "type": "integer",
+        "description": "Minimum time to add for random delay",
+        "default": 0
+      },
+      "random_delay_max_us": {
+        "type": "integer",
+        "description": "Maximum time to add for random delay",
+        "default": 1000
+      },
+      "degradation_frequency": {
+        "type": "float",
+        "description": "Chance of degrading a process",
+        "default": 0.0,
+        "range": [
+          0.0,
+          1.0
+        ]
+      },
+      "min_slice_us": {
+        "type": "integer",
+        "description": "Minimum scheduling slice duration",
+        "default": 100
+      },
+      "dumb_queues": {
+        "type": "integer",
+        "description": "Number of dumb DSQs",
+        "default": 3
+      }
+    },
+    "limitations": "Not production ready, intentionally unpredictable performance",
+    "performance_profile": "designed for stress testing, not performance"
+  }
+}

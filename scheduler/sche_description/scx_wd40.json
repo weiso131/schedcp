@@ -1,0 +1,53 @@
+{
+  "scheduler": {
+    "name": "scx_wd40",
+    "production_ready": false,
+    "description": "An experimental fork of scx_rusty using BPF arenas for direct memory sharing between kernel and userspace. Implements multi-domain scheduling with BPF-side round robin and userspace load balancing. Demonstrates modular scheduler design with separate components for placement, deadline tracking, and load balancing.",
+    "use_cases": [
+      "bpf_arena_research",
+      "modular_design_demo",
+      "experimental"
+    ],
+    "algorithm": "multi_domain_with_arenas",
+    "characteristics": "bpf arena memory sharing, modular bpf design, cache aware domains, two tier load balancing, greedy work stealing, deadline tracking, numa aware operations",
+    "tuning_parameters": {
+      "slice_us_underutil": {
+        "type": "integer",
+        "description": "Slice duration for under-utilized hosts",
+        "default": 20000
+      },
+      "slice_us_overutil": {
+        "type": "integer",
+        "description": "Slice duration for over-utilized hosts",
+        "default": 1000
+      },
+      "interval": {
+        "type": "float",
+        "description": "Load balance interval in seconds",
+        "default": 2.0
+      },
+      "tune_interval": {
+        "type": "float",
+        "description": "Tuning interval in seconds",
+        "default": 0.1
+      },
+      "cache_level": {
+        "type": "integer",
+        "description": "Cache level for domain building",
+        "default": 3
+      },
+      "greedy_threshold": {
+        "type": "integer",
+        "description": "Enable greedy task stealing threshold",
+        "default": 1
+      },
+      "greedy_threshold_x_numa": {
+        "type": "integer",
+        "description": "Enable greedy stealing across NUMA",
+        "default": 0
+      }
+    },
+    "limitations": "Requires bleeding-edge kernel, experimental BPF arenas, not production tested",
+    "performance_profile": "experimental with focus on modular design"
+  }
+}

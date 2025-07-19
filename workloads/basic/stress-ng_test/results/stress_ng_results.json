@@ -1,0 +1,20 @@
+{
+  "test_info": {
+    "timestamp": "2025-07-19T06:24:10.782996",
+    "duration": 5,
+    "stress_tests": [
+      "cpu"
+    ],
+    "cpu_workers": 0,
+    "vm_workers": 2,
+    "io_workers": 2
+  },
+  "results": {
+    "baseline": {
+      "completed": true,
+      "duration": 5.496835708618164,
+      "scheduler": "baseline",
+      "aggregate_bogo_ops_per_sec": 0
+    }
+  }
+}
