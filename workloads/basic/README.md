@@ -123,6 +123,26 @@ These benchmarks are designed to work with SchedCP's scheduler testing framework
 ./schbench -m 1 -t 2 -r 30 -p 99
 ```
 
+### Sysbench Test Suite (30 seconds)
+```bash
+# CPU benchmark
+sysbench cpu --threads=4 --time=30 run
+
+# Memory benchmark
+sysbench memory --threads=4 --time=30 run
+
+# File I/O benchmark
+sysbench fileio --file-total-size=1G prepare
+sysbench fileio --file-total-size=1G --file-test-mode=rndrw --threads=4 --time=30 run
+sysbench fileio cleanup
+
+# Threads benchmark
+sysbench threads --threads=64 --time=30 run
+
+# Mutex benchmark
+sysbench mutex --threads=4 --time=30 run
+```
+
 ## Tips for Scheduler Evaluation
 
 1. **Baseline First**: Always establish baseline metrics with the default scheduler
