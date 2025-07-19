@@ -63,6 +63,36 @@
         "type": "boolean",
         "description": "Disable CPU frequency control",
         "default": false
+      },
+      "autopower": {
+        "type": "boolean",
+        "description": "Automatically decide power mode based on system's active power profile",
+        "default": false
+      },
+      "cpu_pref_order": {
+        "type": "string",
+        "description": "List of CPUs in preferred order (e.g., 0-3,7,6,5,4)",
+        "default": null
+      },
+      "no_use_em": {
+        "type": "boolean",
+        "description": "Do not use the energy model in making CPU preference order decisions",
+        "default": false
+      },
+      "no_futex_boost": {
+        "type": "boolean",
+        "description": "Do not boost futex holders",
+        "default": false
+      },
+      "no_preemption": {
+        "type": "boolean",
+        "description": "Disable preemption",
+        "default": false
+      },
+      "no_wake_sync": {
+        "type": "boolean",
+        "description": "Disable an optimization for synchronous wake-up",
+        "default": false
       }
     },
     "limitations": "Complex configuration, mainly targets single CCX/socket systems",

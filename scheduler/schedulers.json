@@ -82,6 +82,31 @@
           "type": "boolean",
           "description": "Enable CPU frequency control",
           "default": false
+        },
+        "no_wake_sync": {
+          "type": "boolean",
+          "description": "Disable direct dispatch during synchronous wakeups",
+          "default": false
+        },
+        "disable_l2": {
+          "type": "boolean",
+          "description": "Disable L2 cache awareness",
+          "default": false
+        },
+        "disable_l3": {
+          "type": "boolean",
+          "description": "Disable L3 cache awareness",
+          "default": false
+        },
+        "disable_smt": {
+          "type": "boolean",
+          "description": "Disable SMT awareness",
+          "default": false
+        },
+        "disable_numa": {
+          "type": "boolean",
+          "description": "Disable NUMA rebalancing",
+          "default": false
         }
       },
       "limitations": "May not optimize for pure batch workloads, experimental kthread prioritization",
@@ -240,6 +265,74 @@
           "type": "boolean",
           "description": "Enable per-CPU tasks prioritization",
           "default": false
+        },
+        "throttle_us": {
+          "type": "integer",
+          "description": "Throttle the running CPUs by periodically injecting idle cycles",
+          "default": 0,
+          "range": [
+            0,
+            1000000
+          ]
+        },
+        "idle_resume_us": {
+          "type": "integer",
+          "description": "Set CPU idle QoS resume latency in microseconds (-1 = disabled)",
+          "default": 32,
+          "range": [
+            -1,
+            1000000
+          ]
+        },
+        "sticky_cpu": {
+          "type": "boolean",
+          "description": "Enable CPU stickiness",
+          "default": false
+        },
+        "native_priority": {
+          "type": "boolean",
+          "description": "Native tasks priorities - disables normalization",
+          "default": false
+        },
+        "local_kthreads": {
+          "type": "boolean",
+          "description": "Enable per-CPU kthread prioritization",
+          "default": false
+        },
+        "no_wake_sync": {
+          "type": "boolean",
+          "description": "Disable direct dispatch during synchronous wakeups",
+          "default": false
+        },
+        "primary_domain": {
+          "type": "string",
+          "description": "Specifies the initial set of CPUs (auto/performance/powersave/all/none or hex bitmask)",
+          "default": "auto"
+        },
+        "disable_l2": {
+          "type": "boolean",
+          "description": "Disable L2 cache awareness",
+          "default": false
+        },
+        "disable_l3": {
+          "type": "boolean",
+          "description": "Disable L3 cache awareness",
+          "default": false
+        },
+        "disable_smt": {
+          "type": "boolean",
+          "description": "Disable SMT awareness",
+          "default": false
+        },
+        "disable_numa": {
+          "type": "boolean",
+          "description": "Disable NUMA rebalancing",
+          "default": false
+        },
+        "cpufreq": {
+          "type": "boolean",
+          "description": "Enable CPU frequency control with schedutil governor",
+          "default": false
         }
       },
       "limitations": "May not optimize for pure throughput, complex latency weight tuning",
@@ -344,6 +437,36 @@
           "type": "boolean",
           "description": "Disable CPU frequency control",
           "default": false
+        },
+        "autopower": {
+          "type": "boolean",
+          "description": "Automatically decide power mode based on system's active power profile",
+          "default": false
+        },
+        "cpu_pref_order": {
+          "type": "string",
+          "description": "List of CPUs in preferred order (e.g., 0-3,7,6,5,4)",
+          "default": null
+        },
+        "no_use_em": {
+          "type": "boolean",
+          "description": "Do not use the energy model in making CPU preference order decisions",
+          "default": false
+        },
+        "no_futex_boost": {
+          "type": "boolean",
+          "description": "Do not boost futex holders",
+          "default": false
+        },
+        "no_preemption": {
+          "type": "boolean",
+          "description": "Disable preemption",
+          "default": false
+        },
+        "no_wake_sync": {
+          "type": "boolean",
+          "description": "Disable an optimization for synchronous wake-up",
+          "default": false
         }
       },
       "limitations": "Complex configuration, mainly targets single CCX/socket systems",
@@ -399,6 +522,97 @@
           "type": "integer",
           "description": "Maximum runnable_at delay before antistall",
           "default": 3
+        },
+        "no_load_frac_limit": {
+          "type": "boolean",
+          "description": "Disable load-fraction based max layer CPU limit",
+          "default": false
+        },
+        "lo_fb_wait_us": {
+          "type": "integer",
+          "description": "Low priority fallback DSQ wait time in microseconds",
+          "default": 1000,
+          "range": [
+            100,
+            10000
+          ]
+        },
+        "lo_fb_share": {
+          "type": "float",
+          "description": "Fraction of CPU time low priority fallback DSQs can utilize",
+          "default": 0.1,
+          "range": [
+            0.01,
+            0.5
+          ]
+        },
+        "disable_antistall": {
+          "type": "boolean",
+          "description": "Disable antistall mechanism",
+          "default": false
+        },
+        "enable_gpu_affinitize": {
+          "type": "boolean",
+          "description": "Enable GPU task affinitization",
+          "default": false
+        },
+        "gpu_affinitize_secs": {
+          "type": "integer",
+          "description": "GPU task reaffinitization interval in seconds",
+          "default": 5,
+          "range": [
+            1,
+            60
+          ]
+        },
+        "enable_match_debug": {
+          "type": "boolean",
+          "description": "Enable match debug logging",
+          "default": false
+        },
+        "enable_gpu_support": {
+          "type": "boolean",
+          "description": "Enable GPU support",
+          "default": false
+        },
+        "gpu_kprobe_level": {
+          "type": "string",
+          "description": "GPU kprobe level (none, submit, exec)",
+          "default": "none"
+        },
+        "netdev_irq_balance": {
+          "type": "boolean",
+          "description": "Enable netdev IRQ balancing",
+          "default": false
+        },
+        "disable_queued_wakeup": {
+          "type": "boolean",
+          "description": "Disable queued wakeup optimization",
+          "default": false
+        },
+        "disable_percpu_kthread_preempt": {
+          "type": "boolean",
+          "description": "Disable per-cpu kthread preemption",
+          "default": false
+        },
+        "percpu_kthread_preempt_all": {
+          "type": "boolean",
+          "description": "Make all per-cpu kthreads preempting",
+          "default": false
+        },
+        "layer_refresh_ms_avgruntime": {
+          "type": "integer",
+          "description": "Period for AvgRuntime reevaluation in milliseconds",
+          "default": 10000,
+          "range": [
+            100,
+            60000
+          ]
+        },
+        "task_hint_map": {
+          "type": "string",
+          "description": "Path for task hint map",
+          "default": null
         }
       },
       "limitations": "Complex configuration required, potential infeasible weights issue",
@@ -688,43 +902,134 @@
       "algorithm": "multi_domain_round_robin",
       "characteristics": "multi domain support, per llc domains, user space load balancing, configurable thresholds, architecture flexibility, greedy task stealing, fifo mode support",
       "tuning_parameters": {
-        "slice_us": {
+        "slice_us_underutil": {
           "type": "integer",
-          "description": "Time slice duration in microseconds",
+          "description": "Scheduling slice duration for under-utilized hosts, in microseconds",
           "default": 20000,
           "range": [
             1000,
             100000
           ]
         },
-        "greedy_threshold": {
+        "slice_us_overutil": {
           "type": "integer",
-          "description": "Threshold for greedy task stealing",
-          "default": 2,
+          "description": "Scheduling slice duration for over-utilized hosts, in microseconds",
+          "default": 1000,
           "range": [
-            1,
-            10
+            100,
+            100000
           ]
         },
-        "kthreads": {
+        "interval": {
+          "type": "float",
+          "description": "Load balance interval in seconds",
+          "default": 2.0,
+          "range": [
+            0.1,
+            10.0
+          ]
+        },
+        "tune_interval": {
+          "type": "float",
+          "description": "The tuner runs at a higher frequency than the load balancer to dynamically tune scheduling behavior. Tuning interval in seconds",
+          "default": 0.1,
+          "range": [
+            0.01,
+            1.0
+          ]
+        },
+        "load_half_life": {
+          "type": "float",
+          "description": "The half-life of task and domain load running averages in seconds",
+          "default": 1.0,
+          "range": [
+            0.1,
+            10.0
+          ]
+        },
+        "cache_level": {
+          "type": "integer",
+          "description": "Build domains according to how CPUs are grouped at this cache level",
+          "default": 3,
+          "range": [
+            1,
+            4
+          ]
+        },
+        "cpumasks": {
+          "type": "string",
+          "description": "Manually set the cpumask for each domain (e.g., 0xff_00ff). Each CPU must belong to precisely one domain",
+          "default": null
+        },
+        "greedy_threshold": {
+          "type": "integer",
+          "description": "When non-zero, enable greedy task stealing. Minimum tasks in a domain before stealing is allowed",
+          "default": 1,
+          "range": [
+            0,
+            100
+          ]
+        },
+        "greedy_threshold_x_numa": {
+          "type": "integer",
+          "description": "When non-zero, enable greedy task stealing across NUMA nodes",
+          "default": 0,
+          "range": [
+            0,
+            100
+          ]
+        },
+        "kthreads_local": {
           "type": "boolean",
-          "description": "Schedule kernel threads",
+          "description": "If disabled, kthreads are scheduled like any other task. If enabled, they're scheduled within the same domain as waker and wakee",
+          "default": true
+        },
+        "balanced_kworkers": {
+          "type": "boolean",
+          "description": "Distribute workers like kworkers across domains evenly",
           "default": false
         },
         "fifo_sched": {
           "type": "boolean",
-          "description": "Use FIFO scheduling within domains",
+          "description": "Use FIFO scheduling within domains instead of DSQ weights",
           "default": false
         },
-        "load_half_life": {
+        "direct_greedy_under": {
           "type": "float",
-          "description": "Load averaging half-life in seconds",
-          "default": 0.5
+          "description": "When system util below this, tasks are directly dispatched even if this violates domain boundaries",
+          "default": 0.0,
+          "range": [
+            0.0,
+            100.0
+          ]
         },
-        "numa_migration": {
+        "kick_greedy_under": {
+          "type": "float",
+          "description": "Greedy threshold delta below which other domains won't be kicked",
+          "default": 0.0,
+          "range": [
+            0.0,
+            100.0
+          ]
+        },
+        "direct_greedy_numa": {
           "type": "boolean",
-          "description": "Allow NUMA node migrations",
-          "default": true
+          "description": "Allow direct greedy stealing across NUMA boundaries",
+          "default": false
+        },
+        "partial": {
+          "type": "boolean",
+          "description": "Skip BPF scheduling for userspace programs with pid < 1000",
+          "default": false
+        },
+        "perf": {
+          "type": "integer",
+          "description": "Tunable for prioritizing CPU performance by configuring the CPU frequency governor. Valid values are [0, 1024]. Higher values prioritize performance",
+          "default": null,
+          "range": [
+            0,
+            1024
+          ]
         }
       },
       "limitations": "May not distinguish NUMA nodes well, potential infeasible weights issue",
@@ -838,57 +1143,6 @@
       },
       "limitations": "Not production ready, performance overhead, potential deadlocks",
       "performance_profile": "educational scheduler with significant overhead"
-    },
-    {
-      "name": "scx_wd40",
-      "production_ready": false,
-      "description": "An experimental fork of scx_rusty using BPF arenas for direct memory sharing between kernel and userspace. Implements multi-domain scheduling with BPF-side round robin and userspace load balancing. Demonstrates modular scheduler design with separate components for placement, deadline tracking, and load balancing.",
-      "use_cases": [
-        "bpf_arena_research",
-        "modular_design_demo",
-        "experimental"
-      ],
-      "algorithm": "multi_domain_with_arenas",
-      "characteristics": "bpf arena memory sharing, modular bpf design, cache aware domains, two tier load balancing, greedy work stealing, deadline tracking, numa aware operations",
-      "tuning_parameters": {
-        "slice_us_underutil": {
-          "type": "integer",
-          "description": "Slice duration for under-utilized hosts",
-          "default": 20000
-        },
-        "slice_us_overutil": {
-          "type": "integer",
-          "description": "Slice duration for over-utilized hosts",
-          "default": 1000
-        },
-        "interval": {
-          "type": "float",
-          "description": "Load balance interval in seconds",
-          "default": 2.0
-        },
-        "tune_interval": {
-          "type": "float",
-          "description": "Tuning interval in seconds",
-          "default": 0.1
-        },
-        "cache_level": {
-          "type": "integer",
-          "description": "Cache level for domain building",
-          "default": 3
-        },
-        "greedy_threshold": {
-          "type": "integer",
-          "description": "Enable greedy task stealing threshold",
-          "default": 1
-        },
-        "greedy_threshold_x_numa": {
-          "type": "integer",
-          "description": "Enable greedy stealing across NUMA",
-          "default": 0
-        }
-      },
-      "limitations": "Requires bleeding-edge kernel, experimental BPF arenas, not production tested",
-      "performance_profile": "experimental with focus on modular design"
     }
   ]
 }

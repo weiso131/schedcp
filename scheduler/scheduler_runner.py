@@ -152,6 +152,11 @@ class SchedulerRunner:
         
         # Build command
         cmd = [binary_path]
+        
+        # Special handling for scx_layered - add --run-example if no config specified
+        if scheduler_name == "scx_layered" and (not args or not any("--config" in arg or "-c" in arg for arg in (args or []))):
+            cmd.append("--run-example")
+        
         if args:
             cmd.extend(args)
         

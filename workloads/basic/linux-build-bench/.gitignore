@@ -1,0 +1,24 @@
+# Linux kernel source
+linux/
+
+# Build artifacts
+*.o
+*.ko
+*.mod
+*.mod.c
+modules.order
+Module.symvers
+
+# Benchmark results
+results/*.json
+results/*.png
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Temporary files
+*.tmp
+*.swp
+*~

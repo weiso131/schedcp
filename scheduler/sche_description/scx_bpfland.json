@@ -81,6 +81,31 @@
         "type": "boolean",
         "description": "Enable CPU frequency control",
         "default": false
+      },
+      "no_wake_sync": {
+        "type": "boolean",
+        "description": "Disable direct dispatch during synchronous wakeups",
+        "default": false
+      },
+      "disable_l2": {
+        "type": "boolean",
+        "description": "Disable L2 cache awareness",
+        "default": false
+      },
+      "disable_l3": {
+        "type": "boolean",
+        "description": "Disable L3 cache awareness",
+        "default": false
+      },
+      "disable_smt": {
+        "type": "boolean",
+        "description": "Disable SMT awareness",
+        "default": false
+      },
+      "disable_numa": {
+        "type": "boolean",
+        "description": "Disable NUMA rebalancing",
+        "default": false
       }
     },
     "limitations": "May not optimize for pure batch workloads, experimental kthread prioritization",

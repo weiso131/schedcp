@@ -49,6 +49,85 @@
         "type": "integer",
         "description": "Maximum runnable_at delay before antistall",
         "default": 3
+      },
+      "no_load_frac_limit": {
+        "type": "boolean",
+        "description": "Disable load-fraction based max layer CPU limit",
+        "default": false
+      },
+      "lo_fb_wait_us": {
+        "type": "integer",
+        "description": "Low priority fallback DSQ wait time in microseconds",
+        "default": 1000,
+        "range": [100, 10000]
+      },
+      "lo_fb_share": {
+        "type": "float",
+        "description": "Fraction of CPU time low priority fallback DSQs can utilize",
+        "default": 0.1,
+        "range": [0.01, 0.5]
+      },
+      "disable_antistall": {
+        "type": "boolean",
+        "description": "Disable antistall mechanism",
+        "default": false
+      },
+      "enable_gpu_affinitize": {
+        "type": "boolean",
+        "description": "Enable GPU task affinitization",
+        "default": false
+      },
+      "gpu_affinitize_secs": {
+        "type": "integer",
+        "description": "GPU task reaffinitization interval in seconds",
+        "default": 5,
+        "range": [1, 60]
+      },
+      "enable_match_debug": {
+        "type": "boolean",
+        "description": "Enable match debug logging",
+        "default": false
+      },
+      "enable_gpu_support": {
+        "type": "boolean",
+        "description": "Enable GPU support",
+        "default": false
+      },
+      "gpu_kprobe_level": {
+        "type": "string",
+        "description": "GPU kprobe level (none, submit, exec)",
+        "default": "none"
+      },
+      "netdev_irq_balance": {
+        "type": "boolean",
+        "description": "Enable netdev IRQ balancing",
+        "default": false
+      },
+      "disable_queued_wakeup": {
+        "type": "boolean",
+        "description": "Disable queued wakeup optimization",
+        "default": false
+      },
+      "disable_percpu_kthread_preempt": {
+        "type": "boolean",
+        "description": "Disable per-cpu kthread preemption",
+        "default": false
+      },
+      "percpu_kthread_preempt_all": {
+        "type": "boolean",
+        "description": "Make all per-cpu kthreads preempting",
+        "default": false
+      },
+      "layer_refresh_ms_avgruntime": {
+        "type": "integer",
+        "description": "Period for AvgRuntime reevaluation in milliseconds",
+        "default": 10000,
+        "range": [100, 60000]
+      },
+      "task_hint_map": {
+        "type": "string",
+        "description": "Path for task hint map",
+        "default": null
       }
     },
     "limitations": "Complex configuration required, potential infeasible weights issue",
