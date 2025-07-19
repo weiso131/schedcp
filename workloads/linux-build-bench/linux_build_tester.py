@@ -11,11 +11,11 @@ import multiprocessing
 import shutil
 
 # Add scheduler module to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'scheduler')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'scheduler')))
 from scheduler_runner import SchedulerRunner, SchedulerBenchmark
 
 class LinuxBuildTester(SchedulerBenchmark):
-    def __init__(self, jobs=0, config='tinyconfig', clean_between=True, 
+    def __init__(self, jobs=0, config='tinyconfig', clean_between=False, 
                  output_file='results/linux_build_results.json', repeat=1, kernel_dir='linux'):
         super().__init__()
         self.jobs = jobs if jobs > 0 else multiprocessing.cpu_count()
@@ -43,9 +43,9 @@ class LinuxBuildTester(SchedulerBenchmark):
         print(f"Configuring kernel with {self.config}...")
         cmd = ['make', '-C', self.kernel_dir, self.config]
         
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=False, text=True)
         if result.returncode != 0:
-            print(f"Failed to configure kernel: {result.stderr}")
+            print(f"Failed to configure kernel with return code: {result.returncode}")
             return False
         
         print("Kernel configuration complete.")
@@ -55,7 +55,7 @@ class LinuxBuildTester(SchedulerBenchmark):
         """Clean kernel build artifacts"""
         print("Cleaning kernel build...")
         cmd = ['make', '-C', self.kernel_dir, 'clean']
-        subprocess.run(cmd, capture_output=True, text=True)
+        subprocess.run(cmd, capture_output=False, text=True)
     
     def run_kernel_build(self, scheduler_name=None):
         """Run kernel build with optional scheduler"""
@@ -71,9 +71,8 @@ class LinuxBuildTester(SchedulerBenchmark):
                     return None
                 time.sleep(2)  # Give scheduler time to initialize
             
-            # Clean if requested
-            if self.clean_between:
-                self.clean_kernel_build()
+            # Always clean before build to ensure consistent results
+            self.clean_kernel_build()
             
             # Build kernel
             cmd = ['make', '-C', self.kernel_dir, f'-j{self.jobs}', 'vmlinux']
@@ -81,14 +80,13 @@ class LinuxBuildTester(SchedulerBenchmark):
             
             # Run build and measure time
             start_time = time.time()
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            result = subprocess.run(cmd, capture_output=False, text=True)
             end_time = time.time()
             
             build_time = end_time - start_time
             
             if result.returncode != 0:
                 print(f"Build failed with return code {result.returncode}")
-                print(f"stderr: {result.stderr[-1000:]}")  # Print last 1000 chars of error
                 return None
             
             # Collect metrics
@@ -100,8 +98,8 @@ class LinuxBuildTester(SchedulerBenchmark):
                 'success': True
             }
             
-            # Parse additional metrics from output if available
-            if "real" in result.stderr:
+            # Parse additional metrics from output if available (skip since we're not capturing output)
+            if False:
                 # Some make versions output timing info
                 for line in result.stderr.split('\n'):
                     if 'real' in line and 'm' in line and 's' in line:

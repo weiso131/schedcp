@@ -1,0 +1,25 @@
+{
+  "test_info": {
+    "timestamp": "2025-07-19T13:43:18.188823",
+    "kernel_dir": "/root/yunwei37/ai-os/workloads/linux-build-bench/linux",
+    "config": "tinyconfig",
+    "jobs": 172,
+    "repeat": 1,
+    "clean_between": false
+  },
+  "results": {
+    "scx_bpfland": {
+      "build_times": [
+        10.957960844039917
+      ],
+      "avg_build_time": 10.957960844039917,
+      "std_build_time": 0.0,
+      "min_build_time": 10.957960844039917,
+      "max_build_time": 10.957960844039917,
+      "scheduler": "scx_bpfland",
+      "jobs": 172,
+      "config": "tinyconfig",
+      "runs": 1
+    }
+  }
+}

@@ -9,10 +9,6 @@ linux/
 modules.order
 Module.symvers
 
-# Benchmark results
-results/*.json
-results/*.png
-
 # Python cache
 __pycache__/
 *.pyc

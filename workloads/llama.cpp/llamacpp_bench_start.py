@@ -17,7 +17,7 @@ from pathlib import Path
 import argparse
 
 # Add the scheduler module to the path
-sys.path.insert(0, '/home/yunwei37/ai-os')
+sys.path.insert(0, '/root/yunwei37/ai-os')
 
 from scheduler import SchedulerRunner, SchedulerBenchmark
 
@@ -60,9 +60,9 @@ class LlamaBenchmarkTester(SchedulerBenchmark):
         
         # Environment setup - change to the directory containing llama-bench
         # This ensures all shared libraries are found correctly
-        self.cpu_bin_dir = os.path.dirname(self.llama_bench_path)
+        self.build_dir = os.path.dirname(self.llama_bench_path)
         self.env = os.environ.copy()
-        lib_path = self.cpu_bin_dir
+        lib_path = self.build_dir
         if 'LD_LIBRARY_PATH' in self.env:
             self.env['LD_LIBRARY_PATH'] = f"{lib_path}:{self.env['LD_LIBRARY_PATH']}"
         else:
@@ -154,9 +154,9 @@ class LlamaBenchmarkTester(SchedulerBenchmark):
         cmd = self._build_llama_bench_command()
         timeout = self.test_params["timeout"]
         
-        # Save current directory and change to cpu_bin directory
+        # Save current directory and change to build directory
         original_dir = os.getcwd()
-        os.chdir(self.cpu_bin_dir)
+        os.chdir(self.build_dir)
         
         try:
             if scheduler_name:
@@ -466,10 +466,10 @@ def main():
     """Main function for llama scheduler testing"""
     parser = argparse.ArgumentParser(description="Test schedulers with llama-bench")
     parser.add_argument("--llama-bench-path", 
-                       default="/home/yunwei37/ai-os/workloads/llama.cpp/cpu_bin/llama-bench",
+                       default="/root/yunwei37/ai-os/workloads/llama.cpp/build/llama-bench",
                        help="Path to llama-bench binary")
     parser.add_argument("--model-path", 
-                       default="/home/yunwei37/.cache/llama.cpp/ggml-org_gemma-3-1b-it-GGUF_gemma-3-1b-it-Q4_K_M.gguf",
+                       default="/root/.cache/llama.cpp/ggml-org_gemma-3-1b-it-GGUF_gemma-3-1b-it-Q4_K_M.gguf",
                        help="Path to model file")
     parser.add_argument("--results-dir", default="results", 
                        help="Directory to store results")
