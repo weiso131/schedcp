@@ -48,3 +48,22 @@ No
 --------------------------------------------------------------------------------
 
 
+
+## Command Line Options
+
+```
+/root/yunwei37/ai-os/scheduler/sche_bin/scx_nest: invalid option -- '-'
+A Nest sched_ext scheduler.
+
+See the top-level comment in .bpf.c for more details.
+
+Usage: scx_nest [-p] [-d DELAY] [-m <max>] [-i ITERS]
+
+  -d DELAY_US   Delay (us), before removing an idle core from the primary nest (default 2000us / 2ms)
+  -m R_MAX      Maximum number of cores in the reserve nest (default 5)
+  -i ITERS      Number of successive placement failures tolerated before trying to aggressively expand primary nest (default 2), or 0 to disable
+  -s SLICE_US   Override slice duration in us (default 20000us / 20ms)
+  -I            First try to find a fully idle core, and then any idle core, when searching nests. Default behavior is to ignore hypertwins and check for any idle core.
+  -v            Print libbpf debug messages
+  -h            Display this help and exit
+```

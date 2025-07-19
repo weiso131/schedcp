@@ -48,3 +48,18 @@ on hardware with simple topology.
 A simple weighted vtime scheduler where all scheduling decisions take place in
 user space. This is in contrast to Rusty, where load balancing lives in user
 space, but scheduling decisions are still made in the kernel.
+
+## Command Line Options
+
+```
+/root/yunwei37/ai-os/scheduler/sche_bin/scx_simple: invalid option -- '-'
+A simple sched_ext scheduler.
+
+See the top-level comment in .bpf.c for more details.
+
+Usage: scx_simple [-f] [-v]
+
+  -f            Use FIFO scheduling instead of weighted vtime scheduling
+  -v            Print libbpf debug messages
+  -h            Display this help and exit
+```

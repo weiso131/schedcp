@@ -29,3 +29,20 @@ No. This scheduler uses an ordered list for vtime scheduling, and is strictly
 less performant than just using something like `scx_simple`. It is purely
 meant to illustrate that it's possible to build a user space scheduler on
 top of sched_ext.
+
+## Command Line Options
+
+```
+/root/yunwei37/ai-os/scheduler/sche_bin/scx_userland: invalid option -- '-'
+A minimal userland sched_ext scheduler.
+
+See the top-level comment in .bpf.c for more details.
+
+Try to reduce `sysctl kernel.pid_max` if this program triggers OOMs.
+
+Usage: scx_userland [-b BATCH]
+
+  -b BATCH      The number of tasks to batch when dispatching (default: 8)
+  -v            Print libbpf debug messages
+  -h            Display this help and exit
+```

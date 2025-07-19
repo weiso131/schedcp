@@ -48,3 +48,19 @@ A simple scheduler that provides an example of a minimal sched_ext
 scheduler. `scx_simple` can be run in either global weighted vtime mode, or
 FIFO mode.
 
+
+## Command Line Options
+
+```
+/root/yunwei37/ai-os/scheduler/sche_bin/scx_pair: invalid option -- '-'
+A demo sched_ext core-scheduler which always makes every sibling CPU pair
+execute from the same CPU cgroup.
+
+See the top-level comment in .bpf.c for more details.
+
+Usage: scx_pair [-S STRIDE]
+
+  -S STRIDE     Override CPU pair stride (default: nr_cpus_ids / 2)
+  -v            Print libbpf debug messages
+  -h            Display this help and exit
+```

@@ -49,3 +49,20 @@ This scheduler could be used in a production environment, assuming the hardware
 constraints enumerated above.
 
 --------------------------------------------------------------------------------
+
+## Command Line Options
+
+```
+/root/yunwei37/ai-os/scheduler/sche_bin/scx_flatcg: invalid option -- '-'
+A flattened cgroup hierarchy sched_ext scheduler.
+
+See the top-level comment in .bpf.c for more details.
+
+Usage: scx_flatcg [-s SLICE_US] [-i INTERVAL] [-f] [-v]
+
+  -s SLICE_US   Override slice duration
+  -i INTERVAL   Report interval
+  -f            Use FIFO scheduling instead of weighted vtime scheduling
+  -v            Print libbpf debug messages
+  -h            Display this help and exit
+```

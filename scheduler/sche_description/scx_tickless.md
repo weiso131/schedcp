@@ -40,3 +40,63 @@ latency-sensitive workloads.
 ## Production Ready?
 
 This scheduler is still experimental.
+
+## Command Line Options
+
+```
+Usage: scx_tickless [OPTIONS]
+
+Options:
+      --exit-dump-len <EXIT_DUMP_LEN>
+          Exit debug dump buffer length. 0 indicates default
+          
+          [default: 0]
+
+  -m, --primary-domain <PRIMARY_DOMAIN>
+          Define the set of CPUs, represented as a bitmask in hex (e.g., 0xff), dedicated to process
+          scheduling events
+          
+          [default: 0x1]
+
+  -s, --slice-us <SLICE_US>
+          Maximum scheduling slice duration in microseconds (applied only when multiple tasks are
+          contending the same CPU)
+          
+          [default: 20000]
+
+  -f, --frequency <FREQUENCY>
+          Frequency of the tick triggered on the scheduling CPUs to check for task time slice
+          expiration (0 == CONFIG_HZ).
+          
+          A higher frequency can increase the overall system responsiveness but it can also
+          introduce more scheduling overhead and load on the primary CPUs.
+          
+          [default: 0]
+
+  -p, --prefer-same-cpu
+          Try to keep tasks running on the same CPU
+          
+          This can help to improve cache locality at the cost of introducing some extra overhead in
+          the scheduler (and increase the load on the primary CPUs).
+
+  -n, --nosmt
+          Disable SMT topology awareness
+
+      --stats <STATS>
+          Enable stats monitoring with the specified interval
+
+      --monitor <MONITOR>
+          Run in stats monitoring mode with the specified interval. Scheduler is not launched
+
+  -v, --verbose
+          Enable verbose output, including libbpf details
+
+  -V, --version
+          Print scheduler version and exit
+
+      --help-stats
+          Show descriptions for statistics
+
+  -h, --help
+          Print help (see a summary with '-h')
+```

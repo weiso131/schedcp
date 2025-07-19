@@ -48,3 +48,19 @@ able to consume more CPU cycles than they are entitled to.
 
 --------------------------------------------------------------------------------
 
+
+## Command Line Options
+
+```
+/root/yunwei37/ai-os/scheduler/sche_bin/scx_central: invalid option -- '-'
+A central FIFO sched_ext scheduler.
+
+See the top-level comment in .bpf.c for more details.
+
+Usage: scx_central [-s SLICE_US] [-c CPU]
+
+  -s SLICE_US   Override slice duration
+  -c CPU        Override the central CPU (default: 0)
+  -v            Print libbpf debug messages
+  -h            Display this help and exit
+```

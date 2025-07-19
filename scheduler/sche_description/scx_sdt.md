@@ -21,3 +21,16 @@ This scheduler is useful for workloads that have deadline requirements or for le
 ## Production Ready?
 
 This is primarily an example scheduler for educational purposes and may not be suitable for production use without further testing and optimization.
+## Command Line Options
+
+```
+/root/yunwei37/ai-os/scheduler/sche_bin/scx_sdt: invalid option -- '-'
+A simple sched_ext scheduler.
+
+See the top-level comment in .bpf.c for more details.
+
+Usage: scx_sdt [-f] [-v]
+
+  -v            Print libbpf debug messages
+  -h            Display this help and exit
+```

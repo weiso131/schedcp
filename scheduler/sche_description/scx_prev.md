@@ -49,3 +49,19 @@ No. This scheduler uses an ordered list for vtime scheduling, and is strictly
 less performant than just using something like `scx_simple`. It is purely
 meant to illustrate that it's possible to build a user space scheduler on
 top of sched_ext.
+
+## Command Line Options
+
+```
+/root/yunwei37/ai-os/scheduler/sche_bin/scx_prev: invalid option -- '-'
+A variation on scx_simple with CPU selection that prioritizes an idle
+previous CPU over finding a fully idle core.
+
+See the top-level comment in .bpf.c for more details.
+
+Usage: scx_prev [-i sec] [-v]
+
+  -h            Display this help and exit
+  -i            Sampling interval for statistics in seconds
+  -v            Print libbpf debug messages
+```
