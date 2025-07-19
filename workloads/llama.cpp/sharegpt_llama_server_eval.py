@@ -21,6 +21,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
+import platform
+import psutil
+import socket
 
 # Add the scheduler module to the path
 sys.path.insert(0, '/root/yunwei37/ai-os')
@@ -46,7 +49,8 @@ class LlamaServerBenchmark(SchedulerBenchmark):
     
     def __init__(self, server_binary: str, model_path: str, 
                  server_port: int = 8080, 
-                 scheduler_runner: SchedulerRunner = None):
+                 scheduler_runner: SchedulerRunner = None,
+                 server_log_file: str = None):
         super().__init__(scheduler_runner)
         
         self.server_binary = server_binary
@@ -54,6 +58,7 @@ class LlamaServerBenchmark(SchedulerBenchmark):
         self.server_port = server_port
         self.server_url = f"http://localhost:{server_port}"
         self.server_process = None
+        self.server_log_file = server_log_file
         
         # Server configuration
         self.server_config = {
@@ -63,6 +68,7 @@ class LlamaServerBenchmark(SchedulerBenchmark):
             "n_threads": 8,
             "cont_batching": True,
             "flash_attn": True,
+            "n_parallel": 4,  # Number of parallel slots for concurrent requests
         }
     
     def start_server(self, scheduler_name: Optional[str] = None) -> bool:
@@ -76,6 +82,7 @@ class LlamaServerBenchmark(SchedulerBenchmark):
             "-c", str(self.server_config["ctx_size"]),
             "-b", str(self.server_config["n_batch"]),
             "-t", str(self.server_config["n_threads"]),
+            "--parallel", str(self.server_config["n_parallel"]),
         ]
         
         if self.server_config.get("cont_batching"):
@@ -88,12 +95,22 @@ class LlamaServerBenchmark(SchedulerBenchmark):
         print(f"Command: {' '.join(cmd)}")
         
         try:
+            # Setup logging
+            stdout = subprocess.PIPE
+            stderr = subprocess.PIPE
+            if self.server_log_file:
+                log_dir = os.path.dirname(self.server_log_file)
+                if log_dir:
+                    os.makedirs(log_dir, exist_ok=True)
+                stdout = open(self.server_log_file + ".stdout", 'w')
+                stderr = open(self.server_log_file + ".stderr", 'w')
+            
             if scheduler_name and self.runner:
                 # Use scheduler runner to start with specific scheduler
                 self.server_process = subprocess.Popen(
                     cmd,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE
+                    stdout=stdout,
+                    stderr=stderr
                 )
                 # Set scheduler affinity if needed
                 # Note: This is a simplified approach. In a real scenario,
@@ -102,8 +119,8 @@ class LlamaServerBenchmark(SchedulerBenchmark):
                 # Start with default scheduler
                 self.server_process = subprocess.Popen(
                     cmd,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE
+                    stdout=stdout,
+                    stderr=stderr
                 )
             
             # Wait for server to be ready
@@ -135,6 +152,14 @@ class LlamaServerBenchmark(SchedulerBenchmark):
         """Stop the llama.cpp server"""
         if self.server_process:
             print("Stopping server...")
+            
+            # Close log files if they were opened
+            if self.server_log_file and self.server_process:
+                if hasattr(self.server_process.stdout, 'close'):
+                    self.server_process.stdout.close()
+                if hasattr(self.server_process.stderr, 'close'):
+                    self.server_process.stderr.close()
+            
             self.server_process.terminate()
             self.server_process.wait(timeout=10)
             self.server_process = None
@@ -296,6 +321,9 @@ class LlamaServerBenchmark(SchedulerBenchmark):
                 result = await coro
                 results.append(result)
         
+        # Wait a bit to ensure all responses are fully received
+        await asyncio.sleep(1)
+        
         return results
     
     def load_sharegpt_dataset(self, dataset_path: str, num_samples: int = 100) -> List[str]:
@@ -304,14 +332,20 @@ class LlamaServerBenchmark(SchedulerBenchmark):
             data = json.load(f)
         
         prompts = []
-        for item in data[:num_samples]:
+        count = 0
+        for item in data:
+            if count >= num_samples:
+                break
+                
             if isinstance(item, dict) and 'prompt' in item:
                 prompts.append(item['prompt'])
+                count += 1
             elif isinstance(item, dict) and 'conversations' in item:
-                # vLLM format
+                # ShareGPT Vicuna format
                 for conv in item['conversations']:
                     if conv.get('from') in ['human', 'user']:
                         prompts.append(conv['value'])
+                        count += 1
                         break
         
         print(f"Loaded {len(prompts)} prompts from ShareGPT dataset")
@@ -370,6 +404,8 @@ class LlamaServerBenchmark(SchedulerBenchmark):
             results["default"] = self.analyze_results(benchmark_results)
             results["default"]["raw_results"] = benchmark_results
             
+            # Ensure all requests are processed before stopping
+            time.sleep(2)
             self.stop_server()
             time.sleep(5)  # Wait before next test
         
@@ -389,29 +425,89 @@ class LlamaServerBenchmark(SchedulerBenchmark):
                     results[scheduler] = self.analyze_results(benchmark_results)
                     results[scheduler]["raw_results"] = benchmark_results
                     
+                    # Ensure all requests are processed before stopping
+                    time.sleep(2)
                     self.stop_server()
                     time.sleep(5)  # Wait before next test
         
         return results
     
-    def generate_report(self, results: Dict, output_dir: str = "results"):
+    def get_system_info(self) -> Dict:
+        """Collect system information"""
+        try:
+            # Get CPU info
+            cpu_info = {
+                "cpu_count": psutil.cpu_count(logical=False),
+                "cpu_count_logical": psutil.cpu_count(logical=True),
+                "cpu_freq": psutil.cpu_freq().current if psutil.cpu_freq() else "N/A",
+                "cpu_percent": psutil.cpu_percent(interval=1)
+            }
+            
+            # Get memory info
+            mem = psutil.virtual_memory()
+            mem_info = {
+                "total_memory_gb": round(mem.total / (1024**3), 2),
+                "available_memory_gb": round(mem.available / (1024**3), 2),
+                "memory_percent": mem.percent
+            }
+            
+            # Get system info
+            uname = platform.uname()
+            system_info = {
+                "platform": platform.system(),
+                "platform_release": platform.release(),
+                "platform_version": platform.version(),
+                "architecture": platform.machine(),
+                "hostname": socket.gethostname(),
+                "processor": uname.processor or "N/A",
+                "python_version": platform.python_version()
+            }
+            
+            # Get kernel info using uname command
+            try:
+                kernel_info = subprocess.check_output(['uname', '-a'], text=True).strip()
+            except:
+                kernel_info = "N/A"
+            
+            return {
+                "system": system_info,
+                "cpu": cpu_info,
+                "memory": mem_info,
+                "kernel": kernel_info,
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            return {"error": str(e), "timestamp": datetime.now().isoformat()}
+    
+    def generate_report(self, results: Dict, output_dir: str = "results", 
+                       dataset_name: str = None, config_info: Dict = None):
         """Generate comprehensive benchmark report"""
         os.makedirs(output_dir, exist_ok=True)
         
-        # Save raw results
+        # Get system info
+        system_info = self.get_system_info()
+        
+        # Save raw results with metadata
+        results_with_metadata = {
+            "system_info": system_info,
+            "dataset": dataset_name,
+            "config": config_info,
+            "results": {}
+        }
+        
+        # Remove raw_results for JSON serialization
+        for scheduler, data in results.items():
+            results_with_metadata["results"][scheduler] = {k: v for k, v in data.items() if k != "raw_results"}
+            
         results_file = os.path.join(output_dir, "sharegpt_llama_server_results.json")
         with open(results_file, 'w') as f:
-            # Remove raw_results for JSON serialization
-            clean_results = {}
-            for scheduler, data in results.items():
-                clean_results[scheduler] = {k: v for k, v in data.items() if k != "raw_results"}
-            json.dump(clean_results, f, indent=2)
+            json.dump(results_with_metadata, f, indent=2)
         
         # Generate comparison plots
         self._generate_comparison_plots(results, output_dir)
         
         # Generate summary report
-        self._generate_summary_report(results, output_dir)
+        self._generate_summary_report(results, output_dir, system_info, dataset_name, config_info)
     
     def _generate_comparison_plots(self, results: Dict, output_dir: str):
         """Generate comparison plots"""
@@ -492,13 +588,37 @@ class LlamaServerBenchmark(SchedulerBenchmark):
         plt.savefig(figure_path, dpi=300, bbox_inches='tight')
         print(f"Performance figure saved to {figure_path}")
     
-    def _generate_summary_report(self, results: Dict, output_dir: str):
+    def _generate_summary_report(self, results: Dict, output_dir: str, 
+                                system_info: Dict, dataset_name: str, config_info: Dict):
         """Generate text summary report"""
         report_path = os.path.join(output_dir, "sharegpt_benchmark_summary.txt")
         
         with open(report_path, 'w') as f:
             f.write("ShareGPT Benchmark Results - llama.cpp Server\n")
             f.write("=" * 60 + "\n\n")
+            
+            # Write system info
+            f.write("System Information:\n")
+            f.write("-" * 30 + "\n")
+            if "error" not in system_info:
+                f.write(f"Platform: {system_info['system']['platform']} {system_info['system']['platform_release']}\n")
+                f.write(f"Architecture: {system_info['system']['architecture']}\n")
+                f.write(f"CPU: {system_info['cpu']['cpu_count']} cores ({system_info['cpu']['cpu_count_logical']} logical)\n")
+                f.write(f"Memory: {system_info['memory']['total_memory_gb']} GB total\n")
+                f.write(f"Kernel: {system_info['kernel']}\n")
+            else:
+                f.write(f"Error collecting system info: {system_info['error']}\n")
+            
+            # Write test config
+            f.write("\nTest Configuration:\n")
+            f.write("-" * 30 + "\n")
+            f.write(f"Dataset: {dataset_name or 'Unknown'}\n")
+            if config_info:
+                f.write(f"Samples: {config_info.get('num_samples', 'N/A')}\n")
+                f.write(f"Max Concurrent: {config_info.get('max_concurrent', 'N/A')}\n")
+                f.write(f"Model: {config_info.get('model', 'N/A')}\n")
+            f.write(f"Timestamp: {system_info.get('timestamp', 'N/A')}\n")
+            f.write("\n" + "=" * 60 + "\n\n")
             
             for scheduler, data in results.items():
                 if "error" in data:
@@ -529,11 +649,11 @@ def main():
                        default="/root/yunwei37/ai-os/workloads/llama.cpp/build/bin/llama-server",
                        help="Path to llama-server binary")
     parser.add_argument("--model", 
-                       default="/root/yunwei37/ai-os/workloads/llama.cpp/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+                       default="/root/yunwei37/ai-os/workloads/llama.cpp/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
                        help="Path to model file")
     parser.add_argument("--dataset", 
-                       default="datasets/sharegpt_benchmark.json",
-                       help="Path to ShareGPT dataset")
+                       default=None,
+                       help="Path to ShareGPT dataset (default: sharegpt_vicuna.json)")
     parser.add_argument("--port", type=int, default=8080,
                        help="Server port")
     parser.add_argument("--num-samples", type=int, default=100,
@@ -544,10 +664,27 @@ def main():
                        help="List of schedulers to test")
     parser.add_argument("--production-only", action="store_true",
                        help="Test only production schedulers")
-    parser.add_argument("--output-dir", default="results",
-                       help="Output directory for results")
+    parser.add_argument("--output-dir", default=None,
+                       help="Output directory for results (auto-generated if not specified)")
+    parser.add_argument("--server-logs", action="store_true",
+                       help="Save server logs")
     
     args = parser.parse_args()
+    
+    # Set default dataset if not specified
+    if args.dataset is None:
+        args.dataset = "datasets/sharegpt_vicuna.json"
+        if not os.path.exists(args.dataset):
+            # Fallback to benchmark dataset
+            args.dataset = "datasets/sharegpt_benchmark.json"
+    
+    # Extract dataset name from path
+    dataset_name = os.path.splitext(os.path.basename(args.dataset))[0]
+    
+    # Generate output directory name if not specified
+    if args.output_dir is None:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        args.output_dir = f"results/{dataset_name}_s{args.num_samples}_c{args.max_concurrent}_{timestamp}"
     
     # Check if files exist
     if not os.path.exists(args.server_binary):
@@ -564,11 +701,17 @@ def main():
         print("Please run download_sharegpt.py first to download the dataset")
         sys.exit(1)
     
+    # Setup server log file if requested
+    server_log_file = None
+    if args.server_logs:
+        server_log_file = os.path.join(args.output_dir, "server_logs")
+    
     # Create benchmark instance
     benchmark = LlamaServerBenchmark(
         server_binary=args.server_binary,
         model_path=args.model,
-        server_port=args.port
+        server_port=args.port,
+        server_log_file=server_log_file
     )
     
     # Determine schedulers to test
@@ -585,8 +728,17 @@ def main():
         max_concurrent=args.max_concurrent
     )
     
+    # Configuration info for report
+    config_info = {
+        "num_samples": args.num_samples,
+        "max_concurrent": args.max_concurrent,
+        "model": os.path.basename(args.model),
+        "server_binary": os.path.basename(args.server_binary),
+        "schedulers_tested": len(results)
+    }
+    
     # Generate report
-    benchmark.generate_report(results, args.output_dir)
+    benchmark.generate_report(results, args.output_dir, dataset_name, config_info)
     
     print("\nBenchmark complete!")
 
