@@ -25,7 +25,7 @@ Default parameters:
 
 ### Example Command
 ```bash
-../schbench/schbench -m 2 -t 4 -r 30 -s 10000 -n 5
+../schbench/schbench -m 2 -t 4 -r 30 -n 5
 ```
 
 ### Testing Process
