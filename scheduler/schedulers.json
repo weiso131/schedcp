@@ -17,31 +17,46 @@
           "type": "integer",
           "description": "Maximum scheduling slice duration in microseconds",
           "default": 20000,
-          "range": [1000, 100000]
+          "range": [
+            1000,
+            100000
+          ]
         },
         "slice_us_min": {
           "type": "integer",
           "description": "Minimum scheduling slice duration in microseconds",
           "default": 1000,
-          "range": [100, 10000]
+          "range": [
+            100,
+            10000
+          ]
         },
         "slice_us_lag": {
           "type": "integer",
           "description": "Maximum time slice lag in microseconds",
           "default": 20000,
-          "range": [-100000, 100000]
+          "range": [
+            -100000,
+            100000
+          ]
         },
         "throttle_us": {
           "type": "integer",
           "description": "CPU throttling period in microseconds",
           "default": 0,
-          "range": [0, 1000000]
+          "range": [
+            0,
+            1000000
+          ]
         },
         "idle_resume_us": {
           "type": "integer",
           "description": "CPU idle QoS resume latency in microseconds",
           "default": -1,
-          "range": [-1, 1000000]
+          "range": [
+            -1,
+            1000000
+          ]
         },
         "no_preempt": {
           "type": "boolean",
@@ -88,13 +103,19 @@
           "type": "integer",
           "description": "CPU ID to use for central scheduling",
           "default": 0,
-          "range": [0, 255]
+          "range": [
+            0,
+            255
+          ]
         },
         "slice_us": {
           "type": "integer",
           "description": "Override slice duration in microseconds",
           "default": 20000,
-          "range": [1000, 100000]
+          "range": [
+            1000,
+            100000
+          ]
         }
       },
       "limitations": "Not production ready, no priority mechanism, fixed 20ms preemption",
@@ -116,7 +137,10 @@
           "type": "float",
           "description": "Chance of randomly delaying a process",
           "default": 0.0,
-          "range": [0.0, 1.0]
+          "range": [
+            0.0,
+            1.0
+          ]
         },
         "random_delay_min_us": {
           "type": "integer",
@@ -132,7 +156,10 @@
           "type": "float",
           "description": "Chance of degrading a process",
           "default": 0.0,
-          "range": [0.0, 1.0]
+          "range": [
+            0.0,
+            1.0
+          ]
         },
         "min_slice_us": {
           "type": "integer",
@@ -165,13 +192,19 @@
           "type": "integer",
           "description": "Maximum scheduling slice duration",
           "default": 4096,
-          "range": [128, 20000]
+          "range": [
+            128,
+            20000
+          ]
         },
         "slice_us_min": {
           "type": "integer",
           "description": "Minimum scheduling slice duration",
           "default": 128,
-          "range": [32, 4096]
+          "range": [
+            32,
+            4096
+          ]
         },
         "slice_us_lag": {
           "type": "integer",
@@ -228,7 +261,10 @@
           "type": "integer",
           "description": "Override slice duration in microseconds",
           "default": 20000,
-          "range": [1000, 100000]
+          "range": [
+            1000,
+            100000
+          ]
         },
         "interval": {
           "type": "integer",
@@ -260,13 +296,19 @@
           "type": "integer",
           "description": "Maximum scheduling slice duration",
           "default": 5000,
-          "range": [500, 20000]
+          "range": [
+            500,
+            20000
+          ]
         },
         "slice_min_us": {
           "type": "integer",
           "description": "Minimum scheduling slice duration",
           "default": 500,
-          "range": [100, 5000]
+          "range": [
+            100,
+            5000
+          ]
         },
         "preempt_shift": {
           "type": "integer",
@@ -328,7 +370,10 @@
           "type": "integer",
           "description": "Default scheduling slice duration",
           "default": 20000,
-          "range": [1000, 100000]
+          "range": [
+            1000,
+            100000
+          ]
         },
         "max_exec_us": {
           "type": "integer",
@@ -407,19 +452,28 @@
           "type": "integer",
           "description": "Delay before removing idle core from primary nest",
           "default": 2000,
-          "range": [100, 100000]
+          "range": [
+            100,
+            100000
+          ]
         },
         "r_max": {
           "type": "integer",
           "description": "Maximum number of cores in reserve nest",
           "default": 5,
-          "range": [1, 64]
+          "range": [
+            1,
+            64
+          ]
         },
         "iters": {
           "type": "integer",
           "description": "Placement failures before aggressive expansion",
           "default": 2,
-          "range": [0, 10]
+          "range": [
+            0,
+            10
+          ]
         },
         "slice_us": {
           "type": "integer",
@@ -452,19 +506,28 @@
           "type": "integer",
           "description": "Number of dispatch queues",
           "default": 8,
-          "range": [2, 16]
+          "range": [
+            2,
+            16
+          ]
         },
         "slice_us": {
           "type": "integer",
           "description": "Base time slice duration",
           "default": 20000,
-          "range": [5000, 100000]
+          "range": [
+            5000,
+            100000
+          ]
         },
         "interactive_ratio": {
           "type": "float",
           "description": "Ratio of interactive to batch tasks",
           "default": 0.5,
-          "range": [0.0, 1.0]
+          "range": [
+            0.0,
+            1.0
+          ]
         },
         "deadline": {
           "type": "boolean",
@@ -585,13 +648,19 @@
           "type": "integer",
           "description": "Scheduling slice duration",
           "default": 20000,
-          "range": [1000, 100000]
+          "range": [
+            1000,
+            100000
+          ]
         },
         "slice_us_min": {
           "type": "integer",
           "description": "Minimum slice duration",
           "default": 1000,
-          "range": [100, 10000]
+          "range": [
+            100,
+            10000
+          ]
         },
         "percpu_local": {
           "type": "boolean",
@@ -606,6 +675,60 @@
       },
       "limitations": "User-space overhead, not ideal for performance-critical scenarios",
       "performance_profile": "optimized for interactivity over raw performance"
+    },
+    {
+      "name": "scx_rusty",
+      "production_ready": true,
+      "description": "A production-ready multi-domain scheduler with intelligent load balancing. Creates separate scheduling domains per LLC with user-space load balancing. Features configurable thresholds, greedy task stealing, and support for both FIFO and priority-based scheduling within domains. Architecture-flexible design suitable for various CPU topologies.",
+      "use_cases": [
+        "general_purpose",
+        "multi_architecture",
+        "server_workloads"
+      ],
+      "algorithm": "multi_domain_round_robin",
+      "characteristics": "multi domain support, per llc domains, user space load balancing, configurable thresholds, architecture flexibility, greedy task stealing, fifo mode support",
+      "tuning_parameters": {
+        "slice_us": {
+          "type": "integer",
+          "description": "Time slice duration in microseconds",
+          "default": 20000,
+          "range": [
+            1000,
+            100000
+          ]
+        },
+        "greedy_threshold": {
+          "type": "integer",
+          "description": "Threshold for greedy task stealing",
+          "default": 2,
+          "range": [
+            1,
+            10
+          ]
+        },
+        "kthreads": {
+          "type": "boolean",
+          "description": "Schedule kernel threads",
+          "default": false
+        },
+        "fifo_sched": {
+          "type": "boolean",
+          "description": "Use FIFO scheduling within domains",
+          "default": false
+        },
+        "load_half_life": {
+          "type": "float",
+          "description": "Load averaging half-life in seconds",
+          "default": 0.5
+        },
+        "numa_migration": {
+          "type": "boolean",
+          "description": "Allow NUMA node migrations",
+          "default": true
+        }
+      },
+      "limitations": "May not distinguish NUMA nodes well, potential infeasible weights issue",
+      "performance_profile": "balanced general-purpose performance"
     },
     {
       "name": "scx_sdt",
@@ -643,7 +766,10 @@
           "type": "integer",
           "description": "Time slice duration",
           "default": 20000,
-          "range": [1000, 100000]
+          "range": [
+            1000,
+            100000
+          ]
         }
       },
       "limitations": "Limited scalability, may not optimize complex workloads",
@@ -763,54 +889,6 @@
       },
       "limitations": "Requires bleeding-edge kernel, experimental BPF arenas, not production tested",
       "performance_profile": "experimental with focus on modular design"
-    },
-    {
-      "name": "scx_rusty",
-      "production_ready": true,
-      "description": "A production-ready multi-domain scheduler with intelligent load balancing. Creates separate scheduling domains per LLC with user-space load balancing. Features configurable thresholds, greedy task stealing, and support for both FIFO and priority-based scheduling within domains. Architecture-flexible design suitable for various CPU topologies.",
-      "use_cases": [
-        "general_purpose",
-        "multi_architecture",
-        "server_workloads"
-      ],
-      "algorithm": "multi_domain_round_robin",
-      "characteristics": "multi domain support, per llc domains, user space load balancing, configurable thresholds, architecture flexibility, greedy task stealing, fifo mode support",
-      "tuning_parameters": {
-        "slice_us": {
-          "type": "integer",
-          "description": "Time slice duration in microseconds",
-          "default": 20000,
-          "range": [1000, 100000]
-        },
-        "greedy_threshold": {
-          "type": "integer",
-          "description": "Threshold for greedy task stealing",
-          "default": 2,
-          "range": [1, 10]
-        },
-        "kthreads": {
-          "type": "boolean",
-          "description": "Schedule kernel threads",
-          "default": false
-        },
-        "fifo_sched": {
-          "type": "boolean",
-          "description": "Use FIFO scheduling within domains",
-          "default": false
-        },
-        "load_half_life": {
-          "type": "float",
-          "description": "Load averaging half-life in seconds",
-          "default": 0.5
-        },
-        "numa_migration": {
-          "type": "boolean",
-          "description": "Allow NUMA node migrations",
-          "default": true
-        }
-      },
-      "limitations": "May not distinguish NUMA nodes well, potential infeasible weights issue",
-      "performance_profile": "balanced general-purpose performance"
     }
   ]
 }
