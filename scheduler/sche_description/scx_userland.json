@@ -15,6 +15,12 @@
         "type": "integer",
         "description": "Time slice duration",
         "default": 20000
+      },
+      "batch": {
+        "type": "integer",
+        "description": "Number of tasks to batch when dispatching",
+        "default": 8,
+        "range": [1, 32]
       }
     },
     "limitations": "Not production ready, performance overhead, potential deadlocks",

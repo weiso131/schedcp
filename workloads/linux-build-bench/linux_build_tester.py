@@ -15,7 +15,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 from scheduler_runner import SchedulerRunner, SchedulerBenchmark
 
 class LinuxBuildTester(SchedulerBenchmark):
-    def __init__(self, jobs=0, config='tinyconfig', clean_between=False, 
+    def __init__(self, jobs=0, config='tinyconfig', clean_between=True, 
                  output_file='results/linux_build_results.json', repeat=1, kernel_dir='linux'):
         super().__init__()
         self.jobs = jobs if jobs > 0 else multiprocessing.cpu_count()
