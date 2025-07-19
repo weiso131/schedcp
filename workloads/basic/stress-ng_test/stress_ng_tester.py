@@ -59,13 +59,14 @@ class StressNgTester(SchedulerBenchmark):
         """Parse stress-ng output to extract metrics"""
         metrics = {}
         
-        # Parse bogo-ops metrics
-        bogo_pattern = r'(\w+)\s+(\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\w+)'
+        # Parse bogo-ops metrics - look for lines starting with "stress-ng: metrc:"
+        # Format: stressor bogo_ops real_time usr_time sys_time bogo_ops/s_real bogo_ops/s_usr+sys cpu_percent rss_max
+        metric_pattern = r'stress-ng: metrc:.*?(\w+)\s+(\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+)'
         
         for line in output.split('\n'):
             # Look for metrics lines
-            match = re.match(bogo_pattern, line)
-            if match:
+            match = re.search(metric_pattern, line)
+            if match and match.group(1) != 'stressor':  # Skip header line
                 stressor = match.group(1)
                 bogo_ops = float(match.group(2))
                 real_time = float(match.group(3))
@@ -73,6 +74,8 @@ class StressNgTester(SchedulerBenchmark):
                 sys_time = float(match.group(5))
                 bogo_ops_per_sec_real = float(match.group(6))
                 bogo_ops_per_sec_usr_sys = float(match.group(7))
+                cpu_percent = float(match.group(8))
+                rss_max = int(match.group(9))
                 
                 metrics[stressor] = {
                     'bogo_ops': bogo_ops,
@@ -80,7 +83,9 @@ class StressNgTester(SchedulerBenchmark):
                     'usr_time': usr_time,
                     'sys_time': sys_time,
                     'bogo_ops_per_sec_real': bogo_ops_per_sec_real,
-                    'bogo_ops_per_sec_usr_sys': bogo_ops_per_sec_usr_sys
+                    'bogo_ops_per_sec_usr_sys': bogo_ops_per_sec_usr_sys,
+                    'cpu_percent': cpu_percent,
+                    'rss_max_kb': rss_max
                 }
                 
         # Also capture summary metrics
@@ -262,6 +267,8 @@ class StressNgTester(SchedulerBenchmark):
         # Normalize performance relative to baseline
         if 'baseline' in self.results:
             baseline_perf = self.results['baseline'].get('aggregate_bogo_ops_per_sec', 1)
+            if baseline_perf == 0:
+                baseline_perf = 1  # Avoid division by zero
             normalized_perf = [perf / baseline_perf * 100 for perf in aggregate_performance]
             
             bars = ax.bar(schedulers, normalized_perf)

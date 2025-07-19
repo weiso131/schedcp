@@ -1,20 +1,30 @@
 {
   "test_info": {
-    "timestamp": "2025-07-19T06:24:10.782996",
-    "duration": 5,
+    "timestamp": "2025-07-19T06:29:25.505685",
+    "duration": 3,
     "stress_tests": [
       "cpu"
     ],
-    "cpu_workers": 0,
+    "cpu_workers": 2,
     "vm_workers": 2,
     "io_workers": 2
   },
   "results": {
     "baseline": {
+      "cpu": {
+        "bogo_ops": 12808.0,
+        "real_time": 3.0,
+        "usr_time": 6.0,
+        "sys_time": 0.0,
+        "bogo_ops_per_sec_real": 4268.83,
+        "bogo_ops_per_sec_usr_sys": 2134.69,
+        "cpu_percent": 99.99,
+        "rss_max_kb": 5632
+      },
       "completed": true,
-      "duration": 5.496835708618164,
+      "duration": 3.482149124145508,
       "scheduler": "baseline",
-      "aggregate_bogo_ops_per_sec": 0
+      "aggregate_bogo_ops_per_sec": 4268.83
     }
   }
 }
