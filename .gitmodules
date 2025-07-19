@@ -13,3 +13,6 @@
 [submodule "workloads/cachyos-benchmarker"]
 	path = workloads/basic/cachyos-benchmarker
 	url = https://github.com/CachyOS/cachyos-benchmarker
+[submodule "workloads/llama.cpp/llama.cpp"]
+	path = workloads/llama.cpp/llama.cpp
+	url = https://github.com/ggerganov/llama.cpp.git
