@@ -62,7 +62,6 @@ class LlamaServerBenchmark(SchedulerBenchmark):
         
         # Server configuration
         self.server_config = {
-            "n_gpu_layers": -1,  # Use all GPU layers if available
             "ctx_size": 4096,
             "n_batch": 512,
             "n_threads": 8,

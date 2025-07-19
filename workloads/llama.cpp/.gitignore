@@ -50,6 +50,10 @@ ENV/
 
 # Logs
 *.log
+server_logs.stderr
+server_logs.stdout
+**/server_logs.stderr
+**/server_logs.stdout
 
 # Temporary files
 *.tmp

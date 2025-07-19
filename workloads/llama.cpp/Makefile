@@ -117,9 +117,9 @@ SHAREGPT_BENCH := $(DATASET_DIR)/sharegpt_benchmark.json
 
 # Benchmark parameters
 SAMPLES_QUICK := 5
-SAMPLES_FULL := 100
+SAMPLES_FULL := 2000
 CONCURRENT_QUICK := 2
-CONCURRENT_FULL := 10
+CONCURRENT_FULL := 100
 
 help:
 	@echo "Available targets:"
