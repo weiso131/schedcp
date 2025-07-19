@@ -1,6 +1,6 @@
 # Scheduler Performance Testing with schbench
 
-This directory contains tools for testing all schedulers in the ai-os project using schbench.
+This directory contains tools for testing all schedulers in the SchedCP project using schbench.
 
 ## Setup
 
@@ -49,7 +49,7 @@ The script generates:
 
 ## Schedulers Tested
 
-The script tests all available schedulers in the ai-os project, including:
+The script tests all available schedulers in the SchedCP project, including:
 - scx_simple, scx_rusty, scx_bpfland, scx_flash
 - scx_lavd, scx_layered, scx_nest, scx_p2dq
 - scx_flatcg, and more

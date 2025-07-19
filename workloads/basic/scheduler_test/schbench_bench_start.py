@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Scheduler Performance Testing Script using schbench
-Tests all available schedulers in the ai-os project and generates performance figures.
+Tests all available schedulers in the SchedCP project and generates performance figures.
 """
 
 import os

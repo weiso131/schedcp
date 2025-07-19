@@ -84,9 +84,9 @@ Clean build artifacts:
 make clean
 ```
 
-## Integration with KernCP
+## Integration with SchedCP
 
-These benchmarks are designed to work with KernCP's scheduler testing framework:
+These benchmarks are designed to work with SchedCP's scheduler testing framework:
 
 1. **Automated Testing**: Use `scheduler_test/schbench_bench_start.py` for automated schbench runs
 2. **Scheduler Comparison**: Test different sched_ext schedulers with consistent workloads
@@ -137,4 +137,4 @@ These benchmarks are designed to work with KernCP's scheduler testing framework:
 - **stress-ng**: Provides operations per second, CPU usage, and detailed stressor metrics
 - **cachyos-benchmarker**: Generates JSON reports with comparative analysis capabilities
 
-Results can be fed into KernCP's learning algorithms to optimize scheduler parameters for specific workload patterns.
+Results can be fed into SchedCP's learning algorithms to optimize scheduler parameters for specific workload patterns.

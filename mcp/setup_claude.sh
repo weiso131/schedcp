@@ -4,14 +4,14 @@
 
 set -e
 
-echo "Setting up AI-OS MCP server for Claude Desktop..."
+echo "Setting up SchedCP MCP server for Claude Desktop..."
 
 # Build the MCP server
 echo "Building MCP server..."
 cargo build --release
 
 # Get the binary path
-BINARY_PATH="$(pwd)/target/release/ai-os-mcp"
+BINARY_PATH="$(pwd)/target/release/schedcp-mcp"
 
 # Create Claude Desktop config directory if it doesn't exist
 CONFIG_DIR="$HOME/Library/Application Support/Claude"
@@ -34,7 +34,7 @@ config = json.load(sys.stdin)
 if 'mcpServers' not in config:
     config['mcpServers'] = {}
 
-config['mcpServers']['ai-os'] = {
+config['mcpServers']['schedcp'] = {
     'command': '$BINARY_PATH'
 }
 
@@ -47,7 +47,7 @@ else
     cat > "$CONFIG_FILE" << EOF
 {
   "mcpServers": {
-    "ai-os": {
+    "schedcp": {
       "command": "$BINARY_PATH"
     }
   }

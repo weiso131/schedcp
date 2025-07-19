@@ -1,13 +1,13 @@
 # Ecosystem & Inspiration
 
-| Project | Focus | Why it matters to KernCP |
+| Project | Focus | Why it matters to SchedCP |
 |---------|-------|--------------------------|
 | **bpftune** (Oracle) | Always-on autotuning of TCP buffers & other sysctls with BPF | Proven pattern for "observe → tune → verify" loops. |
 | **tuned** (Red Hat/SUSE) | Daemon that switches profiles and tweaks CPU / I/O / VM / power on the fly | Shows demand for profile-based tuning and plug-in architecture. |
-| **sched_ext / scx** | Framework for writing BPF-backed schedulers and loading them at run-time | KernCP can load & auto-parametrize these schedulers. |
+| **sched_ext / scx** | Framework for writing BPF-backed schedulers and loading them at run-time | SchedCP can load & auto-parametrize these schedulers. |
 | **KernelOracle** | Deep-learning model that predicts CFS decisions | Evidence that ML can improve scheduling; potential policy engine. |
-| **SchedViz** (Google) | Collects & visualises kernel scheduling traces | Useful companion for debugging KernCP policies. |
-| **eBPF Energy Monitor** | Process-level power telemetry via eBPF | Feeds power-aware signals into KernCP RL loops. |
+| **SchedViz** (Google) | Collects & visualises kernel scheduling traces | Useful companion for debugging SchedCP policies. |
+| **eBPF Energy Monitor** | Process-level power telemetry via eBPF | Feeds power-aware signals into SchedCP RL loops. |
 
 ---
 

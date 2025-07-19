@@ -1,6 +1,6 @@
-# AI-OS MCP Server
+# SchedCP MCP Server
 
-A minimal Model Context Protocol (MCP) server implementation in Rust for AI-OS.
+A minimal Model Context Protocol (MCP) server implementation in Rust for SchedCP.
 
 ## Overview
 
@@ -17,14 +17,14 @@ cd mcp
 cargo build --release
 ```
 
-The binary will be available at `target/release/ai-os-mcp`.
+The binary will be available at `target/release/schedcp-mcp`.
 
 ## Running
 
 The MCP server communicates via stdio:
 
 ```bash
-./target/release/ai-os-mcp
+./target/release/schedcp-mcp
 ```
 
 ## Available Tools
@@ -45,8 +45,8 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "ai-os": {
-      "command": "/root/yunwei37/ai-os/mcp/target/release/ai-os-mcp"
+    "schedcp": {
+      "command": "/root/yunwei37/ai-os/mcp/target/release/schedcp-mcp"
     }
   }
 }
@@ -59,8 +59,8 @@ Add to `~/.claude_code/settings.json`:
 ```json
 {
   "mcpServers": {
-    "ai-os": {
-      "command": "/root/yunwei37/ai-os/mcp/target/release/ai-os-mcp"
+    "schedcp": {
+      "command": "/root/yunwei37/ai-os/mcp/target/release/schedcp-mcp"
     }
   }
 }
@@ -69,7 +69,7 @@ Add to `~/.claude_code/settings.json`:
 ## Development
 
 This is a minimal implementation for demonstration purposes. Future enhancements could include:
-- Integration with AI-OS scheduler management
+- Integration with SchedCP scheduler management
 - Real-time scheduler monitoring
 - Benchmark execution tools
 - Performance metrics collection

@@ -1,6 +1,6 @@
-# KernCP
+# SchedCP
 
-KernCP is an AI-driven control-plane for the Linux kernel: a lightweight management daemon plus an eBPF-/MCP-based server that watches live workload signals (perf, DAMON, energy, sched_ext events) and allow your AI Agents like claude-code to learns how to tweak schedulers, sysctls and other kernel knobs in real time.
+SchedCP is an AI-driven control-plane for the Linux kernel: a lightweight management daemon plus an eBPF-/MCP-based server that watches live workload signals (perf, DAMON, energy, sched_ext events) and allow your AI Agents like claude-code to learns how to tweak schedulers, sysctls and other kernel knobs in real time.
 
 ## Quick Start
 
@@ -8,7 +8,7 @@ KernCP is an AI-driven control-plane for the Linux kernel: a lightweight managem
 # Build all components
 make
 
-# Run a scheduler with KernCP
+# Run a scheduler with SchedCP
 ./scheduler/sche_bin/scx_rusty --slice-us 20000
 
 # Monitor performance
@@ -17,7 +17,7 @@ make
 
 ## Architecture
 
-KernCP combines multiple technologies to create an intelligent kernel control system:
+SchedCP combines multiple technologies to create an intelligent kernel control system:
 
 - **eBPF/sched_ext**: Runtime kernel programmability for schedulers and monitoring
 - **MCP (Model Context Protocol)**: AI-driven policy decisions based on system state
@@ -35,7 +35,7 @@ KernCP combines multiple technologies to create an intelligent kernel control sy
 ## Documentation
 
 - [Ecosystem & Modules](kerncp-docs/related-and-modules.md) - Related projects and expansion modules
-- [Developer Guide](scheduler/scx/DEVELOPER_GUIDE.md) - Contributing to KernCP
+- [Developer Guide](scheduler/scx/DEVELOPER_GUIDE.md) - Contributing to SchedCP
 - [Scheduler Guide](CLAUDE.md) - Working with sched_ext schedulers
 
 ## Requirements
@@ -47,4 +47,4 @@ KernCP combines multiple technologies to create an intelligent kernel control sy
 
 ## License
 
-KernCP is open source software. See LICENSE for details.
+SchedCP is open source software. See LICENSE for details.

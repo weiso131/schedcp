@@ -1,9 +1,9 @@
 [package]
-name = "ai-os-mcp"
+name = "schedcp-mcp"
 version = "0.1.0"
 edition = "2021"
-authors = ["AI-OS Contributors"]
-description = "Model Context Protocol server for AI-OS scheduler management"
+authors = ["SchedCP Contributors"]
+description = "Model Context Protocol server for SchedCP scheduler management"
 license = "MIT"
 
 [dependencies]
@@ -22,5 +22,5 @@ clap = { version = "4", features = ["derive"] }
 vergen = { version = "8", features = ["git", "gitcl"] }
 
 [[bin]]
-name = "ai-os-mcp"
+name = "schedcp-mcp"
 path = "src/main.rs"

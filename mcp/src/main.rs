@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
     let server = Arc::new(CounterServer::new());
     
     let server_info = ServerInfo {
-        name: "ai-os-mcp".to_string(),
+        name: "schedcp-mcp".to_string(),
         version: "0.1.0".to_string(),
     };
     
