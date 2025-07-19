@@ -1,9 +1,6 @@
 # Ignore compiled scheduler binaries
 sche_bin/
 
-# Ignore generated documentation
-sche_description/
-
 # Ignore tools directory
 tools/
 

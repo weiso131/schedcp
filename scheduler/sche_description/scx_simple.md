@@ -1,58 +1,52 @@
 # scx_simple
 
+## Overview
 
-### Overview
+scx_simple is a minimal sched_ext scheduler that demonstrates the fundamental concepts of BPF-based scheduling. It offers two scheduling modes: global weighted virtual time (vtime) scheduling and FIFO scheduling. Despite its simplicity, it provides a functional scheduler that can perform reasonably well under specific conditions.
 
-A simple scheduler that provides an example of a minimal sched_ext
-scheduler. `scx_simple` can be run in either global weighted vtime mode, or
-FIFO mode.
+### Key Features
 
-### Typical Use Case
+- **Dual Scheduling Modes**: 
+  - **Weighted vtime mode** (default): Tasks are scheduled based on their virtual time, providing fairness
+  - **FIFO mode**: Simple first-in-first-out scheduling for straightforward task ordering
+- **Global Scheduling Queue**: All CPUs share a single scheduling queue, ensuring system-wide scheduling decisions
+- **Statistics Tracking**: Monitors tasks queued to local vs global dispatch queues
+- **Minimal Overhead**: Extremely lightweight implementation focusing on core scheduling functionality
 
-Though very simple, this scheduler should perform reasonably well on
-single-socket CPUs with a uniform L3 cache topology. Note that while running in
-global FIFO mode may work well for some workloads, saturating threads can
-easily starve inactive ones.
+### Architecture
 
-### Production Ready?
+The scheduler uses a custom dispatch queue (DSQ) with ID 0 for priority queue operations, as built-in DSQs like SCX_DSQ_GLOBAL cannot be used with vtime-based dispatching. In vtime mode, it maintains fairness by tracking each task's virtual time and preventing excessive budget accumulation during idle periods. The scheduler implements:
 
-This scheduler could be used in a production environment, assuming the hardware
-constraints enumerated above, and assuming the workload tolerates the simplicity
-of the scheduling policy.
+1. **CPU Selection**: Uses the default CPU selection logic with idle CPU detection
+2. **Task Enqueueing**: Places tasks in either local DSQ (for immediate dispatch) or global shared DSQ
+3. **Dispatch**: Moves tasks from the shared DSQ to local CPU queues for execution
+4. **vtime Tracking**: Updates virtual time for running tasks to maintain fairness
 
---------------------------------------------------------------------------------
+## Typical Use Case
 
+scx_simple is well-suited for:
+- **Single-socket Systems**: Performs best on CPUs with uniform L3 cache topology
+- **Educational Purposes**: Excellent for understanding sched_ext fundamentals
+- **Simple Workloads**: Works well when scheduling requirements are straightforward
+- **Testing and Development**: Useful as a baseline for comparing more complex schedulers
 
-### Overview
+### Limitations
 
-A variation on `scx_simple` with CPU selection that prioritizes an idle previous
-CPU over finding a fully idle core (as is done in `scx_simple` and `scx_rusty`).
+- **FIFO Mode Risks**: In FIFO mode, CPU-saturating threads can starve interactive tasks
+- **No Preemption**: Lacks preemption mechanisms, relying on natural task completion
+- **Limited NUMA Support**: Not optimized for NUMA architectures or complex cache hierarchies
 
-### Typical Use Case
+## Production Ready?
 
-This scheduler outperforms the in-kernel fair class, `scx_simple`, and `scx_rusty`
-on OLTP workloads run on systems with simple topology (i.e. non-NUMA, single
-LLC).
-
-### Production Ready?
-
-`scx_prev` has not been tested in a production environment, but given its
-similarity to `scx_simple`, it might be production ready for specific workloads
-on hardware with simple topology.
-
---------------------------------------------------------------------------------
-
-
-### Overview
-
-A simple weighted vtime scheduler where all scheduling decisions take place in
-user space. This is in contrast to Rusty, where load balancing lives in user
-space, but scheduling decisions are still made in the kernel.
+This scheduler could be used in production environments with careful consideration of:
+- Hardware must match the single-socket, uniform cache topology constraint
+- Workload must tolerate the simplicity of the scheduling policy
+- FIFO mode should be used cautiously due to potential starvation issues
+- Best suited for environments where predictability is more important than optimization
 
 ## Command Line Options
 
 ```
-/root/yunwei37/ai-os/scheduler/sche_bin/scx_simple: invalid option -- '-'
 A simple sched_ext scheduler.
 
 See the top-level comment in .bpf.c for more details.

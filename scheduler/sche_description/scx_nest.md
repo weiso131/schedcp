@@ -1,51 +1,42 @@
 # scx_nest
 
+## Overview
 
-### Overview
+A scheduler based on the following Inria-Paris paper: [OS Scheduling with Nest: Keeping Tasks Close Together on Warm Cores](https://hal.inria.fr/hal-03612592/file/paper.pdf). The core idea of the scheduler is to make scheduling decisions which encourage work to run on cores that are expected to have high frequency. This scheduler currently will only perform well on single CCX / single-socket hosts.
 
-A scheduler based on the following Inria-Paris paper: [OS Scheduling with Nest:
-Keeping Tasks Close Together on Warm
-Cores](https://hal.inria.fr/hal-03612592/file/paper.pdf). The core idea of the
-scheduler is to make scheduling decisions which encourage work to run on cores
-that are expected to have high frequency. This scheduler currently will only
-perform well on single CCX / single-socket hosts.
+## Description
 
-### Typical Use Case
+scx_nest implements a core-packing scheduler that aims to maximize CPU frequency by concentrating work on a subset of "warm" cores. The scheduler divides CPU cores into two nests:
 
-`scx_nest` is designed to optimize workloads that CPU utilization somewhat low,
-and which can benefit from running on a subset of cores on the host so as to
-keep the frequencies high on those cores. Some workloads may perform better by
-spreading work across many cores to avoid thrashing the cache, etc. Determining
-whether a workload is well-suited to `scx_nest` will likely require
-experimentation.
+1. **Primary Nest**: A compact set of cores where most work is scheduled. These cores maintain high frequencies due to consistent utilization.
+2. **Reserve Nest**: Additional cores that are used when the primary nest becomes saturated.
 
-### Production Ready?
+The scheduler dynamically adjusts the size of the primary nest based on workload demands. When cores in the primary nest are fully utilized, work spills over to the reserve nest. Conversely, when load decreases, cores are removed from the primary nest after a configurable idle delay.
 
-This scheduler could be used in a production environment, assuming the hardware
-constraints enumerated above.
+This approach is based on the observation that modern CPUs can achieve higher boost frequencies when only a subset of cores are active, making it beneficial for certain workloads to pack tasks onto fewer cores rather than spreading them across all available cores.
 
---------------------------------------------------------------------------------
+## Features
 
+- **Dynamic Nest Sizing**: Automatically adjusts the number of active cores based on load
+- **Warm Core Preference**: Prioritizes scheduling on cores that are already active
+- **Configurable Idle Delay**: Controls how quickly idle cores are removed from the primary nest
+- **Reserve Core Management**: Maintains a configurable reserve of additional cores
+- **Hyperthreading Awareness**: Can optionally prefer fully idle cores over sibling threads
+- **Placement Failure Handling**: Aggressively expands the primary nest after repeated placement failures
 
-### Overview
+## Use Cases
 
-A sibling scheduler which ensures that tasks will only ever be co-located on a
-physical core if they're in the same cgroup. It illustrates how a scheduling
-policy could be implemented to mitigate CPU bugs, such as L1TF, and also shows
-how some useful kfuncs such as `scx_bpf_kick_cpu()` can be utilized.
+`scx_nest` is designed to optimize workloads that have somewhat low CPU utilization and which can benefit from running on a subset of cores on the host so as to keep the frequencies high on those cores. Some workloads may perform better by spreading work across many cores to avoid thrashing the cache, etc. Determining whether a workload is well-suited to `scx_nest` will likely require experimentation.
 
-### Typical Use Case
+Ideal for:
+- Latency-sensitive applications with moderate CPU usage
+- Workloads that benefit from high single-core performance
+- Systems where power efficiency is important
+- Applications with bursty CPU demands
 
-While this scheduler is only meant to be used to illustrate certain sched_ext
-features, with a bit more work (e.g. by adding some form of priority handling
-inside and across cgroups), it could have been used as a way to quickly
-mitigate L1TF before core scheduling was implemented and rolled out.
+## Production Readiness
 
-### Production Ready?
-
-No
-
---------------------------------------------------------------------------------
+This scheduler could be used in a production environment, assuming the hardware constraints enumerated above (single CCX / single-socket hosts).
 
 
 

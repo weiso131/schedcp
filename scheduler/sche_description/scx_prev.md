@@ -1,59 +1,42 @@
 # scx_prev
 
+## Overview
 
-### Overview
+scx_prev is a variation on scx_simple that implements an optimized CPU selection strategy. Unlike scx_simple and scx_rusty which prioritize finding fully idle cores, scx_prev prioritizes selecting an idle previous CPU. This seemingly simple change in CPU selection policy can significantly improve performance for certain workloads.
 
-A variation on `scx_simple` with CPU selection that prioritizes an idle previous
-CPU over finding a fully idle core (as is done in `scx_simple` and `scx_rusty`).
+### Key Features
 
-### Typical Use Case
+- **Previous CPU Priority**: Checks if the task's previous CPU is idle before searching for other idle CPUs
+- **Simple and Efficient**: Minimal overhead scheduler focusing on a single optimization
+- **Statistics Tracking**: Maintains statistics on CPU selection outcomes (prev_cpu hits, idle_cpu selections, failures)
+- **Performance Optimized**: Specifically tuned for OLTP workloads on simple topology systems
 
-This scheduler outperforms the in-kernel fair class, `scx_simple`, and `scx_rusty`
-on OLTP workloads run on systems with simple topology (i.e. non-NUMA, single
-LLC).
+### Architecture
 
-### Production Ready?
+The scheduler implements a straightforward CPU selection algorithm:
+1. First checks if the task's previous CPU is idle using `scx_bpf_test_and_clear_cpu_idle()`
+2. If not, searches for any idle CPU using `scx_bpf_pick_idle_cpu()`
+3. Falls back to the previous CPU if no idle CPU is found
+4. Inserts selected tasks into the local DSQ for immediate dispatch
 
-`scx_prev` has not been tested in a production environment, but given its
-similarity to `scx_simple`, it might be production ready for specific workloads
-on hardware with simple topology.
+This approach leverages CPU cache locality by preferring the previous CPU when possible, which can reduce cache misses and improve performance for workloads that benefit from cache warmth.
 
---------------------------------------------------------------------------------
+## Typical Use Case
 
+scx_prev excels in environments with:
+- **OLTP Workloads**: Particularly effective for Online Transaction Processing workloads
+- **Simple Topology**: Best suited for non-NUMA systems with a single Last Level Cache (LLC)
+- **Cache-Sensitive Applications**: Workloads that benefit from maintaining CPU cache warmth
 
-### Overview
+The scheduler has been shown to outperform the in-kernel fair class scheduler, scx_simple, and scx_rusty on OLTP workloads when run on systems with simple topology.
 
-A simple weighted vtime scheduler where all scheduling decisions take place in
-user space. This is in contrast to Rusty, where load balancing lives in user
-space, but scheduling decisions are still made in the kernel.
+## Production Ready?
 
-### Typical Use Case
-
-There are many advantages to writing schedulers in user space. For example, you
-can use a debugger, you can write the scheduler in Rust, and you can use data
-structures bundled with your favorite library.
-
-On the other hand, user space scheduling can be hard to get right. You can
-potentially deadlock due to not scheduling a task that's required for the
-scheduler itself to make forward progress (though the sched_ext watchdog will
-protect the system by unloading your scheduler after a timeout if that
-happens). You also have to bootstrap some communication protocol between the
-kernel and user space.
-
-A more robust solution to this would be building a user space scheduling
-framework that abstracts much of this complexity away from you.
-
-### Production Ready?
-
-No. This scheduler uses an ordered list for vtime scheduling, and is strictly
-less performant than just using something like `scx_simple`. It is purely
-meant to illustrate that it's possible to build a user space scheduler on
-top of sched_ext.
+While scx_prev has not been extensively tested in production environments, its similarity to scx_simple and focused optimization suggest it could be production-ready for specific workloads on hardware with simple topology. The scheduler's simplicity reduces the risk of unexpected behavior, making it a reasonable choice for environments matching its design criteria.
 
 ## Command Line Options
 
 ```
-/root/yunwei37/ai-os/scheduler/sche_bin/scx_prev: invalid option -- '-'
 A variation on scx_simple with CPU selection that prioritizes an idle
 previous CPU over finding a fully idle core.
 

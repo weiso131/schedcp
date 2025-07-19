@@ -1,58 +1,39 @@
 # scx_qmap
 
+## Overview
 
-### Overview
+scx_qmap is a simple five-level FIFO queue scheduler that demonstrates fundamental sched_ext features. It implements a weighted queuing policy where tasks are assigned to one of five priority queues based on their compound weight. The scheduler uses BPF_MAP_TYPE_QUEUE for task queuing and provides examples of various sched_ext capabilities.
 
-Another simple, yet slightly more complex scheduler that provides an example of
-a basic weighted FIFO queuing policy. It also provides examples of some common
-useful BPF features, such as sleepable per-task storage allocation in the
-`ops.prep_enable()` callback, and using the `BPF_MAP_TYPE_QUEUE` map type to
-enqueue tasks. It also illustrates how core-sched support could be implemented.
+### Key Features
 
-### Typical Use Case
+- **Five-Level Priority Queuing**: Tasks are distributed across five FIFO queues (queue0-queue4) based on their weight
+- **Weighted Dispatch**: Higher priority queues get more dispatch opportunities (1 from queue0, 2 from queue1, 4 from queue2, etc.)
+- **Sleepable Task Storage**: Demonstrates per-task storage allocation using ops.prep_enable()
+- **Core Scheduling Support**: Implements core-sched ordering using per-queue sequence numbers
+- **CPU Performance Scaling**: Optional CPU performance target adjustment based on queue index
+- **High Priority Boosting**: Can boost nice -20 tasks to a dedicated high-priority DSQ
 
-Purely used to illustrate sched_ext features.
+### Architecture
 
-### Production Ready?
+The scheduler maintains five BPF queues implemented as an array of maps. Each CPU round-robins through these queues, dispatching more tasks from higher-indexed queues to provide weighted scheduling. Tasks are enqueued using their PIDs, and the scheduler includes comprehensive error handling and debugging features.
 
-No
+## Typical Use Case
 
---------------------------------------------------------------------------------
+scx_qmap is primarily designed for demonstration and testing of sched_ext features. It serves as an educational example showing how to:
+- Implement BPF-side task queueing
+- Handle CPU release events when higher priority scheduling classes take over
+- Support core scheduling requirements
+- Implement weighted scheduling policies
 
+While functional, it is unlikely to be optimal for actual production workloads due to its simplified design focused on illustrating sched_ext capabilities.
 
+## Production Ready?
 
-### Overview
-
-A simple scheduler that provides an example of a minimal sched_ext
-scheduler. `scx_simple` can be run in either global weighted vtime mode, or
-FIFO mode.
-
-### Typical Use Case
-
-Though very simple, this scheduler should perform reasonably well on
-single-socket CPUs with a uniform L3 cache topology. Note that while running in
-global FIFO mode may work well for some workloads, saturating threads can
-easily starve inactive ones.
-
-### Production Ready?
-
-This scheduler could be used in a production environment, assuming the hardware
-constraints enumerated above, and assuming the workload tolerates the simplicity
-of the scheduling policy.
-
---------------------------------------------------------------------------------
-
-
-### Overview
-
-A variation on `scx_simple` with CPU selection that prioritizes an idle previous
-CPU over finding a fully idle core (as is done in `scx_simple` and `scx_rusty`).
-
+No. This scheduler is explicitly designed for demonstration and testing purposes. Its simplified five-level FIFO approach, while educational, lacks the sophistication needed for production environments.
 
 ## Command Line Options
 
 ```
-/root/yunwei37/ai-os/scheduler/sche_bin/scx_qmap: invalid option -- '-'
 A simple five-level FIFO queue sched_ext scheduler.
 
 See the top-level comment in .bpf.c for more details.
