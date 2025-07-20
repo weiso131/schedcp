@@ -80,6 +80,8 @@ test-full: build download-models $(DATASET_DIR) $(RESULTS_DIR)
 	@python sharegpt_llama_server_eval.py \
 		--num-samples $(SAMPLES_FULL) \
 		--max-concurrent $(CONCURRENT_FULL) \
+		--n-threads 32 \
+		--n-parallel 32 \
 		--server-logs
 
 test-sharegpt: test-quick
@@ -117,9 +119,9 @@ SHAREGPT_BENCH := $(DATASET_DIR)/sharegpt_benchmark.json
 
 # Benchmark parameters
 SAMPLES_QUICK := 5
-SAMPLES_FULL := 2000
+SAMPLES_FULL := 1000
 CONCURRENT_QUICK := 2
-CONCURRENT_FULL := 100
+CONCURRENT_FULL := 64
 
 help:
 	@echo "Available targets:"

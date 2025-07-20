@@ -50,7 +50,9 @@ class LlamaServerBenchmark(SchedulerBenchmark):
     def __init__(self, server_binary: str, model_path: str, 
                  server_port: int = 8080, 
                  scheduler_runner: SchedulerRunner = None,
-                 server_log_file: str = None):
+                 server_log_file: str = None,
+                 n_threads: int = 8,
+                 n_parallel: int = 4):
         super().__init__(scheduler_runner)
         
         self.server_binary = server_binary
@@ -64,10 +66,10 @@ class LlamaServerBenchmark(SchedulerBenchmark):
         self.server_config = {
             "ctx_size": 4096,
             "n_batch": 512,
-            "n_threads": 8,
+            "n_threads": n_threads,
             "cont_batching": True,
             "flash_attn": True,
-            "n_parallel": 4,  # Number of parallel slots for concurrent requests
+            "n_parallel": n_parallel,  # Number of parallel slots for concurrent requests
         }
     
     def start_server(self, scheduler_name: Optional[str] = None) -> bool:
@@ -77,7 +79,6 @@ class LlamaServerBenchmark(SchedulerBenchmark):
             "-m", self.model_path,
             "--port", str(self.server_port),
             "--host", "0.0.0.0",
-            "-ngl", str(self.server_config["n_gpu_layers"]),
             "-c", str(self.server_config["ctx_size"]),
             "-b", str(self.server_config["n_batch"]),
             "-t", str(self.server_config["n_threads"]),
@@ -667,6 +668,10 @@ def main():
                        help="Output directory for results (auto-generated if not specified)")
     parser.add_argument("--server-logs", action="store_true",
                        help="Save server logs")
+    parser.add_argument("--n-threads", type=int, default=8,
+                       help="Number of threads for llama.cpp server (default: 8)")
+    parser.add_argument("--n-parallel", type=int, default=4,
+                       help="Number of parallel slots for concurrent requests (default: 4)")
     
     args = parser.parse_args()
     
@@ -710,7 +715,9 @@ def main():
         server_binary=args.server_binary,
         model_path=args.model,
         server_port=args.port,
-        server_log_file=server_log_file
+        server_log_file=server_log_file,
+        n_threads=args.n_threads,
+        n_parallel=args.n_parallel
     )
     
     # Determine schedulers to test
