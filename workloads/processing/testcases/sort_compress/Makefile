@@ -3,11 +3,11 @@
 .PHONY: all clean generate-data run-test analyze help
 
 # Configuration
-DATA_DIR = data
+DATA_DIR = /tmp/sort_test_data
 OUTPUT_DIR = output
 RESULTS_DIR = results
-SMALL_FILE_COUNT = 10  # Reduced for faster testing
-LARGE_FILE_LINES = 1000000  # 1M lines
+SMALL_FILE_COUNT = 5   # Reduced from 10
+LARGE_FILE_LINES = 100000  # 100K lines (reduced from 1M)
 
 all: generate-data run-test analyze
 

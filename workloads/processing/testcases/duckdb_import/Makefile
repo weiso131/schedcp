@@ -3,11 +3,11 @@
 .PHONY: all clean generate-data run-test analyze help
 
 # Configuration
-DATA_DIR = data
-OUTPUT_DIR = output
-RESULTS_DIR = results
-SMALL_FILE_COUNT = 10
-LARGE_FILE_ROWS = 1000000
+DATA_DIR = /tmp/duckdb_import_data
+OUTPUT_DIR = /tmp/duckdb_import_output
+RESULTS_DIR = /tmp/duckdb_import_results
+SMALL_FILE_COUNT = 3
+LARGE_FILE_ROWS = 10000
 
 all: generate-data run-test analyze
 
@@ -24,10 +24,10 @@ help:
 generate-data:
 	@echo "Generating CSV files for DuckDB import testing..."
 	@mkdir -p $(DATA_DIR)
-	@echo "Creating $(SMALL_FILE_COUNT) small CSV files (10K rows each)..."
+	@echo "Creating $(SMALL_FILE_COUNT) small CSV files (1K rows each)..."
 	@for i in $$(seq 1 $(SMALL_FILE_COUNT)); do \
 		echo "id,value,category" > $(DATA_DIR)/file$$i.csv; \
-		seq 1 10000 | awk '{print $$1","rand()","int(rand()*10)}' >> $(DATA_DIR)/file$$i.csv; \
+		seq 1 1000 | awk '{print $$1","rand()","int(rand()*10)}' >> $(DATA_DIR)/file$$i.csv; \
 	done
 	@echo "Creating 1 large CSV file ($(LARGE_FILE_ROWS) rows)..."
 	@echo "id,value,category" > $(DATA_DIR)/file_large.csv

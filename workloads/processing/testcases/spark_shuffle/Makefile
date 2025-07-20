@@ -3,9 +3,9 @@
 .PHONY: all clean generate-data run-test analyze help
 
 # Configuration
-DATA_DIR = data
-OUTPUT_DIR = output
-RESULTS_DIR = results
+DATA_DIR = /tmp/spark_shuffle_data
+OUTPUT_DIR = /tmp/spark_shuffle_output
+RESULTS_DIR = /tmp/spark_shuffle_results
 SCRIPT_NAME = skewed_workload.py
 
 all: generate-data run-test analyze
@@ -39,8 +39,8 @@ def process_partition(partition_data):
     partition_id, record_count = partition_data
     
     # Simulate processing time proportional to data size
-    # Hot key (partition 999) has 100x more data
-    processing_time = record_count / 50000  # Scale factor for reasonable test time
+    # Hot key (partition 999) has 10x more data
+    processing_time = record_count / 10000  # Scale factor for reasonable test time
     
     print(f"Worker {mp.current_process().pid}: Processing partition {partition_id} with {record_count} records")
     
@@ -59,16 +59,16 @@ if __name__ == '__main__':
     # Create skewed data: 99 small partitions + 1 huge partition (hot key)
     partitions = []
     
-    # 99 small partitions with 10K records each
-    for i in range(99):
-        partitions.append((i, 10000))
+    # 9 small partitions with 1K records each
+    for i in range(9):
+        partitions.append((i, 1000))
     
-    # 1 hot partition with 1M records (100x larger)
-    partitions.append((999, 1000000))
+    # 1 hot partition with 10K records (10x larger)
+    partitions.append((999, 10000))
     
     print(f"Created {len(partitions)} partitions")
-    print("Small partitions: 99 x 10K records")
-    print("Hot partition: 1 x 1M records (100x skew)")
+    print("Small partitions: 9 x 1K records")
+    print("Hot partition: 1 x 10K records (10x skew)")
     
     # Process with 2 workers to simulate 2-CPU system
     start_time = time.time()

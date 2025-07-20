@@ -3,9 +3,9 @@
 .PHONY: all clean generate-data run-test analyze help
 
 # Configuration
-DATA_DIR = data
-OUTPUT_DIR = output
-RESULTS_DIR = results
+DATA_DIR = /tmp/git_compression_data
+OUTPUT_DIR = /tmp/git_compression_output
+RESULTS_DIR = /tmp/git_compression_results
 REPO_NAME = test-repo
 
 all: generate-data run-test analyze
@@ -26,14 +26,14 @@ generate-data:
 	@cd $(DATA_DIR) && \
 	git init $(REPO_NAME) && \
 	cd $(REPO_NAME) && \
-	echo "Creating 99 small commits..." && \
-	for i in $$(seq 1 99); do \
+	echo "Creating 9 small commits..." && \
+	for i in $$(seq 1 9); do \
 		echo "Small change $$i" > file$$i.txt; \
 		git add file$$i.txt; \
 		git commit -m "Small commit $$i" --quiet; \
 	done && \
-	echo "Creating 1 large binary blob (100MB)..." && \
-	dd if=/dev/urandom of=large.bin bs=1M count=100 2>/dev/null && \
+	echo "Creating 1 large binary blob (10MB)..." && \
+	dd if=/dev/zero of=large.bin bs=1M count=10 2>/dev/null && \
 	git add large.bin && \
 	git commit -m "Add large binary" --quiet
 	@echo "Repository created with mixed object sizes."

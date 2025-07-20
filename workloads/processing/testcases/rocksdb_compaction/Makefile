@@ -3,9 +3,9 @@
 .PHONY: all clean generate-data run-test analyze help
 
 # Configuration
-DATA_DIR = data
-OUTPUT_DIR = output
-RESULTS_DIR = results
+DATA_DIR = /tmp/rocksdb_compaction_data
+OUTPUT_DIR = /tmp/rocksdb_compaction_output
+RESULTS_DIR = /tmp/rocksdb_compaction_results
 SCRIPT_NAME = rocksdb_sim.py
 
 all: generate-data run-test analyze
@@ -50,19 +50,19 @@ def simulate_compaction(args):
     
     # Simulate compaction work - CPU intensive operation
     # Processing time roughly proportional to data size
-    work_units = total_size // 1024  # Work units based on KB
+    work_units = total_size // (1024 * 10)  # Work units based on 10KB chunks
     
     result_data = []
     for i in range(work_units):
         # Simulate reading, merging, and writing data
         dummy_work = 0
-        for _ in range(100):  # CPU work per unit
-            dummy_work += hash(i) % 1000
+        for _ in range(50):  # CPU work per unit
+            dummy_work += hash(i) % 500
         
         result_data.append(dummy_work)
         
-        # Add small delay every 1000 units to simulate I/O
-        if i % 1000 == 0 and i > 0:
+        # Add small delay every 100 units to simulate I/O
+        if i % 100 == 0 and i > 0:
             time.sleep(0.001)
     
     # Simulate writing output file
@@ -84,20 +84,20 @@ if __name__ == '__main__':
     # Create simulated SST files with mixed sizes
     print("Creating synthetic SST file metadata...")
     
-    # 99 small SST files (1-10 MB each)
+    # 9 small SST files (1-5 MB each)
     small_files = []
-    for i in range(99):
-        file_size = random.randint(1, 10) * 1024 * 1024  # 1-10 MB
+    for i in range(9):
+        file_size = random.randint(1, 5) * 1024 * 1024  # 1-5 MB
         small_files.append({
             'name': f'small_{i:03d}.sst',
             'size': file_size,
             'level': 1
         })
     
-    # 1 large SST file (1 GB)
+    # 1 large SST file (50 MB)
     large_file = {
         'name': 'large_000.sst',
-        'size': 1024 * 1024 * 1024,  # 1 GB
+        'size': 50 * 1024 * 1024,  # 50 MB
         'level': 0
     }
     

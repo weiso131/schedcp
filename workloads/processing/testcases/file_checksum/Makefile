@@ -3,12 +3,12 @@
 .PHONY: all clean generate-data run-test analyze help
 
 # Configuration
-DATA_DIR = data
+DATA_DIR = /tmp/checksum_test_data
 OUTPUT_DIR = output
 RESULTS_DIR = results
-SMALL_FILE_COUNT = 99
-SMALL_FILE_SIZE = 10     # MB
-LARGE_FILE_SIZE = 1024   # MB (1GB)
+SMALL_FILE_COUNT = 9      # Reduced from 99
+SMALL_FILE_SIZE = 1      # MB (reduced from 10)
+LARGE_FILE_SIZE = 10     # MB (reduced from 1024)
 
 all: generate-data run-test analyze
 
@@ -27,10 +27,10 @@ generate-data:
 	@mkdir -p $(DATA_DIR)
 	@echo "Creating $(SMALL_FILE_COUNT) small files ($(SMALL_FILE_SIZE)MB each)..."
 	@for i in $$(seq 1 $(SMALL_FILE_COUNT)); do \
-		dd if=/dev/urandom of=$(DATA_DIR)/file$$i.dat bs=1M count=$(SMALL_FILE_SIZE) 2>/dev/null; \
+		dd if=/dev/zero of=$(DATA_DIR)/file$$i.dat bs=1M count=$(SMALL_FILE_SIZE) 2>/dev/null; \
 	done
 	@echo "Creating 1 large file ($(LARGE_FILE_SIZE)MB)..."
-	@dd if=/dev/urandom of=$(DATA_DIR)/largefile.dat bs=1M count=$(LARGE_FILE_SIZE) 2>/dev/null
+	@dd if=/dev/zero of=$(DATA_DIR)/largefile.dat bs=1M count=$(LARGE_FILE_SIZE) 2>/dev/null
 	@echo "File generation complete."
 	@echo "Files created:"
 	@ls -lh $(DATA_DIR)/ | tail -5

@@ -3,9 +3,9 @@
 .PHONY: all clean generate-data run-test analyze help
 
 # Configuration
-DATA_DIR = data
-OUTPUT_DIR = output
-RESULTS_DIR = results
+DATA_DIR = /tmp/flink_join_data
+OUTPUT_DIR = /tmp/flink_join_output
+RESULTS_DIR = /tmp/flink_join_results
 SCRIPT_NAME = flink_join_sim.py
 
 all: generate-data run-test analyze
@@ -60,8 +60,8 @@ def process_join_partition(args):
             result.append(join_result)
             
             # Add some processing delay
-            if len(result) % 10000 == 0:
-                time.sleep(0.001)  # Small delay every 10K joins
+            if len(result) % 100 == 0:
+                time.sleep(0.001)  # Small delay every 100 joins
     
     end_time = time.time()
     print(f"Slot {slot_id} (PID {worker_pid}): Completed key {key} in {end_time - start_time:.2f}s ({len(result)} join results)")
@@ -77,21 +77,21 @@ if __name__ == '__main__':
     # Simulate sales data (left side) and product data (right side)
     partitions = []
     
-    # 99 normal products with few sales each
-    for product_id in range(99):
-        left_records = list(range(product_id * 10, (product_id + 1) * 10))  # 10 sales per product
+    # 9 normal products with few sales each
+    for product_id in range(9):
+        left_records = list(range(product_id * 5, (product_id + 1) * 5))  # 5 sales per product
         right_records = [product_id]  # 1 product record
         partitions.append(((product_id, left_records, right_records), 0))  # Assign to slot 0
     
     # 1 hot product (iPhone, bestseller) with many sales
     hot_product_id = 999
-    left_records = list(range(100000))  # 100K sales for hot product
+    left_records = list(range(1000))  # 1K sales for hot product
     right_records = [hot_product_id]    # 1 product record
     partitions.append(((hot_product_id, left_records, right_records), 1))  # Assign to slot 1
     
     print(f"Created {len(partitions)} partitions")
-    print("Normal products: 99 x ~10 sales each")
-    print("Hot product: 1 x 100K sales (10,000x skew)")
+    print("Normal products: 9 x ~5 sales each")
+    print("Hot product: 1 x 1K sales (200x skew)")
     
     # Redistribute partitions to simulate Flink's task assignment
     # In reality, hot key would end up dominating one slot

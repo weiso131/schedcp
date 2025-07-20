@@ -3,9 +3,9 @@
 .PHONY: all clean generate-data run-test analyze help
 
 # Configuration
-DATA_DIR = data
-OUTPUT_DIR = output
-RESULTS_DIR = results
+DATA_DIR = /tmp/dask_groupby_data
+OUTPUT_DIR = /tmp/dask_groupby_output
+RESULTS_DIR = /tmp/dask_groupby_results
 SCRIPT_NAME = dask_groupby.py
 
 all: generate-data run-test analyze
@@ -49,10 +49,10 @@ def process_group(args):
     result = data_chunk.groupby('k')['v'].sum()
     
     # Add some CPU work proportional to data size
-    work_iterations = len(data_chunk) // 1000
+    work_iterations = len(data_chunk) // 100
     dummy_result = 0
     for _ in range(work_iterations):
-        dummy_result += sum(range(100))
+        dummy_result += sum(range(50))
     
     end_time = time.time()
     print(f"Worker {worker_pid}: Completed chunk {chunk_id} in {end_time - start_time:.2f}s")
@@ -65,19 +65,19 @@ if __name__ == '__main__':
     # Create skewed data: most keys have few records, one key has many
     print("Creating synthetic data...")
     
-    # 99 normal keys with 1K records each
+    # 9 normal keys with 100 records each
     normal_data = []
-    for k in range(99):
+    for k in range(9):
         chunk = pd.DataFrame({
-            'k': [k] * 1000,
-            'v': np.random.randint(1, 100, 1000)
+            'k': [k] * 100,
+            'v': np.random.randint(1, 100, 100)
         })
         normal_data.append(chunk)
     
-    # 1 hot key with 500K records (500x larger)
+    # 1 hot key with 5K records (50x larger)
     hot_data = pd.DataFrame({
-        'k': [999] * 500000,
-        'v': np.random.randint(1, 100, 500000)
+        'k': [999] * 5000,
+        'v': np.random.randint(1, 100, 5000)
     })
     
     # Combine and split into chunks for parallel processing

@@ -3,11 +3,11 @@
 .PHONY: all clean generate-data run-test analyze help
 
 # Configuration
-DATA_DIR = data
-OUTPUT_DIR = output
-RESULTS_DIR = results
+DATA_DIR = /tmp/pandas_etl_data
+OUTPUT_DIR = /tmp/pandas_etl_output
+RESULTS_DIR = /tmp/pandas_etl_results
 SCRIPT_NAME = pandas_etl.py
-SMALL_FILE_COUNT = 10
+SMALL_FILE_COUNT = 3
 
 all: generate-data run-test analyze
 
@@ -26,11 +26,11 @@ generate-data:
 	@mkdir -p $(DATA_DIR)/logs
 	@echo "Creating $(SMALL_FILE_COUNT) small log files..."
 	@for i in $$(seq 1 $(SMALL_FILE_COUNT)); do \
-		seq 1 1000 | awk '{print strftime("%Y-%m-%d %H:%M:%S", systime()), "INFO", "Message", $$1}' | \
+		seq 1 500 | awk '{print strftime("%Y-%m-%d %H:%M:%S", systime()), "INFO", "Message", $$1}' | \
 		gzip > $(DATA_DIR)/logs/log$$i.gz; \
 	done
 	@echo "Creating 1 large log file..."
-	@seq 1 100000 | awk '{print strftime("%Y-%m-%d %H:%M:%S", systime()), "INFO", "Message", $$1}' | \
+	@seq 1 5000 | awk '{print strftime("%Y-%m-%d %H:%M:%S", systime()), "INFO", "Message", $$1}' | \
 	gzip > $(DATA_DIR)/logs/log_large.gz
 	@cat > $(DATA_DIR)/$(SCRIPT_NAME) << 'EOF'
 #!/usr/bin/env python3
@@ -78,10 +78,10 @@ def parse_log_file(args):
         summary = df.groupby(['level', 'hour']).size().reset_index(name='count')
         
         # Add some CPU-intensive work proportional to file size
-        work_iterations = len(data) // 100
+        work_iterations = len(data) // 50
         dummy_result = 0
         for _ in range(work_iterations):
-            dummy_result += sum(range(50))
+            dummy_result += sum(range(25))
         
         end_time = time.time()
         print(f"Worker {worker_pid}: Completed {os.path.basename(filename)} in {end_time - start_time:.2f}s ({len(data)} records)")

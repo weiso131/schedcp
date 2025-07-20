@@ -13,12 +13,14 @@ Each test case simulates a real-world scenario where:
 ## Available Test Cases
 
 ### 1. Pigz Compression (`pigz_compression/`)
+
 - **Scenario**: Backup systems compressing mixed-size files
 - **Workload**: 99 small files (1MB) + 1 large file (2GB)
 - **Tool**: pigz parallel compression
 - **Expected**: Large file compression dominates runtime
 
 ### 2. FFmpeg Transcode (`ffmpeg_transcode/`)
+
 - **Scenario**: Video platform processing mixed-length uploads
 - **Workload**: 10 short videos (1s) + 1 long video (30s)
 - **Tool**: ffmpeg video transcoding

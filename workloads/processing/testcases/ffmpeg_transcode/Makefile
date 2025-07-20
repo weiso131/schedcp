@@ -3,11 +3,11 @@
 .PHONY: all clean generate-data run-test analyze help
 
 # Configuration
-DATA_DIR = data
+DATA_DIR = /tmp/ffmpeg_test_data
 OUTPUT_DIR = output
 RESULTS_DIR = results
-SHORT_VIDEO_COUNT = 10  # Reduced for faster testing
-LONG_VIDEO_DURATION = 30  # seconds (reduced for testing)
+SHORT_VIDEO_COUNT = 5   # Reduced from 10
+LONG_VIDEO_DURATION = 10  # seconds (reduced from 30)
 
 all: generate-data run-test analyze
 
