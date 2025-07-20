@@ -1,5 +1,6 @@
 pub mod bpf_interface;
 pub mod scheduler_integration;
+pub mod ml_scheduler_exact;
 
 use anyhow::Result;
 use tensorflow::{Graph, Session, SessionOptions, SessionRunArgs, Tensor, SavedModelBundle};

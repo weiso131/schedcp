@@ -15,3 +15,11 @@ scx_utils = "1.0.6"
 simplelog = "0.12"
 tokio = { version = "1.40", features = ["full"] }
 tensorflow = "0.21.0"
+
+[[bin]]
+name = "ml-scheduler"
+path = "src/main.rs"
+
+[[bin]]
+name = "test-ml"
+path = "src/test_ml.rs"

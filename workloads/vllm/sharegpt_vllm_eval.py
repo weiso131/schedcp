@@ -142,10 +142,29 @@ class VLLMBenchmark(SchedulerBenchmark):
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
     
+    def _truncate_prompt(self, prompt: str, max_ratio: float = 0.9) -> str:
+        """Truncate prompt to fit within model's max length"""
+        # Calculate max prompt tokens (leave room for generation)
+        max_prompt_tokens = int(self.max_model_len * max_ratio)
+        
+        # Simple character-based truncation
+        # Rough estimate: 1 token ≈ 4 characters
+        max_chars = max_prompt_tokens * 4
+        
+        if len(prompt) > max_chars:
+            return prompt[:max_chars] + "..."
+        return prompt
+    
     def run_inference(self, prompts: List[str], max_tokens: int = 128) -> List[BenchmarkResult]:
         """Run inference on a batch of prompts"""
         if not self.llm:
             return []
+        
+        # Truncate prompts to avoid length errors
+        truncated_prompts = [self._truncate_prompt(p) for p in prompts]
+        truncated_count = sum(1 for i, p in enumerate(prompts) if p != truncated_prompts[i])
+        if truncated_count > 0:
+            print(f"Truncated {truncated_count} prompts to fit within max_model_len={self.max_model_len}")
         
         sampling_params = SamplingParams(
             temperature=0.7,
@@ -159,8 +178,9 @@ class VLLMBenchmark(SchedulerBenchmark):
         try:
             # Process in batches for better progress tracking
             batch_size = 100
-            for i in tqdm(range(0, len(prompts), batch_size), desc="Processing batches"):
-                batch_prompts = prompts[i:i + batch_size]
+            for i in tqdm(range(0, len(truncated_prompts), batch_size), desc="Processing batches"):
+                batch_prompts = truncated_prompts[i:i + batch_size]
+                original_batch_prompts = prompts[i:i + batch_size]
                 
                 start_time = time.time()
                 outputs = self.llm.generate(batch_prompts, sampling_params)
@@ -169,7 +189,7 @@ class VLLMBenchmark(SchedulerBenchmark):
                 batch_time = (end_time - start_time) * 1000  # Convert to ms
                 avg_latency_per_prompt = batch_time / len(batch_prompts)
                 
-                for prompt, output in zip(batch_prompts, outputs):
+                for original_prompt, output in zip(original_batch_prompts, outputs):
                     generated_text = output.outputs[0].text
                     prompt_tokens = len(output.prompt_token_ids)
                     response_tokens = len(output.outputs[0].token_ids)
@@ -179,7 +199,7 @@ class VLLMBenchmark(SchedulerBenchmark):
                     tokens_per_second = response_tokens / (latency_ms / 1000) if latency_ms > 0 else 0
                     
                     results.append(BenchmarkResult(
-                        prompt=prompt,
+                        prompt=original_prompt,  # Use original prompt for recording
                         response=generated_text,
                         prompt_tokens=prompt_tokens,
                         response_tokens=response_tokens,
