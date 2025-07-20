@@ -1,0 +1,38 @@
+# Generated test data and results
+*/data/
+*/output/
+*/results/
+
+# Compiled files
+*.o
+*.so
+*.a
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Compressed files
+*.gz
+*.bz2
+*.xz
+*.tar
+*.zip
+
+# Media files
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# Database files
+*.db
+*.sqlite
+
+# Log files
+*.log
+*.txt
+
+# Analysis files
+*.json

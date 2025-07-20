@@ -1,0 +1,17 @@
+# Generated test data
+data/
+output/
+results/
+
+# Database files
+*.db
+*.sst
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Analysis files
+*.json
+*.log
+*.txt

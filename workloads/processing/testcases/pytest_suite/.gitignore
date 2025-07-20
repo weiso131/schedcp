@@ -1,0 +1,14 @@
+# Generated test data
+data/
+output/
+results/
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Analysis files
+*.json
+*.log
+*.txt

@@ -1,0 +1,12 @@
+# Generated test data
+data/
+output/
+results/
+
+# Data files
+*.dat
+
+# Analysis files
+*.json
+*.log
+*.txt

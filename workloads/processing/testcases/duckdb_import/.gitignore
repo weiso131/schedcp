@@ -1,0 +1,14 @@
+# Generated test data
+data/
+output/
+results/
+
+# Data files
+*.csv
+*.db
+*.parquet
+
+# Analysis files
+*.json
+*.log
+*.txt

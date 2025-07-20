@@ -42,18 +42,6 @@ for i in {1..99}; do dd if=/dev/urandom of=file$i.dat bs=1M count=1; done
 dd if=/dev/urandom of=large.iso bs=1M count=2048  # 2GB file
 ```
 
-**Simple Scheduler Implementation:**
-```bash
-# Pre-identify PIDs and pin them before starting
-# Start pigz in background and capture PIDs
-find ./test-dir -name "large.iso" -print0 | xargs -0 -n1 -P1 pigz -1 &
-LARGE_PID=$!
-# Pin large file processing to CPU 0
-taskset -cp 0 $LARGE_PID
-
-# Process small files on CPU 1
-find ./test-dir -name "file*.dat" -print0 | xargs -0 -n1 -P2 taskset -c 1 pigz -1
-```
 
 **Expected Results:**
 - End-to-end time reduction: ~149s → ~100s
@@ -87,19 +75,6 @@ done
 ffmpeg -f lavfi -i testsrc=duration=100:size=1920x1080:rate=30 long_clip.mp4
 ```
 
-**Simple Scheduler Implementation:**
-```bash
-# Process large video on CPU 0
-ffmpeg -i long_clip.mp4 -vf scale=640:-1 -c:v libx264 -preset veryfast out/long_clip.mp4 &
-LONG_PID=$!
-taskset -cp 0 $LONG_PID
-
-# Process short clips on CPU 1 in parallel
-for f in clip{1..99}.mp4; do
-    taskset -c 1 ffmpeg -loglevel quiet -i "$f" -vf scale=640:-1 -c:v libx264 -preset veryfast out/"$f" &
-done
-wait
-```
 
 **Expected Results:**
 - Batch processing time reduced by ~33%
@@ -141,25 +116,6 @@ def test_slow_integration():
     assert True
 ```
 
-**Simple Scheduler Implementation:**
-```bash
-# Run tests with CPU affinity based on test name
-# Create wrapper script
-cat > run_test.sh << 'EOF'
-#!/bin/bash
-if [[ "$1" == *"slow_integration"* ]]; then
-    # Long test goes to CPU 0
-    taskset -c 0 pytest -q "$1"
-else
-    # Fast tests go to CPU 1
-    taskset -c 1 pytest -q "$1"
-fi
-EOF
-chmod +x run_test.sh
-
-# Run tests in parallel with proper CPU assignment
-pytest --collect-only -q | grep "::test_" | xargs -n1 -P2 ./run_test.sh
-```
 
 **Expected Results:**
 - Suite wall time: 8940 sec → ~6000 sec
@@ -195,32 +151,6 @@ dd if=/dev/urandom of=large.bin bs=1M count=3072  # 3GB
 git add large.bin && git commit -m "add large binary"
 ```
 
-**Simple Scheduler Implementation:**
-```bash
-# Git gc uses multiple threads, we can control them
-# Set git to use 2 threads and pin the process
-git config gc.autoPackLimit 2
-git config pack.threads 2
-
-# Run gc with CPU affinity monitoring
-git gc &
-GC_PID=$!
-
-# Monitor and repin threads as they appear
-while kill -0 $GC_PID 2>/dev/null; do
-    # Find git pack-objects threads
-    for pid in $(pgrep -P $GC_PID); do
-        # Check if thread is using high CPU
-        CPU_TIME=$(ps -p $pid -o time= | awk -F: '{print ($1*60)+$2}')
-        if [ "$CPU_TIME" -gt 5 ]; then
-            taskset -cp 0 $pid 2>/dev/null
-        else
-            taskset -cp 1 $pid 2>/dev/null
-        fi
-    done
-    sleep 1
-done
-```
 
 **Expected Results:**
 - GC time reduced by ~30%
@@ -262,15 +192,6 @@ EOF
 g++ -o rocksdb_test rocksdb_test.cpp -lrocksdb
 ```
 
-**Scheduler Policy Implementation:**
-```c
-// Track RocksDB compaction threads
-if (strstr(p->comm, "rocksdb") && p->utime > 2 * NSEC_PER_SEC) {
-    // Compaction thread detected, isolate it
-    p->cpus_ptr = cpumask_of(0);
-    bpf_map_update_elem(&compaction_pids, &p->pid, &ONE, BPF_ANY);
-}
-```
 
 **Expected Results:**
 - Improved 99th percentile latency during fill phase
@@ -305,18 +226,6 @@ dd if=/dev/urandom of=large-dir/largefile.dat bs=1M count=10240  # 10GB
 time find ./large-dir -type f -print0 | xargs -0 -n1 -P2 sha256sum > checksums.txt
 ```
 
-**Scheduler Policy Implementation:**
-```c
-// Track sha256sum processes
-if (strstr(p->comm, "sha256sum")) {
-    // Monitor CPU time to detect long-running checksum
-    if (p->utime > 5 * NSEC_PER_SEC) {
-        // Pin heavy checksum task to CPU 0
-        set_cpus_allowed_ptr(p, cpumask_of(0));
-        // Allow other checksums to use CPU 1
-    }
-}
-```
 
 **Expected Results:**
 - Total checksum time: ~8940 sec → ~6000 sec
@@ -360,14 +269,6 @@ if __name__ == '__main__':
         results = pool.map(process_partition, partitions)
 ```
 
-**Scheduler Policy Implementation:**
-```c
-// Detect Python multiprocessing workers
-if (strstr(p->comm, "python") && p->utime > 5 * NSEC_PER_SEC) {
-    // Long-running Python worker -> dedicate CPU 0
-    set_cpus_allowed_ptr(p, cpumask_of(0));
-}
-```
 
 **Expected Results:**
 - Stage time: ~8940 sec → ~6000 sec
@@ -396,15 +297,6 @@ done
 seq 1 100000000 | shuf > part_100.tsv  # ~1GB file
 ```
 
-**Scheduler Policy Implementation:**
-```c
-// Track sort/zstd processes
-if ((strstr(p->comm, "sort") || strstr(p->comm, "zstd")) && 
-    p->utime > 3 * NSEC_PER_SEC) {
-    // Heavy sort/compress -> pin to CPU 0
-    p->cpus_ptr = cpumask_of(0);
-}
-```
 
 **Expected Results:**
 - Total processing time reduced by ~30%
@@ -452,16 +344,6 @@ with ProcessPoolExecutor(max_workers=2) as executor:
     results = list(executor.map(process_group, chunks))
 ```
 
-**Scheduler Policy Implementation:**
-```c
-// Monitor Python workers in process pool
-if (strstr(p->comm, "python") && p->parent && 
-    strstr(p->parent->comm, "python")) {
-    if (p->utime > 60 * NSEC_PER_SEC) {
-        pin_to_cpu(p->pid, 0);
-    }
-}
-```
 
 **Expected Results:**
 - Computation time significantly reduced
@@ -493,15 +375,6 @@ echo "id,value" > file100.csv
 seq 1 10000000 | awk '{print $1","rand()}' >> file100.csv
 ```
 
-**Scheduler Policy Implementation:**
-```c
-// DuckDB uses thread pool for parallel ops
-if (strstr(p->comm, "duckdb") && p->utime > 5 * NSEC_PER_SEC) {
-    // Heavy import thread -> CPU 0
-    set_cpus_allowed_ptr(p, cpumask_of(0));
-    // Light threads stay on CPU 1
-}
-```
 
 **Expected Results:**
 - Import time reduced by 25-35%
@@ -541,16 +414,6 @@ seq 1 1000000 | awk '{print strftime("%Y-%m-%d %H:%M:%S"), "INFO", "Message", $1
 gzip > logs/log100.gz
 ```
 
-**Scheduler Policy Implementation:**
-```c
-// Track gzip decompression in Python workers
-if (strstr(p->comm, "python") && p->parent) {
-    // Check if doing heavy I/O (gzip decompression)
-    if (p->utime + p->stime > 10 * NSEC_PER_SEC) {
-        pin_to_cpu(p->pid, 0);
-    }
-}
-```
 
 **Expected Results:**
 - ETL pipeline completes 30-40% faster
@@ -593,47 +456,46 @@ with mp.Pool(2) as pool:
     results = pool.map(process_join_partition, data.items())
 ```
 
-**Scheduler Policy Implementation:**
-```c
-// Generic policy for any skewed parallel workload
-struct task_stats {
-    u64 start_time;
-    u64 cpu_time;
-};
-
-BPF_MAP_TYPE_HASH(task_stats_map, u32, struct task_stats);
-
-// In scheduler callback:
-if (p->utime > 30 * NSEC_PER_SEC && sibling_idle()) {
-    // Long task with idle sibling -> dedicate CPU
-    pin_to_cpu(p->pid, 0);
-}
-```
 
 **Expected Results:**
 - Join operation completes faster
 - Better slot utilization in MiniCluster
 
-## Implementation Details
+## Test Case Implementation
 
-### BPF/sched_ext Policy Structure
+All test cases described above are implemented as automated tests in the `testcases/` directory. Each test case includes:
 
-The optimization strategies described above can be implemented with a minimal sched_ext policy (~30 lines of code):
+- **Synthetic data generation** for reproducible results
+- **Process monitoring** to track CPU usage and identify long-tail tasks  
+- **Analysis tools** to measure scheduler optimization potential
+- **Makefile automation** for easy execution
 
-1. **Detection Phase:**
-   - Track per-PID metrics (runtime, bytes written, utime)
-   - Use BPF maps to store historical data
-   - Implement threshold-based classification
+### Running Tests
 
-2. **Action Phase:**
-   - Use `sched_setaffinity()` or equivalent to pin tasks
-   - Separate long-running tasks from short ones
-   - Ensure optimal CPU utilization
+```bash
+# Navigate to testcases directory
+cd testcases/
 
-3. **Monitoring:**
-   - Use `perf sched timehist` to visualize improvements
-   - Track wall-clock time with simple `time` command
-   - Measure 30-40% improvements consistently
+# List available tests
+make list-tests
+
+# Run all tests
+make run-all
+
+# Run specific test
+make run-pigz_compression
+
+# Analyze results
+make analyze-pigz_compression
+```
+
+### Process Analysis
+
+Each test automatically monitors:
+- **CPU Time**: Time spent on CPU per process
+- **Wall Clock Time**: Total runtime per process
+- **Long-tail Detection**: Processes running >5 seconds
+- **Scheduler Benefit**: Estimated improvement from optimization
 
 ## Key Benefits of These Demonstrations
 

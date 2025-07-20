@@ -1,0 +1,13 @@
+# Generated test data
+data/
+output/
+results/
+
+# Git files
+*.pack
+*.idx
+
+# Analysis files
+*.json
+*.log
+*.txt

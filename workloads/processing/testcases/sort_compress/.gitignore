@@ -1,0 +1,13 @@
+# Generated test data
+data/
+output/
+results/
+
+# Data files
+*.tsv
+*.zst
+
+# Analysis files
+*.json
+*.log
+*.txt
