@@ -10,6 +10,8 @@ I've created a comprehensive setup for running vLLM benchmarks to measure latenc
 
 ## Installation Status
 
+python sharegpt_vllm_eval.py --model facebook/opt-3b --num-samples 1000 --use-v0
+
 vLLM has been installed via pip. However, there are some compilation issues with the CUDA environment that may require additional system dependencies.
 
 ## Quick Commands

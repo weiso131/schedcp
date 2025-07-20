@@ -19,6 +19,7 @@ __pycache__/
 venv/
 env/
 .env
+vllm_env/
 
 # IDE
 .vscode/

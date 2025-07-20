@@ -1,0 +1,34 @@
+# Rust build artifacts
+/target/
+Cargo.lock
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# TensorFlow models
+*.h5
+*.pb
+*.tflite
+model_path/
+model/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temp cloned repo
+/scx-ml-temp/

@@ -107,6 +107,28 @@ bench-custom: build download-models $(DATASET_DIR) $(RESULTS_DIR)
 		--max-concurrent $${CONCURRENT:-2} \
 		--server-logs
 
+# Run 1B model (TinyLlama) for quick testing
+run-1b: build download-models
+	@echo "Running TinyLlama 1.1B model..."
+	@$(BUILD_DIR)/bin/llama-cli \
+		-m $(MODEL_1B) \
+		-p "You are a helpful assistant" \
+		-n 256 \
+		--interactive-first
+
+# Benchmark with 1B model
+bench-1b: build download-models $(DATASET_DIR) $(RESULTS_DIR)
+	@echo "Benchmarking with TinyLlama 1.1B model..."
+	@if [ ! -f "$(SHAREGPT_VICUNA)" ] && [ ! -f "$(SHAREGPT_BENCH)" ]; then \
+		echo "Downloading ShareGPT dataset..."; \
+		python download_sharegpt.py --dataset vicuna --num-samples 100; \
+	fi
+	@python sharegpt_llama_server_eval.py \
+		--model $(MODEL_1B) \
+		--num-samples 10 \
+		--max-concurrent 4 \
+		--server-logs
+
 # Model and dataset paths
 MODEL_DIR := models
 DATASET_DIR := datasets
@@ -132,11 +154,15 @@ help:
 	@echo "  Setup targets:"
 	@echo "    make download-models - Download all required models"
 	@echo "  "
+	@echo "  Run targets:"
+	@echo "    make run-1b       - Run TinyLlama 1.1B model interactively"
+	@echo "  "
 	@echo "  Benchmark targets:"
 	@echo "    make test-quick   - Quick test with 5 samples, 2 concurrent"
 	@echo "    make test-full    - Full test with 100 samples, 10 concurrent"
 	@echo "    make test-sharegpt - Test ShareGPT server benchmark"
 	@echo "    make bench-schedulers - Benchmark all production schedulers"
+	@echo "    make bench-1b     - Benchmark with TinyLlama 1.1B model"
 	@echo "  "
 	@echo "  Maintenance targets:"
 	@echo "    make clean        - Remove build artifacts"

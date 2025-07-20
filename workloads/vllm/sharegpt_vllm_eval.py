@@ -19,6 +19,7 @@ from tqdm import tqdm
 import platform
 import psutil
 import socket
+import torch
 
 # Add the scheduler module to the path
 sys.path.insert(0, '/root/yunwei37/ai-os')
@@ -107,11 +108,26 @@ class VLLMBenchmark(SchedulerBenchmark):
                 trust_remote_code=True,
                 max_model_len=self.max_model_len,
                 gpu_memory_utilization=self.gpu_memory_utilization,
-                enforce_eager=True if self.use_v0 else False  # Disable CUDA graphs for V0
+                enforce_eager=True if self.use_v0 else False,  # Disable CUDA graphs for V0
+                download_dir="/tmp/vllm_models"  # Specify download directory
             )
             return True
         except Exception as e:
             print(f"Failed to initialize vLLM: {e}")
+            if "facebook/opt-3b" in self.model_path or "Llama-3" in self.model_path:
+                print("\nNote: The model appears to be unavailable or requires authentication.")
+                print("Try using one of these alternatives:")
+                print("  - facebook/opt-125m (smaller, faster)")
+                print("  - facebook/opt-1.3b (medium size)")
+                print("  - facebook/opt-2.7b (medium-large size)")
+                print("  - facebook/opt-6.7b (larger, requires more memory)")
+                print("  - meta-llama/Llama-3.2-1B (requires HuggingFace token)")
+                print("  - meta-llama/Llama-3.2-3B (requires HuggingFace token)")
+                print("  - meta-llama/Llama-2-7b-hf (requires HuggingFace token)")
+                print("\nFor Llama models, you need to:")
+                print("  1. Accept the license agreement on HuggingFace")
+                print("  2. Set your HF token: export HF_TOKEN=your_token_here")
+                print("\nExample: python sharegpt_vllm_eval.py --model facebook/opt-2.7b --num-samples 100")
             return False
     
     def cleanup_llm(self):
@@ -513,7 +529,7 @@ class VLLMBenchmark(SchedulerBenchmark):
 def main():
     parser = argparse.ArgumentParser(description="Benchmark vLLM with ShareGPT dataset")
     parser.add_argument("--model", 
-                       default="facebook/opt-125m",
+                       default="meta-llama/Llama-3.2-3B",
                        help="Model name or path")
     parser.add_argument("--dataset", 
                        default="../datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
