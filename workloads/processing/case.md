@@ -7,15 +7,15 @@ This document presents a comprehensive collection of benchmark test cases design
 ## Core Concept: The Long-Tail Problem
 
 In many real-world scenarios, workloads consist of multiple tasks where:
-- 99 tasks complete in ~60 seconds each
-- 1 task (the "straggler") takes ~6000 seconds
+- 99 tasks complete in ~6 seconds each
+- 1 task (the "straggler") takes ~600 seconds
 
 Under standard CFS scheduling on a 2-CPU system:
-- Total time = (99 × 60 sec / 2 cores) + 6000 sec ≈ 8940 seconds
+- Total time = (99 × 6 sec / 2 cores) + 600 sec ≈ 894 seconds
 - One core sits idle after completing its share of short tasks
 
 With a custom scheduler that detects and pins long-running tasks:
-- Total time ≈ 6000 seconds (the duration of the longest task)
+- Total time ≈ 600 seconds (the duration of the longest task)
 - Both cores remain busy until all short tasks complete
 - Performance improvement: 25-40% reduction in wall-clock time
 
@@ -31,20 +31,20 @@ find ./linux-src -type f -print0 | xargs -0 -n1 -P2 pigz -1
 ```
 
 **Workload Characteristics:**
-- 99 small files (≤1 MiB each)
-- 1 large ISO file (2 GiB)
+- 99 small files (≤100 KiB each)
+- 1 large ISO file (200 MiB)
 - The pigz thread processing the ISO lives 100x longer than others
 
 **Synthetic Data Generation:**
 ```bash
 # Create 99 small files and 1 large file
-for i in {1..99}; do dd if=/dev/urandom of=file$i.dat bs=1M count=1; done
-dd if=/dev/urandom of=large.iso bs=1M count=2048  # 2GB file
+for i in {1..99}; do dd if=/dev/urandom of=file$i.dat bs=1K count=100; done
+dd if=/dev/urandom of=large.iso bs=1M count=200  # 200MB file
 ```
 
 
 **Expected Results:**
-- End-to-end time reduction: ~149s → ~100s
+- End-to-end time reduction: ~15s → ~10s
 - Performance gain: ~33%
 
 ### 1.2 FFmpeg Split Transcode
@@ -61,18 +61,18 @@ wait
 ```
 
 **Workload Characteristics:**
-- 99 short video clips (process in ~60 seconds each)
-- 1 4K/10-minute clip (processes in ~6000 seconds)
+- 99 short video clips (process in ~6 seconds each)
+- 1 4K/10-minute clip (processes in ~600 seconds)
 - Massive imbalance in processing time
 
 **Synthetic Data Generation:**
 ```bash
 # Generate test videos using ffmpeg itself
 for i in {1..99}; do
-    ffmpeg -f lavfi -i testsrc=duration=1:size=320x240:rate=30 clip$i.mp4
+    ffmpeg -f lavfi -i testsrc=duration=0.1:size=320x240:rate=30 clip$i.mp4
 done
 # One long video
-ffmpeg -f lavfi -i testsrc=duration=100:size=1920x1080:rate=30 long_clip.mp4
+ffmpeg -f lavfi -i testsrc=duration=10:size=1920x1080:rate=30 long_clip.mp4
 ```
 
 
@@ -93,7 +93,7 @@ pytest -q -n2 --durations=0
 
 **Workload Characteristics:**
 - Test suite with 99 fast unit tests
-- 1 integration test that starts Postgres (takes 6000 seconds)
+- 1 integration test that starts Postgres (takes 600 seconds)
 - xdist spawns 2 workers; one finishes fast tests in ~60s then idles
 
 **Synthetic Test Suite Creation:**
@@ -112,13 +112,13 @@ def test_fast_{i}():
 
 # 1 slow integration test
 def test_slow_integration():
-    time.sleep(100)  # Simulate database setup/teardown
+    time.sleep(10)  # Simulate database setup/teardown
     assert True
 ```
 
 
 **Expected Results:**
-- Suite wall time: 8940 sec → ~6000 sec
+- Suite wall time: 894 sec → ~600 sec
 - ~33% improvement in total test time
 
 ### 2.2 Git Incremental Compression
@@ -134,7 +134,7 @@ time git gc
 
 **Workload Characteristics:**
 - Packs hundreds of 4 MiB deltas
-- One massive 3 GiB delta
+- One massive 300 MiB delta
 - The large delta thread is 100x heavier
 
 **Synthetic Repository Creation:**
@@ -147,7 +147,7 @@ for i in {1..99}; do
     git add file$i.txt && git commit -m "commit $i"
 done
 # Add one massive binary blob
-dd if=/dev/urandom of=large.bin bs=1M count=3072  # 3GB
+dd if=/dev/urandom of=large.bin bs=1M count=300  # 300MB
 git add large.bin && git commit -m "add large binary"
 ```
 
@@ -164,8 +164,8 @@ git add large.bin && git commit -m "add large binary"
 
 **Test Setup:**
 ```bash
-# RocksDB db_bench with 10M keys
-db_bench --benchmarks=fillrandom --num=10000000
+# RocksDB db_bench with 1M keys
+db_bench --benchmarks=fillrandom --num=1000000
 ```
 
 **Workload Characteristics:**
@@ -183,8 +183,8 @@ int main() {
     rocksdb::Options options;
     options.create_if_missing = true;
     rocksdb::DB::Open(options, "/tmp/testdb", &db);
-    // Insert 10M keys to trigger compaction
-    for(int i = 0; i < 10000000; i++) {
+    // Insert 1M keys to trigger compaction
+    for(int i = 0; i < 1000000; i++) {
         db->Put(rocksdb::WriteOptions(), std::to_string(i), std::string(1024, 'x'));
     }
 }
@@ -209,7 +209,7 @@ find ./large-dir -type f -print0 | xargs -0 -n1 -P2 sha256sum > checksums.txt
 
 **Workload Characteristics:**
 - 99 small files (< 10 MB each) checksum quickly
-- 1 large file (10 GB) takes 100x longer to process
+- 1 large file (1 GB) takes 100x longer to process
 - Creates severe imbalance in xargs parallel execution
 
 **Synthetic Test Setup:**
@@ -217,10 +217,10 @@ find ./large-dir -type f -print0 | xargs -0 -n1 -P2 sha256sum > checksums.txt
 # Create test directory with mixed file sizes
 mkdir -p large-dir
 for i in {1..99}; do
-    dd if=/dev/urandom of=large-dir/file$i.dat bs=1M count=10
+    dd if=/dev/urandom of=large-dir/file$i.dat bs=1M count=1
 done
 # One large file
-dd if=/dev/urandom of=large-dir/largefile.dat bs=1M count=10240  # 10GB
+dd if=/dev/urandom of=large-dir/largefile.dat bs=1M count=1024  # 1GB
 
 # Run the parallel checksum operation
 time find ./large-dir -type f -print0 | xargs -0 -n1 -P2 sha256sum > checksums.txt
@@ -228,7 +228,7 @@ time find ./large-dir -type f -print0 | xargs -0 -n1 -P2 sha256sum > checksums.t
 
 
 **Expected Results:**
-- Total checksum time: ~8940 sec → ~6000 sec
+- Total checksum time: ~894 sec → ~600 sec
 - ~33% improvement in parallel file processing
 
 ## Section 4: Data Processing and Analytics Workloads
@@ -242,13 +242,13 @@ time find ./large-dir -type f -print0 | xargs -0 -n1 -P2 sha256sum > checksums.t
 from pyspark.sql import SparkSession
 s = SparkSession.builder.master("local[2]").getOrCreate()
 # 99 small keys, 1 hot key
-rdd = s.parallelize([(i%100, 1) for i in range(10_000_000)])
+rdd = s.parallelize([(i%100, 1) for i in range(1_000_000)])
 result = rdd.groupByKey().mapValues(sum).collect()
 ```
 
 **Workload Characteristics:**
 - Data skew: 1 hot key processes 100x more data
-- One executor thread runs for 6000 seconds
+- One executor thread runs for 600 seconds
 - Other executor completes 99 tasks quickly
 
 **Simplified Test Without Spark:**
@@ -264,14 +264,14 @@ def process_partition(key_count):
 
 if __name__ == '__main__':
     # 99 small partitions + 1 huge partition
-    partitions = [10000] * 99 + [10000000]  # 100x skew
+    partitions = [1000] * 99 + [1000000]  # 100x skew
     with mp.Pool(2) as pool:
         results = pool.map(process_partition, partitions)
 ```
 
 
 **Expected Results:**
-- Stage time: ~8940 sec → ~6000 sec
+- Stage time: ~894 sec → ~600 sec
 - ~33% improvement in shuffle performance
 
 ### 4.2 Sort and Compress with Skew
@@ -285,16 +285,16 @@ parallel -j2 --line-buffer 'sort {} | zstd -q -o {}.zst' ::: part_*
 ```
 
 **Workload Characteristics:**
-- One 10 GB chunk among 99 small chunks
+- One 1 GB chunk among 99 small chunks
 - Massive sorting time difference between chunks
 
 **Synthetic Data Generation:**
 ```bash
 # Create skewed data files
 for i in {1..99}; do
-    seq 1 100000 | shuf > part_$i.tsv  # ~1MB files
+    seq 1 10000 | shuf > part_$i.tsv  # ~100KB files
 done
-seq 1 100000000 | shuf > part_100.tsv  # ~1GB file
+seq 1 10000000 | shuf > part_100.tsv  # ~100MB file
 ```
 
 
@@ -310,7 +310,7 @@ seq 1 100000000 | shuf > part_100.tsv  # ~1GB file
 ```python
 import dask.dataframe as dd, pandas as pd, numpy as np
 pdf = pd.DataFrame({
-    'k': np.concatenate([np.arange(99), np.repeat(999, 5_000_000)]),
+    'k': np.concatenate([np.arange(99), np.repeat(999, 500_000)]),
     'v': 1
 })
 d = dd.from_pandas(pdf, npartitions=100)
@@ -319,7 +319,7 @@ result = d.groupby('k').v.sum().compute()
 
 **Workload Characteristics:**
 - Hot group (key 999) overwhelms one worker
-- Worker with key 999 occupies CPU for ~6000 seconds
+- Worker with key 999 occupies CPU for ~600 seconds
 - Severe workload imbalance
 
 **Simple Test Without Dask:**
@@ -334,7 +334,7 @@ def process_group(data):
 
 # Create skewed data
 data = pd.DataFrame({
-    'k': np.concatenate([np.arange(99), np.repeat(999, 5_000_000)]),
+    'k': np.concatenate([np.arange(99), np.repeat(999, 500_000)]),
     'v': 1
 })
 # Split into chunks for parallel processing
@@ -359,8 +359,8 @@ duckdb -c "PRAGMA threads=2; COPY (SELECT * FROM read_csv_auto('*.csv')) TO 'all
 ```
 
 **Workload Characteristics:**
-- 99 × 10 MB CSV files
-- 1 × 1 GB CSV file
+- 99 × 1 MB CSV files
+- 1 × 100 MB CSV file
 - DuckDB splits import by file, creating imbalance
 
 **Synthetic CSV Generation:**
@@ -368,11 +368,11 @@ duckdb -c "PRAGMA threads=2; COPY (SELECT * FROM read_csv_auto('*.csv')) TO 'all
 # Create test CSV files
 for i in {1..99}; do
     echo "id,value" > file$i.csv
-    seq 1 100000 | awk '{print $1","rand()}' >> file$i.csv
+    seq 1 10000 | awk '{print $1","rand()}' >> file$i.csv
 done
 # One large CSV
 echo "id,value" > file100.csv
-seq 1 10000000 | awk '{print $1","rand()}' >> file100.csv
+seq 1 1000000 | awk '{print $1","rand()}' >> file100.csv
 ```
 
 
@@ -397,8 +397,8 @@ with mp.Pool(2) as p:
 ```
 
 **Workload Characteristics:**
-- 99 × 10 MB gzipped files
-- 1 × 1 GB gzipped file
+- 99 × 1 MB gzipped files
+- 1 × 100 MB gzipped file
 - One pool worker spends excessive time decompressing large file
 
 **Synthetic Log File Generation:**
@@ -406,11 +406,11 @@ with mp.Pool(2) as p:
 # Create test gzipped files
 for i in {1..99}; do
     # Small log files
-    seq 1 10000 | awk '{print strftime("%Y-%m-%d %H:%M:%S"), "INFO", "Message", $1}' | 
+    seq 1 1000 | awk '{print strftime("%Y-%m-%d %H:%M:%S"), "INFO", "Message", $1}' | 
     gzip > logs/log$i.gz
 done
 # One large log file
-seq 1 1000000 | awk '{print strftime("%Y-%m-%d %H:%M:%S"), "INFO", "Message", $1}' | 
+seq 1 100000 | awk '{print strftime("%Y-%m-%d %H:%M:%S"), "INFO", "Message", $1}' | 
 gzip > logs/log100.gz
 ```
 
@@ -449,7 +449,7 @@ def process_join_partition(partition_data):
 data = {}
 for i in range(99):
     data[i] = list(range(1000))
-data[999] = list(range(100000))  # Hot key
+data[999] = list(range(10000))  # Hot key
 
 # Process in parallel
 with mp.Pool(2) as pool:
@@ -494,7 +494,7 @@ make analyze-pigz_compression
 Each test automatically monitors:
 - **CPU Time**: Time spent on CPU per process
 - **Wall Clock Time**: Total runtime per process
-- **Long-tail Detection**: Processes running >5 seconds
+- **Long-tail Detection**: Processes running >0.5 seconds
 - **Scheduler Benefit**: Estimated improvement from optimization
 
 ## Key Benefits of These Demonstrations
@@ -505,7 +505,7 @@ Each test automatically monitors:
    - Works with existing binaries
 
 2. **Quick Iteration:**
-   - Tests run in minutes, not hours
+   - Tests run in seconds to minutes, not hours
    - Faster than full cluster deployments
    - Easy to iterate on scheduler policies
 
