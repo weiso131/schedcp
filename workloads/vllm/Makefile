@@ -164,6 +164,45 @@ benchmark-quick: install
 	@$(MAKE) benchmark-latency MODEL=facebook/opt-125m BATCH_SIZE=1 INPUT_LEN=32 OUTPUT_LEN=32 WARMUP=5 ITERS=10
 	@$(MAKE) benchmark-throughput MODEL=facebook/opt-125m NUM_PROMPTS=100 DATASET=random INPUT_LEN=32 OUTPUT_LEN=32
 
+# Run custom ShareGPT benchmark with 3B model
+benchmark-sharegpt:
+	@echo "$(GREEN)Running ShareGPT benchmark with 3B model...$(NC)"
+	@. vllm_env/bin/activate && $(PYTHON) vllm_full_benchmark.py \
+		--model meta-llama/Llama-3.2-3B \
+		--dataset datasets/ShareGPT_V3_unfiltered_cleaned_split.json \
+		--num-prompts $${NUM_PROMPTS:-1000} \
+		--max-output-tokens $${MAX_OUTPUT_TOKENS:-256} \
+		--max-model-len $${MAX_MODEL_LEN:-4096}
+
+# Quick test run with fewer prompts
+benchmark-sharegpt-test:
+	@echo "$(GREEN)Running quick ShareGPT test (100 prompts)...$(NC)"
+	@. vllm_env/bin/activate && $(PYTHON) vllm_full_benchmark.py \
+		--model meta-llama/Llama-3.2-3B \
+		--dataset datasets/ShareGPT_V3_unfiltered_cleaned_split.json \
+		--num-prompts 100 \
+		--max-output-tokens 128 \
+		--max-model-len 2048
+
+# Run ShareGPT benchmark with scheduler testing
+benchmark-sharegpt-schedulers:
+	@echo "$(GREEN)Running ShareGPT benchmark with different schedulers...$(NC)"
+	@for scheduler in default scx_lavd scx_rusty scx_bpfland; do \
+		echo "Testing scheduler: $$scheduler"; \
+		if [ "$$scheduler" = "default" ]; then \
+			. vllm_env/bin/activate && $(PYTHON) vllm_full_benchmark.py \
+				--model meta-llama/Llama-3.2-3B \
+				--num-prompts $${NUM_PROMPTS:-10000} \
+				--max-output-tokens $${MAX_OUTPUT_TOKENS:-128}; \
+		else \
+			. vllm_env/bin/activate && $(PYTHON) vllm_full_benchmark.py \
+				--model meta-llama/Llama-3.2-3B \
+				--num-prompts $${NUM_PROMPTS:-10000} \
+				--max-output-tokens $${MAX_OUTPUT_TOKENS:-128} \
+				--test-scheduler $$scheduler; \
+		fi; \
+	done
+
 # Clean build artifacts
 clean:
 	@echo "$(GREEN)Cleaning build artifacts...$(NC)"
@@ -195,6 +234,9 @@ help:
 	@echo "  make benchmark-throughput - Run throughput benchmark"
 	@echo "  make benchmark-serving    - Run serving benchmark (requires running server)"
 	@echo "  make benchmark-quick      - Run a quick benchmark suite"
+	@echo "  make benchmark-sharegpt   - Run ShareGPT benchmark with 3B model (1000 prompts)"
+	@echo "  make benchmark-sharegpt-test - Quick ShareGPT test (100 prompts)"
+	@echo "  make benchmark-sharegpt-schedulers - Test different schedulers"
 	@echo "  make download-datasets    - Download common benchmark datasets"
 	@echo ""
 	@echo "Other targets:"
