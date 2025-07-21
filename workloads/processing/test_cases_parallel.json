@@ -10,6 +10,12 @@
         "for i in {1..99}; do dd if=/dev/urandom of=test_data/file$i.dat bs=1K count=100 2>/dev/null; done",
         "dd if=/dev/urandom of=test_data/large.iso bs=1M count=200 2>/dev/null"
       ],
+      "small_commands": [
+        "pigz -1 test_data/file{ID}.dat"
+      ],
+      "large_commands": [
+        "pigz -1 test_data/large.iso"
+      ],
       "test_command": "find ./test_data -name '*.dat' -o -name '*.iso' -print0 | xargs -0 -n1 -P2 pigz -1",
       "cleanup_commands": [
         "rm -rf test_data/",
@@ -34,6 +40,12 @@
         "for i in {1..99}; do ffmpeg -f lavfi -i testsrc=duration=0.1:size=320x240:rate=30 -loglevel quiet clips/clip$i.mp4; done",
         "ffmpeg -f lavfi -i testsrc=duration=10:size=1920x1080:rate=30 -loglevel quiet clips/long_clip.mp4"
       ],
+      "small_commands": [
+        "ffmpeg -loglevel quiet -i clips/clip{ID}.mp4 -vf scale=640:-1 -c:v libx264 -preset veryfast out/clip{ID}.mp4"
+      ],
+      "large_commands": [
+        "ffmpeg -loglevel quiet -i clips/long_clip.mp4 -vf scale=640:-1 -c:v libx264 -preset veryfast out/long_clip.mp4"
+      ],
       "test_command": "for f in clips/*.mp4; do ffmpeg -loglevel quiet -i \"$f\" -vf scale=640:-1 -c:v libx264 -preset veryfast out/\"${f##*/}\" & done; wait",
       "cleanup_commands": [
         "rm -rf clips/ out/"
@@ -54,7 +66,15 @@
       "category": "software_testing",
       "setup_commands": [
         "mkdir -p test_suite",
-        "cat > test_suite/test_mixed.py << 'EOF'\nimport time\nimport pytest\n\n# 99 fast tests\nfor i in range(99):\n    exec(f'''\ndef test_fast_{i}():\n    time.sleep(0.01)\n    assert True\n''')\n\n# 1 slow integration test\ndef test_slow_integration():\n    time.sleep(10)\n    assert True\nEOF"
+        "cat > test_suite/conftest.py << 'EOF'\nimport pytest\n\ndef pytest_addoption(parser):\n    parser.addoption('--test-id', default='0')\nEOF",
+        "for i in {1..99}; do echo \"import time\\ndef test_fast_$i():\\n    time.sleep(0.01)\\n    assert True\" > test_suite/test_fast_$i.py; done",
+        "echo \"import time\\ndef test_slow_integration():\\n    time.sleep(10)\\n    assert True\" > test_suite/test_slow.py"
+      ],
+      "small_commands": [
+        "cd test_suite && python -m pytest -q test_fast_{ID}.py"
+      ],
+      "large_commands": [
+        "cd test_suite && python -m pytest -q test_slow.py"
       ],
       "test_command": "cd test_suite && python -m pytest -q -n2 --durations=0",
       "cleanup_commands": [
@@ -76,14 +96,16 @@
       "description": "Git garbage collection with mixed object sizes",
       "category": "version_control",
       "setup_commands": [
-        "mkdir -p test_repo && cd test_repo",
-        "git init",
-        "git config user.name 'Test User'",
-        "git config user.email 'test@example.com'",
-        "for i in {1..99}; do echo \"small change $i\" > file$i.txt && git add file$i.txt && git commit -m \"commit $i\" --quiet; done",
-        "dd if=/dev/urandom of=large.bin bs=1M count=300 2>/dev/null",
-        "git add large.bin && git commit -m 'add large binary' --quiet",
-        "cd .."
+        "rm -rf test_repo && mkdir -p test_repo && cd test_repo && git init",
+        "cd test_repo && git config user.name 'Test User' && git config user.email 'test@example.com'",
+        "cd test_repo && for i in {1..99}; do echo \"small change $i\" > file$i.txt && git add file$i.txt && git commit -m \"commit $i\" --quiet; done",
+        "cd test_repo && dd if=/dev/urandom of=large.bin bs=1M count=300 2>/dev/null && git add large.bin && git commit -m 'add large binary' --quiet"
+      ],
+      "small_commands": [
+        "cd test_repo && git gc --aggressive --prune=now --quiet || true"
+      ],
+      "large_commands": [
+        "cd test_repo && git repack -a -d -f --depth=50 --window=250"
       ],
       "test_command": "cd test_repo && time git gc",
       "cleanup_commands": [
@@ -108,6 +130,12 @@
         "for i in {1..99}; do dd if=/dev/urandom of=large-dir/file$i.dat bs=1M count=1 2>/dev/null; done",
         "dd if=/dev/urandom of=large-dir/largefile.dat bs=1M count=1024 2>/dev/null"
       ],
+      "small_commands": [
+        "sha256sum large-dir/file{ID}.dat"
+      ],
+      "large_commands": [
+        "sha256sum large-dir/largefile.dat"
+      ],
       "test_command": "find ./large-dir -type f -print0 | xargs -0 -n1 -P2 sha256sum > checksums.txt",
       "cleanup_commands": [
         "rm -rf large-dir/",
@@ -131,6 +159,12 @@
         "for i in {1..99}; do seq 1 10000 | shuf > part_$i.tsv; done",
         "seq 1 10000000 | shuf > part_100.tsv"
       ],
+      "small_commands": [
+        "sort part_{ID}.tsv | zstd -q -o part_{ID}.tsv.zst"
+      ],
+      "large_commands": [
+        "sort part_100.tsv | zstd -q -o part_100.tsv.zst"
+      ],
       "test_command": "parallel -j2 --line-buffer 'sort {} | zstd -q -o {}.zst' ::: part_*.tsv",
       "cleanup_commands": [
         "rm -f part_*.tsv part_*.tsv.zst"
@@ -150,10 +184,21 @@
       "description": "Analytics with skewed data distribution (hot key problem)",
       "category": "data_processing",
       "setup_commands": [
-        "chmod +x assets/spark_skew_test.py"
+        "chmod +x assets/spark_skew_test.py",
+        "mkdir -p spark_data",
+        "for i in {1..99}; do echo \"partition_$i\" > spark_data/part_$i.txt; done",
+        "echo \"large_partition\" > spark_data/part_100.txt"
+      ],
+      "small_commands": [
+        "python3 -c \"import time; time.sleep(0.1); print('Processed partition {ID}')\""
+      ],
+      "large_commands": [
+        "python3 -c \"import time; time.sleep(10); print('Processed large partition')\""
       ],
       "test_command": "python3 assets/spark_skew_test.py",
-      "cleanup_commands": [],
+      "cleanup_commands": [
+        "rm -rf spark_data/"
+      ],
       "expected_improvement": 0.33,
       "workload_characteristics": {
         "small_tasks": 99,
@@ -169,10 +214,21 @@
       "description": "Customer analytics with power-law distribution",
       "category": "data_processing",
       "setup_commands": [
-        "chmod +x assets/dask_groupby_test.py"
+        "chmod +x assets/dask_groupby_test.py",
+        "mkdir -p dask_data",
+        "python3 -c \"import csv; [csv.writer(open(f'dask_data/chunk_{i}.csv', 'w')).writerows([['key', 'value'], [str(i), '1']]) for i in range(1, 100)]\"",
+        "python3 -c \"import csv; w = csv.writer(open('dask_data/chunk_100.csv', 'w')); w.writerow(['key', 'value']); [w.writerow(['999', str(i)]) for i in range(100000)]\""
+      ],
+      "small_commands": [
+        "python3 -c \"import pandas as pd; df = pd.read_csv('dask_data/chunk_{ID}.csv'); print(f'Grouped chunk {ID}: {len(df.groupby(\\\"key\\\"))}')\""
+      ],
+      "large_commands": [
+        "python3 -c \"import pandas as pd; df = pd.read_csv('dask_data/chunk_100.csv'); print(f'Grouped large chunk: {len(df.groupby(\\\"key\\\"))}')\""
       ],
       "test_command": "python3 assets/dask_groupby_test.py",
-      "cleanup_commands": [],
+      "cleanup_commands": [
+        "rm -rf dask_data/"
+      ],
       "expected_improvement": 0.35,
       "workload_characteristics": {
         "small_tasks": 99,
@@ -193,6 +249,12 @@
         "seq 1 100000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"INFO\", \"Message\", $1}' | gzip > logs/log100.gz",
         "chmod +x assets/pandas_etl_test.py"
       ],
+      "small_commands": [
+        "python3 -c \"import gzip; lines = gzip.open('logs/log{ID}.gz', 'rt').readlines(); print(f'Processed log{ID}: {len(lines)} lines')\""
+      ],
+      "large_commands": [
+        "python3 -c \"import gzip; lines = gzip.open('logs/log100.gz', 'rt').readlines(); print(f'Processed log100: {len(lines)} lines')\""
+      ],
       "test_command": "python3 assets/pandas_etl_test.py",
       "cleanup_commands": [
         "rm -rf logs/"
@@ -212,10 +274,21 @@
       "description": "Retail analytics with popular items creating join skew",
       "category": "data_processing",
       "setup_commands": [
-        "chmod +x assets/flink_join_test.py"
+        "chmod +x assets/flink_join_test.py",
+        "mkdir -p flink_data",
+        "for i in {1..99}; do echo \"key_$i,value_$i\" > flink_data/join_$i.txt; done",
+        "python3 -c \"with open('flink_data/join_100.txt', 'w') as f: [f.write(f'key_999,value_{i}\\n') for i in range(100000)]\""
+      ],
+      "small_commands": [
+        "python3 -c \"lines = open('flink_data/join_{ID}.txt').readlines(); print(f'Joined partition {ID}: {len(lines)} records')\""
+      ],
+      "large_commands": [
+        "python3 -c \"lines = open('flink_data/join_100.txt').readlines(); print(f'Joined large partition: {len(lines)} records')\""
       ],
       "test_command": "python3 assets/flink_join_test.py",
-      "cleanup_commands": [],
+      "cleanup_commands": [
+        "rm -rf flink_data/"
+      ],
       "expected_improvement": 0.30,
       "workload_characteristics": {
         "small_tasks": 99,
@@ -227,8 +300,8 @@
     }
   ],
   "metadata": {
-    "version": "1.0",
-    "description": "Long-tail workload test cases for Linux scheduler optimization",
+    "version": "2.0",
+    "description": "Long-tail workload test cases with parallel command definitions",
     "target_platform": "Linux",
     "cpu_count": 4,
     "total_test_cases": 10,

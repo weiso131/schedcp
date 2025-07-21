@@ -144,27 +144,31 @@ class EnhancedWorkloadEvaluator:
         small_tasks = characteristics['small_tasks']
         large_tasks = characteristics['large_tasks']
         
-        # Generate task commands based on test type
+        # Check if parallel commands are defined in JSON
+        if 'small_commands' not in test_case or 'large_commands' not in test_case:
+            error_msg = f"Test case '{test_case['id']}' is missing 'small_commands' or 'large_commands' in configuration"
+            print(f"ERROR: {error_msg}")
+            return {
+                'status': 'error',
+                'error': error_msg,
+                'wall_clock_time': 0
+            }
+        
+        # Generate task commands from JSON templates
         small_cmds = []
         large_cmds = []
         
-        if test_case['id'] == 'pigz_compression':
-            # Setup already creates files, we just compress them in parallel
-            small_cmds = [f"pigz -1 test_data/file{i}.dat" for i in range(1, small_tasks + 1)]
-            large_cmds = ["pigz -1 test_data/large.iso"]
-            
-        elif test_case['id'] == 'file_checksum':
-            small_cmds = [f"sha256sum large-dir/file{i}.dat" for i in range(1, small_tasks + 1)]
-            large_cmds = ["sha256sum large-dir/largefile.dat"]
-            
-        elif test_case['id'] == 'sort_compress':
-            small_cmds = [f"sort part_{i}.tsv | zstd -q -o part_{i}.tsv.zst" for i in range(1, small_tasks + 1)]
-            large_cmds = ["sort part_100.tsv | zstd -q -o part_100.tsv.zst"]
-            
-        else:
-            # For other tests, use the original command
-            # This is a fallback - ideally each test should specify how to parallelize
-            return self._run_original_command(test_case)
+        # Process small commands
+        for cmd_template in test_case['small_commands']:
+            for i in range(1, small_tasks + 1):
+                # Replace {ID} with actual task number
+                cmd = cmd_template.replace('{ID}', str(i))
+                small_cmds.append(cmd)
+                
+        # Process large commands
+        for cmd_template in test_case['large_commands']:
+            # Large commands don't need ID replacement typically
+            large_cmds.append(cmd_template)
             
         # Execute tasks in parallel and track times
         tracker = ParallelTaskTracker()
@@ -399,8 +403,8 @@ class EnhancedWorkloadEvaluator:
 
 def main():
     parser = argparse.ArgumentParser(description='Enhanced Long-tail Workload Evaluation with Parallel Tracking')
-    parser.add_argument('--config', default='test_cases.json', 
-                       help='Test configuration file (default: test_cases.json)')
+    parser.add_argument('--config', default='test_cases_parallel.json', 
+                       help='Test configuration file (default: test_cases_parallel.json)')
     parser.add_argument('--list', action='store_true', 
                        help='List all available test cases')
     parser.add_argument('--test', metavar='TEST_ID', 
