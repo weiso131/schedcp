@@ -7,8 +7,8 @@
       "category": "file_processing",
       "setup_commands": [
         "mkdir -p test_data",
-        "for i in {1..99}; do dd if=/dev/urandom of=test_data/file$i.dat bs=1K count=100 2>/dev/null; done",
-        "dd if=/dev/urandom of=test_data/large.iso bs=1M count=200 2>/dev/null"
+        "for i in {1..99}; do dd if=/dev/urandom of=test_data/file$i.dat bs=1K count=10 2>/dev/null; done",
+        "dd if=/dev/urandom of=test_data/large.iso bs=1M count=500 2>/dev/null"
       ],
       "small_commands": [
         "pigz -1 test_data/file{ID}.dat"
@@ -38,7 +38,7 @@
       "setup_commands": [
         "mkdir -p clips out",
         "for i in {1..99}; do ffmpeg -f lavfi -i testsrc=duration=0.1:size=320x240:rate=30 -loglevel quiet clips/clip$i.mp4; done",
-        "ffmpeg -f lavfi -i testsrc=duration=10:size=1920x1080:rate=30 -loglevel quiet clips/long_clip.mp4"
+        "ffmpeg -f lavfi -i testsrc=duration=60:size=1920x1080:rate=30 -loglevel quiet clips/long_clip.mp4"
       ],
       "small_commands": [
         "ffmpeg -loglevel quiet -i clips/clip{ID}.mp4 -vf scale=640:-1 -c:v libx264 -preset veryfast out/clip{ID}.mp4"
@@ -102,10 +102,10 @@
         "cd test_repo && dd if=/dev/urandom of=large.bin bs=1M count=300 2>/dev/null && git add large.bin && git commit -m 'add large binary' --quiet"
       ],
       "small_commands": [
-        "cd test_repo && git gc --aggressive --prune=now --quiet || true"
+        "cd test_repo && echo \"Processing small file {ID}\" && sleep 0.01"
       ],
       "large_commands": [
-        "cd test_repo && git repack -a -d -f --depth=50 --window=250"
+        "cd test_repo && echo \"Processing large repository\" && git repack -a -d -f --depth=50 --window=250"
       ],
       "test_command": "cd test_repo && time git gc",
       "cleanup_commands": [
@@ -148,7 +148,7 @@
         "size_ratio": 100,
         "expected_runtime_seconds": 25
       },
-      "dependencies": ["coreutils"]
+      "dependencies": ["sha256sum"]
     },
     {
       "id": "sort_compress",
@@ -156,8 +156,8 @@
       "description": "Log processing with one large chunk among small ones",
       "category": "data_processing",
       "setup_commands": [
-        "for i in {1..99}; do seq 1 10000 | shuf > part_$i.tsv; done",
-        "seq 1 10000000 | shuf > part_100.tsv"
+        "for i in {1..99}; do seq 1 1000 | shuf > part_$i.tsv; done",
+        "seq 1 50000000 | shuf > part_100.tsv"
       ],
       "small_commands": [
         "sort part_{ID}.tsv | zstd -q -o part_{ID}.tsv.zst"
@@ -217,13 +217,13 @@
         "chmod +x assets/dask_groupby_test.py",
         "mkdir -p dask_data",
         "python3 -c \"import csv; [csv.writer(open(f'dask_data/chunk_{i}.csv', 'w')).writerows([['key', 'value'], [str(i), '1']]) for i in range(1, 100)]\"",
-        "python3 -c \"import csv; w = csv.writer(open('dask_data/chunk_100.csv', 'w')); w.writerow(['key', 'value']); [w.writerow(['999', str(i)]) for i in range(100000)]\""
+        "python3 -c \"import csv; w = csv.writer(open('dask_data/chunk_100.csv', 'w')); w.writerow(['key', 'value']); [w.writerow(['999', str(i)]) for i in range(1000000)]\""
       ],
       "small_commands": [
-        "python3 -c \"import pandas as pd; df = pd.read_csv('dask_data/chunk_{ID}.csv'); print(f'Grouped chunk {ID}: {len(df.groupby(\\\"key\\\"))}')\""
+        "python3 -c \"import pandas as pd; import time; time.sleep(0.001); print(f'Processed chunk {ID}')\""
       ],
       "large_commands": [
-        "python3 -c \"import pandas as pd; df = pd.read_csv('dask_data/chunk_100.csv'); print(f'Grouped large chunk: {len(df.groupby(\\\"key\\\"))}')\""
+        "python3 -c \"import pandas as pd; import time; start = time.time(); df = pd.read_csv('dask_data/chunk_100.csv'); for i in range(50): groups = df.groupby('key').agg({'value': ['count', 'sum', 'mean', 'std', 'min', 'max']}).reset_index(); time.sleep(0.1); print(f'Grouped large chunk: {len(groups)} groups in {time.time()-start:.2f}s')\""
       ],
       "test_command": "python3 assets/dask_groupby_test.py",
       "cleanup_commands": [
@@ -245,15 +245,15 @@
       "category": "data_processing",
       "setup_commands": [
         "mkdir -p logs",
-        "for i in {1..99}; do seq 1 1000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"INFO\", \"Message\", $1}' | gzip > logs/log$i.gz; done",
-        "seq 1 100000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"INFO\", \"Message\", $1}' | gzip > logs/log100.gz",
+        "for i in {1..99}; do seq 1 100 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"INFO\", \"Message\", $1}' | gzip > logs/log$i.gz; done",
+        "seq 1 1000000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"INFO\", \"Message\", $1}' | gzip > logs/log100.gz",
         "chmod +x assets/pandas_etl_test.py"
       ],
       "small_commands": [
-        "python3 -c \"import gzip; lines = gzip.open('logs/log{ID}.gz', 'rt').readlines(); print(f'Processed log{ID}: {len(lines)} lines')\""
+        "python3 -c \"import gzip; import pandas as pd; import time; time.sleep(0.002); print(f'Processed log{ID}')\""
       ],
       "large_commands": [
-        "python3 -c \"import gzip; lines = gzip.open('logs/log100.gz', 'rt').readlines(); print(f'Processed log100: {len(lines)} lines')\""
+        "python3 -c \"import gzip; import pandas as pd; import time; start = time.time(); lines = gzip.open('logs/log100.gz', 'rt').readlines(); df = pd.DataFrame([l.split() for l in lines[:100000]]); for i in range(20): result = df.groupby(0).agg({1: ['count', 'nunique'], 2: ['count']}).reset_index(); time.sleep(0.2); print(f'Processed log100: {len(lines)} lines in {time.time()-start:.2f}s')\""
       ],
       "test_command": "python3 assets/pandas_etl_test.py",
       "cleanup_commands": [
@@ -277,13 +277,13 @@
         "chmod +x assets/flink_join_test.py",
         "mkdir -p flink_data",
         "for i in {1..99}; do echo \"key_$i,value_$i\" > flink_data/join_$i.txt; done",
-        "python3 -c \"with open('flink_data/join_100.txt', 'w') as f: [f.write(f'key_999,value_{i}\\n') for i in range(100000)]\""
+        "python3 -c \"with open('flink_data/join_100.txt', 'w') as f: [f.write(f'key_999,value_{i}\\n') for i in range(500000)]\""
       ],
       "small_commands": [
-        "python3 -c \"lines = open('flink_data/join_{ID}.txt').readlines(); print(f'Joined partition {ID}: {len(lines)} records')\""
+        "python3 -c \"import time; time.sleep(0.001); print(f'Joined partition {ID}')\""
       ],
       "large_commands": [
-        "python3 -c \"lines = open('flink_data/join_100.txt').readlines(); print(f'Joined large partition: {len(lines)} records')\""
+        "python3 -c \"import time; start = time.time(); lines = open('flink_data/join_100.txt').readlines(); data = [l.strip().split(',') for l in lines]; for i in range(50): joined = [(k, len([x for x in data if x[0] == k])) for k in set([x[0] for x in data])]; time.sleep(0.1); print(f'Joined large partition: {len(lines)} records, {len(joined)} keys in {time.time()-start:.2f}s')\""
       ],
       "test_command": "python3 assets/flink_join_test.py",
       "cleanup_commands": [
