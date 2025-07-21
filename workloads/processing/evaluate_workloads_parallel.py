@@ -9,16 +9,12 @@ tracks completion times for short vs long tasks separately.
 import json
 import subprocess
 import time
-import os
 import sys
 import argparse
-from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 import threading
 import multiprocessing
-import signal
 from concurrent.futures import ProcessPoolExecutor, as_completed
-import queue
 
 class ParallelTaskTracker:
     """Track execution times of parallel tasks"""
@@ -82,6 +78,14 @@ class EnhancedWorkloadEvaluator:
         self.config_file = config_file
         self.config = self._load_config()
         self.results = {}
+        # Load task counts from configuration
+        if 'configuration' in self.config:
+            cfg = self.config['configuration']
+            self.short_tasks = cfg.get('short_tasks', 39)
+            self.long_tasks = cfg.get('long_tasks', 1)
+        else:
+            self.short_tasks = 39
+            self.long_tasks = 1
         
     def _load_config(self) -> Dict:
         """Load test configuration from JSON file"""
@@ -106,10 +110,8 @@ class EnhancedWorkloadEvaluator:
             print(f"Category: {test['category']}")
             print(f"Description: {test['description']}")
             print(f"Expected improvement: {test['expected_improvement']*100:.0f}%")
-            print(f"Small tasks: {test['workload_characteristics']['small_tasks']}")
-            print(f"Large tasks: {test['workload_characteristics']['large_tasks']}")
-            print(f"Size ratio: {test['workload_characteristics']['size_ratio']}x")
-            print(f"Estimated runtime: {test['workload_characteristics']['expected_runtime_seconds']}s")
+            print(f"Small tasks: {self.short_tasks}")
+            print(f"Large tasks: {self.long_tasks}")
             print("-" * 50)
             
     def check_dependencies(self, test_case: Dict) -> Tuple[bool, List[str]]:
@@ -140,9 +142,9 @@ class EnhancedWorkloadEvaluator:
         
     def _run_parallel_workload(self, test_case: Dict) -> Dict:
         """Run workload with proper parallel execution and tracking"""
-        characteristics = test_case['workload_characteristics']
-        small_tasks = characteristics['small_tasks']
-        large_tasks = characteristics['large_tasks']
+        # Use configured values instead of reading from characteristics
+        small_tasks = self.short_tasks
+        large_tasks = self.long_tasks
         
         # Check if parallel commands are defined in JSON
         if 'small_commands' not in test_case or 'large_commands' not in test_case:
@@ -158,17 +160,15 @@ class EnhancedWorkloadEvaluator:
         small_cmds = []
         large_cmds = []
         
-        # Process small commands
+        # Process small commands - repeat for each short task
         for cmd_template in test_case['small_commands']:
-            for i in range(1, small_tasks + 1):
-                # Replace {ID} with actual task number
-                cmd = cmd_template.replace('{ID}', str(i))
-                small_cmds.append(cmd)
+            for i in range(small_tasks):
+                small_cmds.append(cmd_template)
                 
-        # Process large commands
+        # Process large commands - repeat for each long task  
         for cmd_template in test_case['large_commands']:
-            # Large commands don't need ID replacement typically
-            large_cmds.append(cmd_template)
+            for i in range(large_tasks):
+                large_cmds.append(cmd_template)
             
         # Execute tasks in parallel and track times
         tracker = ParallelTaskTracker()
@@ -197,7 +197,7 @@ class EnhancedWorkloadEvaluator:
             for future in as_completed(future_to_task):
                 task_type, task_id = future_to_task[future]
                 try:
-                    result_type, duration, output = future.result()
+                    result_type, duration, _ = future.result()
                     if result_type == 'small':
                         tracker.add_short_task(duration)
                     else:
@@ -266,7 +266,7 @@ class EnhancedWorkloadEvaluator:
             
         print(f"\nRunning test: {test_case['name']}")
         print(f"Description: {test_case['description']}")
-        print(f"Parallel tasks: {test_case['workload_characteristics']['small_tasks']} small + {test_case['workload_characteristics']['large_tasks']} large")
+        print(f"Parallel tasks: {self.short_tasks} small + {self.long_tasks} large")
         
         # Check dependencies
         deps_ok, missing_deps = self.check_dependencies(test_case)
@@ -280,8 +280,7 @@ class EnhancedWorkloadEvaluator:
             'test_id': test_id,
             'test_name': test_case['name'],
             'start_time': time.time(),
-            'expected_improvement': test_case['expected_improvement'],
-            'workload_characteristics': test_case['workload_characteristics']
+            'expected_improvement': test_case['expected_improvement']
         }
         
         # Setup phase
