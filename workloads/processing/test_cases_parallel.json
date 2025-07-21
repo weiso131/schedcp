@@ -60,26 +60,24 @@
       "dependencies": ["ffmpeg"]
     },
     {
-      "id": "pytest_suite",
-      "name": "Pytest Test Suite with Slow Integration Test",
-      "description": "Test suite with fast unit tests and one slow integration test",
-      "category": "software_testing",
+      "id": "c_compile_suite",
+      "name": "C Compilation Suite with Complex Project",
+      "description": "Compile suite with fast simple programs and one complex project",
+      "category": "software_compilation",
       "setup_commands": [
-        "mkdir -p test_suite",
-        "cat > test_suite/conftest.py << 'EOF'\nimport pytest\n\ndef pytest_addoption(parser):\n    parser.addoption('--test-id', default='0')\nEOF",
-        "for i in {1..99}; do echo \"import time\\ndef test_fast_$i():\\n    time.sleep(0.01)\\n    assert True\" > test_suite/test_fast_$i.py; done",
-        "echo \"import time\\ndef test_slow_integration():\\n    time.sleep(10)\\n    assert True\" > test_suite/test_slow.py"
+        "mkdir -p c_suite",
+        "for i in {1..99}; do echo \"#include <stdio.h>\nint main() { printf(\\\"Hello from program $i\\\\n\\\"); return 0; }\" > c_suite/prog$i.c; done",
+        "echo \"#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <math.h>\nint main() { int n=10000; double sum=0; for(int i=0; i<n*1000; i++) { for(int j=0; j<100; j++) { sum += sin(i*j)*cos(i+j); } } printf(\\\"Complex calculation: %f\\\\n\\\", sum); return 0; }\" > c_suite/complex.c"
       ],
       "small_commands": [
-        "cd test_suite && python -m pytest -q test_fast_{ID}.py"
+        "gcc -O2 c_suite/prog{ID}.c -o c_suite/prog{ID} && c_suite/prog{ID}"
       ],
       "large_commands": [
-        "cd test_suite && python -m pytest -q test_slow.py"
+        "gcc -O2 c_suite/complex.c -lm -o c_suite/complex && c_suite/complex"
       ],
-      "test_command": "cd test_suite && python -m pytest -q -n2 --durations=0",
+      "test_command": "cd c_suite && for f in *.c; do gcc -O2 \"$f\" -lm -o \"${f%.c}\" && \"${f%.c}\" & done; wait",
       "cleanup_commands": [
-        "rm -rf test_suite/",
-        "rm -rf .pytest_cache/"
+        "rm -rf c_suite/"
       ],
       "expected_improvement": 0.33,
       "workload_characteristics": {
@@ -88,7 +86,7 @@
         "size_ratio": 100,
         "expected_runtime_seconds": 12
       },
-      "dependencies": ["python3-pytest", "python3-pytest-xdist"]
+      "dependencies": ["gcc"]
     },
     {
       "id": "git_compression",
@@ -209,25 +207,24 @@
       "dependencies": ["python3"]
     },
     {
-      "id": "dask_groupby",
-      "name": "Dask DataFrame Groupby",
-      "description": "Customer analytics with power-law distribution",
-      "category": "data_processing",
+      "id": "make_build_suite",
+      "name": "Makefile Build Suite with Large Project",
+      "description": "Build system with simple targets and one complex project",
+      "category": "software_compilation",
       "setup_commands": [
-        "chmod +x assets/dask_groupby_test.py",
-        "mkdir -p dask_data",
-        "python3 -c \"import csv; [csv.writer(open(f'dask_data/chunk_{i}.csv', 'w')).writerows([['key', 'value'], [str(i), '1']]) for i in range(1, 100)]\"",
-        "python3 -c \"import csv; w = csv.writer(open('dask_data/chunk_100.csv', 'w')); w.writerow(['key', 'value']); [w.writerow(['999', str(i)]) for i in range(1000000)]\""
+        "mkdir -p build_suite",
+        "for i in {1..99}; do echo -e \"prog$i:\\n\\techo 'Building prog$i'; sleep 0.001; echo 'prog$i' > prog$i\" > build_suite/Makefile$i; done",
+        "echo -e \"complex_project:\\n\\techo 'Building complex project'; for i in {1..1000}; do echo \\\"Processing file \\$$i\\\"; dd if=/dev/urandom of=temp_\\$$i bs=1K count=100 2>/dev/null; sha256sum temp_\\$$i > hash_\\$$i; rm temp_\\$$i; done; echo 'Complex project built'\" > build_suite/Makefile_complex"
       ],
       "small_commands": [
-        "python3 -c \"import pandas as pd; import time; time.sleep(0.001); print(f'Processed chunk {ID}')\""
+        "cd build_suite && make -f Makefile{ID} prog{ID}"
       ],
       "large_commands": [
-        "python3 -c \"import pandas as pd; import time; start = time.time(); df = pd.read_csv('dask_data/chunk_100.csv'); for i in range(50): groups = df.groupby('key').agg({'value': ['count', 'sum', 'mean', 'std', 'min', 'max']}).reset_index(); time.sleep(0.1); print(f'Grouped large chunk: {len(groups)} groups in {time.time()-start:.2f}s')\""
+        "cd build_suite && make -f Makefile_complex complex_project"
       ],
-      "test_command": "python3 assets/dask_groupby_test.py",
+      "test_command": "cd build_suite && for f in Makefile*; do make -f \"$f\" & done; wait",
       "cleanup_commands": [
-        "rm -rf dask_data/"
+        "rm -rf build_suite/"
       ],
       "expected_improvement": 0.35,
       "workload_characteristics": {
@@ -236,28 +233,28 @@
         "size_ratio": 100,
         "expected_runtime_seconds": 22
       },
-      "dependencies": ["python3", "python3-pandas", "python3-numpy"]
+      "dependencies": ["make", "sha256sum"]
     },
     {
-      "id": "pandas_etl",
-      "name": "Pandas Multiprocessing ETL",
-      "description": "Log processing with DDoS spike creating large file",
+      "id": "log_analysis",
+      "name": "Log Analysis with Heavy Processing",
+      "description": "Log processing with grep/awk analysis and one complex computation",
       "category": "data_processing",
       "setup_commands": [
         "mkdir -p logs",
         "for i in {1..99}; do seq 1 100 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"INFO\", \"Message\", $1}' | gzip > logs/log$i.gz; done",
-        "seq 1 1000000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"INFO\", \"Message\", $1}' | gzip > logs/log100.gz",
-        "chmod +x assets/pandas_etl_test.py"
+        "seq 1 500000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"INFO\", \"Message\", $1}' | gzip > logs/big_log.gz"
       ],
       "small_commands": [
-        "python3 -c \"import gzip; import pandas as pd; import time; time.sleep(0.002); print(f'Processed log{ID}')\""
+        "zcat logs/log{ID}.gz | grep -c 'INFO' | head -1"
       ],
       "large_commands": [
-        "python3 -c \"import gzip; import pandas as pd; import time; start = time.time(); lines = gzip.open('logs/log100.gz', 'rt').readlines(); df = pd.DataFrame([l.split() for l in lines[:100000]]); for i in range(20): result = df.groupby(0).agg({1: ['count', 'nunique'], 2: ['count']}).reset_index(); time.sleep(0.2); print(f'Processed log100: {len(lines)} lines in {time.time()-start:.2f}s')\""
+        "zcat logs/big_log.gz | awk '{count[$2]++} END {for(i in count) print i, count[i]}' | sort -nr | head -100 | while read line; do echo \"$line\"; for j in {1..100}; do echo \"$line\" | sha256sum; done; done > /tmp/analysis_result"
       ],
-      "test_command": "python3 assets/pandas_etl_test.py",
+      "test_command": "for f in logs/*.gz; do zcat \"$f\" | wc -l & done; wait",
       "cleanup_commands": [
-        "rm -rf logs/"
+        "rm -rf logs/",
+        "rm -f /tmp/analysis_result"
       ],
       "expected_improvement": 0.35,
       "workload_characteristics": {
@@ -266,28 +263,28 @@
         "size_ratio": 100,
         "expected_runtime_seconds": 20
       },
-      "dependencies": ["python3", "python3-pandas", "gzip"]
+      "dependencies": ["gzip", "awk", "grep"]
     },
     {
-      "id": "flink_join",
-      "name": "Local Flink Batch Join",
-      "description": "Retail analytics with popular items creating join skew",
+      "id": "text_processing",
+      "name": "Text Processing with Complex Analysis",
+      "description": "Text analysis with simple grep and one complex sed/awk pipeline",
       "category": "data_processing",
       "setup_commands": [
-        "chmod +x assets/flink_join_test.py",
-        "mkdir -p flink_data",
-        "for i in {1..99}; do echo \"key_$i,value_$i\" > flink_data/join_$i.txt; done",
-        "python3 -c \"with open('flink_data/join_100.txt', 'w') as f: [f.write(f'key_999,value_{i}\\n') for i in range(500000)]\""
+        "mkdir -p text_data",
+        "for i in {1..99}; do echo \"key_$i,value_$i\" > text_data/file_$i.txt; done",
+        "seq 1 100000 | awk '{printf \"key_999,value_%d\\n\", $1}' > text_data/large_file.txt"
       ],
       "small_commands": [
-        "python3 -c \"import time; time.sleep(0.001); print(f'Joined partition {ID}')\""
+        "grep -c 'key' text_data/file_{ID}.txt"
       ],
       "large_commands": [
-        "python3 -c \"import time; start = time.time(); lines = open('flink_data/join_100.txt').readlines(); data = [l.strip().split(',') for l in lines]; for i in range(50): joined = [(k, len([x for x in data if x[0] == k])) for k in set([x[0] for x in data])]; time.sleep(0.1); print(f'Joined large partition: {len(lines)} records, {len(joined)} keys in {time.time()-start:.2f}s')\""
+        "cat text_data/large_file.txt | awk -F',' '{count[$1]++; sum[$1]+=$2} END {for(k in count) printf \"%s:%d:%s\\n\", k, count[k], sum[k]}' | while read line; do for i in {1..200}; do echo \"$line\" | sed 's/:/|/g' | sha256sum; done; done > /tmp/complex_result"
       ],
-      "test_command": "python3 assets/flink_join_test.py",
+      "test_command": "for f in text_data/*.txt; do wc -l \"$f\" & done; wait",
       "cleanup_commands": [
-        "rm -rf flink_data/"
+        "rm -rf text_data/",
+        "rm -f /tmp/complex_result"
       ],
       "expected_improvement": 0.30,
       "workload_characteristics": {
@@ -296,12 +293,12 @@
         "size_ratio": 100,
         "expected_runtime_seconds": 18
       },
-      "dependencies": ["python3"]
+      "dependencies": ["grep", "awk", "sed"]
     }
   ],
   "metadata": {
-    "version": "2.0",
-    "description": "Long-tail workload test cases with parallel command definitions",
+    "version": "2.1",
+    "description": "Long-tail workload test cases with system-level parallel commands",
     "target_platform": "Linux",
     "cpu_count": 4,
     "total_test_cases": 10,
