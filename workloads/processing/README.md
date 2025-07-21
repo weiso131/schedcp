@@ -65,13 +65,13 @@ The framework includes 10 test cases across different categories:
 - **ffmpeg_transcode**: Video transcoding with one large file
 
 ### Software Testing
-- **pytest_suite**: Test suite with slow integration test
+- **ctest_suite**: Test suite with slow integration test
 
 ### Version Control
 - **git_compression**: Git garbage collection with mixed objects
 
 ### Data Processing
-- **sort_compress**: Log processing with skewed chunks
+- **log_processing**: Log processing with skewed chunks
 - **spark_shuffle**: Analytics with hot key problem
 - **dask_groupby**: Customer analytics with power-law distribution
 - **pandas_etl**: ETL with DDoS spike simulation

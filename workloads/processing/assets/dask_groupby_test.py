@@ -5,64 +5,50 @@ Simulates customer analytics with power-law distribution
 """
 
 import pandas as pd
-import numpy as np
-from concurrent.futures import ProcessPoolExecutor
 import time
-
-def process_group(data_chunk):
-    """Process a chunk of data for groupby operation"""
-    print(f"Processing chunk with {len(data_chunk)} rows")
-    start_time = time.time()
-    
-    # Simulate processing time based on data size
-    processing_time = len(data_chunk) / 100000  # Scale factor
-    time.sleep(processing_time)
-    
-    result = data_chunk.groupby('k')['v'].sum()
-    
-    end_time = time.time()
-    print(f"Chunk processed in {end_time - start_time:.2f}s, groups: {len(result)}")
-    
-    return result
-
-def setup_dask_test():
-    """Setup skewed data for Dask-like workload"""
-    print("Setting up Dask groupby test...")
-    
-    # Create skewed data: 99 small groups + 1 hot group
-    data = pd.DataFrame({
-        'k': np.concatenate([np.arange(99), np.repeat(999, 500_000)]),
-        'v': 1
-    })
-    
-    print(f"Created dataset with {len(data)} rows")
-    print(f"Hot key (999) has {(data['k'] == 999).sum()} rows")
-    print(f"Other keys have ~{(data['k'] != 999).sum() / 99:.0f} rows each on average")
-    
-    return data
+import argparse
 
 if __name__ == '__main__':
-    data = setup_dask_test()
+    parser = argparse.ArgumentParser(description='Dask-like groupby test')
+    parser.add_argument('data_file', type=str, help='Path to CSV data file')
     
-    # Split into chunks for parallel processing (simulating Dask partitions)
-    print("\nSplitting data into 2 chunks for parallel processing...")
-    chunks = np.array_split(data, 2)
+    args = parser.parse_args()
     
-    print(f"Chunk 1: {len(chunks[0])} rows")
-    print(f"Chunk 2: {len(chunks[1])} rows")
-    
+    print(f"Processing groupby on {args.data_file}...")
     start_time = time.time()
     
-    with ProcessPoolExecutor(max_workers=2) as executor:
-        results = list(executor.map(process_group, chunks))
+    # Load data from file
+    data = pd.read_csv(args.data_file, names=['k', 'v'])
+    print(f"Loaded {len(data)} rows")
+    
+    # Perform multiple groupby operations to simulate complex analytics
+    # Customer analytics: sum, mean, count, std
+    result_sum = data.groupby('k')['v'].sum()
+    result_mean = data.groupby('k')['v'].mean()
+    result_count = data.groupby('k')['v'].count()
+    result_std = data.groupby('k')['v'].std()
+    
+    # Additional aggregations
+    result_min = data.groupby('k')['v'].min()
+    result_max = data.groupby('k')['v'].max()
+    
+    # Combine all results
+    final_result = pd.DataFrame({
+        'sum': result_sum,
+        'mean': result_mean,
+        'count': result_count,
+        'std': result_std,
+        'min': result_min,
+        'max': result_max
+    })
+    
+    # Sort by sum descending
+    final_result = final_result.sort_values('sum', ascending=False)
     
     end_time = time.time()
     
-    # Combine results
-    final_result = pd.concat(results).groupby(level=0).sum()
-    
-    print(f"\nGroupby operation complete!")
-    print(f"Total time: {end_time - start_time:.2f} seconds")
-    print(f"Final groups: {len(final_result)}")
-    print(f"Hot key (999) total: {final_result.get(999, 0)}")
-    print(f"Sample of other keys: {dict(list(final_result.drop(999, errors='ignore').head(5).items()))}")
+    print(f"Groupby complete in {end_time - start_time:.2f}s")
+    print(f"Total groups: {len(final_result)}")
+    print(f"Total sum: {result_sum.sum()}")
+    print(f"Top 5 groups by sum:")
+    print(final_result.head())

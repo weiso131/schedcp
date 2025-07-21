@@ -124,28 +124,6 @@
       "dependencies": ["sha256sum"]
     },
     {
-      "id": "sort_compress",
-      "name": "Sort and Compress with Skew",
-      "description": "Log processing with one large chunk among small ones",
-      "category": "data_processing",
-      "setup_commands": [
-        "seq 1 10000 | shuf > short_part.tsv",
-        "seq 1 500000 | shuf > long_part.tsv"
-      ],
-      "small_commands": [
-        "sort short_part.tsv | zstd -q -o short_part.tsv.zst"
-      ],
-      "large_commands": [
-        "sort long_part.tsv | zstd -q -o long_part.tsv.zst"
-      ],
-      "test_command": "parallel -j2 --line-buffer 'sort {} | zstd -q -o {}.zst' ::: part_*.tsv",
-      "cleanup_commands": [
-        "rm -f part_*.tsv part_*.tsv.zst"
-      ],
-      "expected_improvement": 0.30,
-      "dependencies": ["parallel", "zstd"]
-    },
-    {
       "id": "spark_shuffle",
       "name": "Spark Local Shuffle with Skew",
       "description": "Analytics with skewed data distribution (hot key problem)",
@@ -216,6 +194,127 @@
       ],
       "expected_improvement": 0.30,
       "dependencies": ["grep", "awk", "sed"]
+    },
+    {
+      "id": "ctest_suite",
+      "name": "CTest Suite with Slow Integration Test",
+      "description": "Test suite with fast unit tests and one slow integration test",
+      "category": "software_testing",
+      "setup_commands": [
+        "mkdir -p ctest_project",
+        "echo '#include <stdio.h>\n#include <math.h>\nint main() { double sum = 0; for(int i = 0; i < 1000000; i++) { sum += sin(i * 0.001) * cos(i * 0.001); } printf(\"Unit test result: %.6f\\n\", sum); return 0; }' > ctest_project/unit_test.c",
+        "echo '#include <stdio.h>\n#include <math.h>\n#include <stdlib.h>\nint main() { double sum = 0; for(long i = 0; i < 100000000L; i++) { sum += sin(i * 0.00001) * cos(i * 0.00001) * sqrt(i % 1000 + 1); } printf(\"Integration test result: %.6f\\n\", sum); return 0; }' > ctest_project/integration_test.c"
+      ],
+      "small_commands": [
+        "gcc -O2 -lm ctest_project/unit_test.c -o ctest_project/unit_test && ctest_project/unit_test"
+      ],
+      "large_commands": [
+        "gcc -O2 -lm ctest_project/integration_test.c -o ctest_project/integration_test && ctest_project/integration_test"
+      ],
+      "test_command": "cd ctest_project && for i in {1..39}; do (gcc -O2 -lm unit_test.c -o unit_test_$i && ./unit_test_$i > /dev/null) & done; (gcc -O2 -lm integration_test.c -o integration_test && ./integration_test > /dev/null) & wait",
+      "cleanup_commands": [
+        "rm -rf ctest_project/"
+      ],
+      "expected_improvement": 0.33,
+      "dependencies": ["gcc"]
+    },
+    {
+      "id": "log_processing",
+      "name": "Log Processing with Skewed Chunks",
+      "description": "Processing log files with different sizes and compression",
+      "category": "data_processing",
+      "setup_commands": [
+        "mkdir -p log_chunks",
+        "seq 1 50000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[INFO]\", \"Request from\", \"192.168.1.\"int(rand()*255), \"processed in\", int(rand()*100), \"ms\"}' > log_chunks/small.log",
+        "seq 1 2000000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[INFO]\", \"Request from\", \"192.168.1.\"int(rand()*255), \"processed in\", int(rand()*100), \"ms\"}' > log_chunks/large.log"
+      ],
+      "small_commands": [
+        "gzip -c log_chunks/small.log | zcat | grep -E '\\[INFO\\]' | awk '{print $4}' | sort | uniq -c | sort -nr > log_chunks/small_ips.txt"
+      ],
+      "large_commands": [
+        "gzip -c log_chunks/large.log | zcat | grep -E '\\[INFO\\]' | awk '{print $4}' | sort | uniq -c | sort -nr > log_chunks/large_ips.txt"
+      ],
+      "test_command": "for f in log_chunks/*.log; do gzip -c \"$f\" | zcat | grep -E '\\[INFO\\]' | awk '{print $4}' | sort | uniq -c | sort -nr > \"${f%.log}_analysis.txt\" & done; wait",
+      "cleanup_commands": [
+        "rm -rf log_chunks/"
+      ],
+      "expected_improvement": 0.35,
+      "dependencies": ["gzip", "grep", "awk", "sort", "uniq"]
+    },
+    {
+      "id": "dask_groupby",
+      "name": "Dask-like GroupBy with Power-law Distribution",
+      "description": "Customer analytics simulation with skewed group sizes",
+      "category": "data_processing",
+      "setup_commands": [
+        "mkdir -p dask_data",
+        "chmod +x assets/dask_groupby_test.py",
+        "for i in {1..99}; do echo \"customer_$i,$(shuf -i 100-500 -n 1)\" >> dask_data/small_groups.csv; done",
+        "for i in {1..50000}; do echo \"customer_999,$(shuf -i 100-500 -n 1)\" >> dask_data/large_group.csv; done"
+      ],
+      "small_commands": [
+        "python3 assets/dask_groupby_test.py"
+      ],
+      "large_commands": [
+        "python3 assets/dask_groupby_test.py"
+      ],
+      "test_command": "python3 assets/dask_groupby_test.py",
+      "cleanup_commands": [
+        "rm -rf dask_data/",
+        "rm -f /tmp/dask_*"
+      ],
+      "expected_improvement": 0.33,
+      "dependencies": ["python3", "awk"]
+    },
+    {
+      "id": "pandas_etl",
+      "name": "Pandas ETL with DDoS Spike Simulation",
+      "description": "ETL pipeline with sudden spike in data volume",
+      "category": "data_processing",
+      "setup_commands": [
+        "mkdir -p logs",
+        "chmod +x assets/pandas_etl_test.py",
+        "for i in {1..39}; do seq 1 1000 | awk -v i=$i '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[INFO]\", \"server\"i, \"Request processed\", $1}' | gzip > logs/log_$i.gz; done",
+        "seq 1 100000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[ERROR]\", \"server40\", \"DDoS attack detected\", $1}' | gzip > logs/log_40.gz"
+      ],
+      "small_commands": [
+        "python3 assets/pandas_etl_test.py"
+      ],
+      "large_commands": [
+        "python3 assets/pandas_etl_test.py"
+      ],
+      "test_command": "python3 assets/pandas_etl_test.py",
+      "cleanup_commands": [
+        "rm -rf logs/",
+        "rm -f /tmp/pandas_*"
+      ],
+      "expected_improvement": 0.33,
+      "dependencies": ["python3", "gzip", "awk"]
+    },
+    {
+      "id": "flink_join",
+      "name": "Flink-like Join with Popular Items",
+      "description": "Retail analytics simulation with hot products",
+      "category": "data_processing",
+      "setup_commands": [
+        "mkdir -p flink_data",
+        "chmod +x assets/flink_join_test.py",
+        "for i in {1..99}; do for j in {1..100}; do echo \"product_$i,$(shuf -i 10-50 -n 1),$(date +%s -d \"$j hours ago\")\" >> flink_data/regular_products.csv; done; done",
+        "for i in {1..10000}; do echo \"product_999,$(shuf -i 10-50 -n 1),$(date +%s -d \"$((RANDOM % 24)) hours ago\")\" >> flink_data/popular_product.csv; done"
+      ],
+      "small_commands": [
+        "python3 assets/flink_join_test.py"
+      ],
+      "large_commands": [
+        "python3 assets/flink_join_test.py"
+      ],
+      "test_command": "python3 assets/flink_join_test.py",
+      "cleanup_commands": [
+        "rm -rf flink_data/",
+        "rm -f /tmp/flink_*"
+      ],
+      "expected_improvement": 0.33,
+      "dependencies": ["python3", "awk"]
     }
   ],
   "metadata": {
@@ -223,7 +322,7 @@
     "description": "Long-tail workload test cases with system-level parallel commands",
     "target_platform": "Linux",
     "cpu_count": 4,
-    "total_test_cases": 10,
+    "total_test_cases": 14,
     "average_expected_improvement": 0.32
   }
 }

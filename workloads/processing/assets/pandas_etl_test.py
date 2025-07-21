@@ -4,82 +4,74 @@ Pandas ETL simulation without heavy dependencies
 Simulates log processing with DDoS spike creating large file
 """
 
-import multiprocessing as mp
 import pandas as pd
-import glob
 import gzip
 import time
-import io
-
-def parse_log_file(filename):
-    """Parse a gzipped log file and return basic stats"""
-    print(f"Processing {filename}...")
-    start_time = time.time()
-    
-    try:
-        with gzip.open(filename, 'rt') as f:
-            lines = f.readlines()
-            
-        # Simulate processing time based on file size
-        processing_time = len(lines) / 10000  # Scale factor
-        time.sleep(processing_time)
-        
-        # Simple parsing simulation
-        data = []
-        for line in lines[:1000]:  # Limit to avoid memory issues
-            parts = line.strip().split()
-            if len(parts) >= 4:
-                data.append({
-                    'timestamp': parts[0] + ' ' + parts[1],
-                    'level': parts[2],
-                    'message': ' '.join(parts[3:])
-                })
-        
-        df = pd.DataFrame(data)
-        
-        end_time = time.time()
-        print(f"Processed {filename} in {end_time - start_time:.2f}s: {len(lines)} lines -> {len(df)} parsed")
-        
-        return {
-            'filename': filename,
-            'total_lines': len(lines),
-            'parsed_lines': len(df),
-            'processing_time': end_time - start_time
-        }
-        
-    except Exception as e:
-        print(f"Error processing {filename}: {e}")
-        return {'filename': filename, 'error': str(e)}
+import argparse
+import re
+from collections import Counter
 
 if __name__ == '__main__':
-    print("Starting Pandas ETL test...")
+    parser = argparse.ArgumentParser(description='Pandas ETL test')
+    parser.add_argument('log_file', type=str, help='Log file to process')
     
-    # Find all log files
-    files = glob.glob('logs/*.gz')
-    print(f"Found {len(files)} log files to process")
+    args = parser.parse_args()
     
-    if not files:
-        print("No log files found! Run setup first.")
-        exit(1)
-    
+    print(f"Processing ETL on {args.log_file}...")
     start_time = time.time()
     
-    # Process files in parallel
-    with mp.Pool(2) as pool:
-        results = pool.map(parse_log_file, files)
+    # Read and parse the gzipped log file
+    with gzip.open(args.log_file, 'rt') as f:
+        lines = f.readlines()
+    
+    print(f"Loaded {len(lines)} log lines")
+    
+    # Parse all lines into structured data
+    data = []
+    ip_pattern = re.compile(r'\d+\.\d+\.\d+\.\d+')
+    
+    for line in lines:
+        parts = line.strip().split()
+        if len(parts) >= 4:
+            # Extract IP addresses
+            ips = ip_pattern.findall(line)
+            data.append({
+                'timestamp': parts[0] + ' ' + parts[1],
+                'level': parts[2],
+                'ip': ips[0] if ips else 'unknown',
+                'message': ' '.join(parts[3:])
+            })
+    
+    # Create DataFrame for analysis
+    df = pd.DataFrame(data)
+    
+    # Perform ETL transformations
+    # 1. Count by log level
+    level_counts = df['level'].value_counts()
+    
+    # 2. Count by IP address
+    ip_counts = df['ip'].value_counts()
+    
+    # 3. Extract hour from timestamp and count
+    df['hour'] = pd.to_datetime(df['timestamp'], errors='coerce').dt.hour
+    hourly_counts = df['hour'].value_counts().sort_index()
+    
+    # 4. Find error patterns
+    error_df = df[df['level'] == '[ERROR]']
+    error_patterns = Counter()
+    for msg in error_df['message']:
+        # Simple pattern extraction
+        words = msg.split()
+        if len(words) >= 2:
+            pattern = f"{words[0]} {words[1]}"
+            error_patterns[pattern] += 1
     
     end_time = time.time()
     
-    # Combine and analyze results
-    successful_results = [r for r in results if 'error' not in r]
-    
-    print(f"\nETL processing complete!")
-    print(f"Total time: {end_time - start_time:.2f} seconds")
-    print(f"Files processed: {len(successful_results)}")
-    print(f"Total lines processed: {sum(r['total_lines'] for r in successful_results)}")
-    print(f"Total parsed records: {sum(r['parsed_lines'] for r in successful_results)}")
-    
-    # Show processing time distribution
-    if successful_results:
-        times = [r['processing_time'] for r in successful_results]
-        print(f"Processing time - Min: {min(times):.2f}s, Max: {max(times):.2f}s, Avg: {sum(times)/len(times):.2f}s")
+    print(f"ETL complete in {end_time - start_time:.2f}s")
+    print(f"Total records processed: {len(df)}")
+    print(f"Log levels: {dict(level_counts)}")
+    print(f"Top 5 IPs: {dict(ip_counts.head())}")
+    print(f"Hourly distribution: {dict(hourly_counts.head())}")
+    if error_patterns:
+        print(f"Top error patterns: {dict(error_patterns.most_common(5))}")
