@@ -1,0 +1,237 @@
+{
+  "test_cases": [
+    {
+      "id": "pigz_compression",
+      "name": "Pigz Directory Compression",
+      "description": "Parallel compression of mixed-size files with severe load imbalance",
+      "category": "file_processing",
+      "setup_commands": [
+        "mkdir -p test_data",
+        "for i in {1..99}; do dd if=/dev/urandom of=test_data/file$i.dat bs=1K count=100 2>/dev/null; done",
+        "dd if=/dev/urandom of=test_data/large.iso bs=1M count=200 2>/dev/null"
+      ],
+      "test_command": "find ./test_data -name '*.dat' -o -name '*.iso' -print0 | xargs -0 -n1 -P2 pigz -1",
+      "cleanup_commands": [
+        "rm -rf test_data/",
+        "rm -f *.gz"
+      ],
+      "expected_improvement": 0.33,
+      "workload_characteristics": {
+        "small_tasks": 99,
+        "large_tasks": 1,
+        "size_ratio": 100,
+        "expected_runtime_seconds": 15
+      },
+      "dependencies": ["pigz"]
+    },
+    {
+      "id": "ffmpeg_transcode",
+      "name": "FFmpeg Split Transcode",
+      "description": "Video transcoding with one large file dominating processing time",
+      "category": "media_processing",
+      "setup_commands": [
+        "mkdir -p clips out",
+        "for i in {1..99}; do ffmpeg -f lavfi -i testsrc=duration=0.1:size=320x240:rate=30 -loglevel quiet clips/clip$i.mp4; done",
+        "ffmpeg -f lavfi -i testsrc=duration=10:size=1920x1080:rate=30 -loglevel quiet clips/long_clip.mp4"
+      ],
+      "test_command": "for f in clips/*.mp4; do ffmpeg -loglevel quiet -i \"$f\" -vf scale=640:-1 -c:v libx264 -preset veryfast out/\"${f##*/}\" & done; wait",
+      "cleanup_commands": [
+        "rm -rf clips/ out/"
+      ],
+      "expected_improvement": 0.33,
+      "workload_characteristics": {
+        "small_tasks": 99,
+        "large_tasks": 1,
+        "size_ratio": 100,
+        "expected_runtime_seconds": 15
+      },
+      "dependencies": ["ffmpeg"]
+    },
+    {
+      "id": "pytest_suite",
+      "name": "Pytest Test Suite with Slow Integration Test",
+      "description": "Test suite with fast unit tests and one slow integration test",
+      "category": "software_testing",
+      "setup_commands": [
+        "mkdir -p test_suite",
+        "cat > test_suite/test_mixed.py << 'EOF'\nimport time\nimport pytest\n\n# 99 fast tests\nfor i in range(99):\n    exec(f'''\ndef test_fast_{i}():\n    time.sleep(0.01)\n    assert True\n''')\n\n# 1 slow integration test\ndef test_slow_integration():\n    time.sleep(10)\n    assert True\nEOF"
+      ],
+      "test_command": "cd test_suite && python -m pytest -q -n2 --durations=0",
+      "cleanup_commands": [
+        "rm -rf test_suite/",
+        "rm -rf .pytest_cache/"
+      ],
+      "expected_improvement": 0.33,
+      "workload_characteristics": {
+        "small_tasks": 99,
+        "large_tasks": 1,
+        "size_ratio": 100,
+        "expected_runtime_seconds": 12
+      },
+      "dependencies": ["python3-pytest", "python3-pytest-xdist"]
+    },
+    {
+      "id": "git_compression",
+      "name": "Git Incremental Compression",
+      "description": "Git garbage collection with mixed object sizes",
+      "category": "version_control",
+      "setup_commands": [
+        "mkdir -p test_repo && cd test_repo",
+        "git init",
+        "git config user.name 'Test User'",
+        "git config user.email 'test@example.com'",
+        "for i in {1..99}; do echo \"small change $i\" > file$i.txt && git add file$i.txt && git commit -m \"commit $i\" --quiet; done",
+        "dd if=/dev/urandom of=large.bin bs=1M count=300 2>/dev/null",
+        "git add large.bin && git commit -m 'add large binary' --quiet",
+        "cd .."
+      ],
+      "test_command": "cd test_repo && time git gc",
+      "cleanup_commands": [
+        "rm -rf test_repo/"
+      ],
+      "expected_improvement": 0.30,
+      "workload_characteristics": {
+        "small_tasks": 99,
+        "large_tasks": 1,
+        "size_ratio": 100,
+        "expected_runtime_seconds": 20
+      },
+      "dependencies": ["git"]
+    },
+    {
+      "id": "file_checksum",
+      "name": "Parallel File System Operations",
+      "description": "Checksum operations with one large file blocking completion",
+      "category": "file_processing",
+      "setup_commands": [
+        "mkdir -p large-dir",
+        "for i in {1..99}; do dd if=/dev/urandom of=large-dir/file$i.dat bs=1M count=1 2>/dev/null; done",
+        "dd if=/dev/urandom of=large-dir/largefile.dat bs=1M count=1024 2>/dev/null"
+      ],
+      "test_command": "find ./large-dir -type f -print0 | xargs -0 -n1 -P2 sha256sum > checksums.txt",
+      "cleanup_commands": [
+        "rm -rf large-dir/",
+        "rm -f checksums.txt"
+      ],
+      "expected_improvement": 0.33,
+      "workload_characteristics": {
+        "small_tasks": 99,
+        "large_tasks": 1,
+        "size_ratio": 100,
+        "expected_runtime_seconds": 25
+      },
+      "dependencies": ["coreutils"]
+    },
+    {
+      "id": "sort_compress",
+      "name": "Sort and Compress with Skew",
+      "description": "Log processing with one large chunk among small ones",
+      "category": "data_processing",
+      "setup_commands": [
+        "for i in {1..99}; do seq 1 10000 | shuf > part_$i.tsv; done",
+        "seq 1 10000000 | shuf > part_100.tsv"
+      ],
+      "test_command": "parallel -j2 --line-buffer 'sort {} | zstd -q -o {}.zst' ::: part_*.tsv",
+      "cleanup_commands": [
+        "rm -f part_*.tsv part_*.tsv.zst"
+      ],
+      "expected_improvement": 0.30,
+      "workload_characteristics": {
+        "small_tasks": 99,
+        "large_tasks": 1,
+        "size_ratio": 100,
+        "expected_runtime_seconds": 18
+      },
+      "dependencies": ["parallel", "zstd"]
+    },
+    {
+      "id": "spark_shuffle",
+      "name": "Spark Local Shuffle with Skew",
+      "description": "Analytics with skewed data distribution (hot key problem)",
+      "category": "data_processing",
+      "setup_commands": [
+        "chmod +x assets/spark_skew_test.py"
+      ],
+      "test_command": "python3 assets/spark_skew_test.py",
+      "cleanup_commands": [],
+      "expected_improvement": 0.33,
+      "workload_characteristics": {
+        "small_tasks": 99,
+        "large_tasks": 1,
+        "size_ratio": 100,
+        "expected_runtime_seconds": 20
+      },
+      "dependencies": ["python3"]
+    },
+    {
+      "id": "dask_groupby",
+      "name": "Dask DataFrame Groupby",
+      "description": "Customer analytics with power-law distribution",
+      "category": "data_processing",
+      "setup_commands": [
+        "chmod +x assets/dask_groupby_test.py"
+      ],
+      "test_command": "python3 assets/dask_groupby_test.py",
+      "cleanup_commands": [],
+      "expected_improvement": 0.35,
+      "workload_characteristics": {
+        "small_tasks": 99,
+        "large_tasks": 1,
+        "size_ratio": 100,
+        "expected_runtime_seconds": 22
+      },
+      "dependencies": ["python3", "python3-pandas", "python3-numpy"]
+    },
+    {
+      "id": "pandas_etl",
+      "name": "Pandas Multiprocessing ETL",
+      "description": "Log processing with DDoS spike creating large file",
+      "category": "data_processing",
+      "setup_commands": [
+        "mkdir -p logs",
+        "for i in {1..99}; do seq 1 1000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"INFO\", \"Message\", $1}' | gzip > logs/log$i.gz; done",
+        "seq 1 100000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"INFO\", \"Message\", $1}' | gzip > logs/log100.gz",
+        "chmod +x assets/pandas_etl_test.py"
+      ],
+      "test_command": "python3 assets/pandas_etl_test.py",
+      "cleanup_commands": [
+        "rm -rf logs/"
+      ],
+      "expected_improvement": 0.35,
+      "workload_characteristics": {
+        "small_tasks": 99,
+        "large_tasks": 1,
+        "size_ratio": 100,
+        "expected_runtime_seconds": 20
+      },
+      "dependencies": ["python3", "python3-pandas", "gzip"]
+    },
+    {
+      "id": "flink_join",
+      "name": "Local Flink Batch Join",
+      "description": "Retail analytics with popular items creating join skew",
+      "category": "data_processing",
+      "setup_commands": [
+        "chmod +x assets/flink_join_test.py"
+      ],
+      "test_command": "python3 assets/flink_join_test.py",
+      "cleanup_commands": [],
+      "expected_improvement": 0.30,
+      "workload_characteristics": {
+        "small_tasks": 99,
+        "large_tasks": 1,
+        "size_ratio": 100,
+        "expected_runtime_seconds": 18
+      },
+      "dependencies": ["python3"]
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "description": "Long-tail workload test cases for Linux scheduler optimization",
+    "target_platform": "Linux",
+    "cpu_count": 4,
+    "total_test_cases": 10,
+    "average_expected_improvement": 0.32
+  }
+}
