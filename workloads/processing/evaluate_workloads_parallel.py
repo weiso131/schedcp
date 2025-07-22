@@ -76,10 +76,11 @@ def run_single_task(task_info: Tuple[str, int, str, str]) -> Tuple[str, float, s
 class EnhancedWorkloadEvaluator:
     """Enhanced evaluation framework with parallel execution tracking"""
     
-    def __init__(self, config_file: str = "test_cases.json"):
+    def __init__(self, config_file: str = "test_cases.json", sequential: bool = False):
         self.config_file = config_file
         self.config = self._load_config()
         self.results = {}
+        self.sequential = sequential
         # Load task counts from configuration
         if 'configuration' in self.config:
             cfg = self.config['configuration']
@@ -220,7 +221,10 @@ class EnhancedWorkloadEvaluator:
             tracker = ParallelTaskTracker()
             
             # Run all tasks in parallel using process pool
-            max_workers = multiprocessing.cpu_count()
+            if self.sequential:
+                max_workers = 1
+            else:
+                max_workers = len(all_tasks)
             wall_start = time.time()
             
             with ProcessPoolExecutor(max_workers=max_workers) as executor:
@@ -250,6 +254,7 @@ class EnhancedWorkloadEvaluator:
             # Get statistics
             stats = tracker.get_stats()
             stats['wall_clock_time'] = wall_time
+            stats['execution_mode'] = 'sequential' if self.sequential else 'parallel'
             
             # Calculate completion times
             if stats['short_tasks']['times'] and stats['long_tasks']['times']:
@@ -257,7 +262,8 @@ class EnhancedWorkloadEvaluator:
                 # The long task dominates the total completion time
                 stats['short_tasks_completion_time'] = max(stats['short_tasks']['times'])
                 stats['long_tasks_completion_time'] = max(stats['long_tasks']['times'])
-                stats['parallel_efficiency'] = (stats['short_tasks']['total_time'] + stats['long_tasks']['total_time']) / (wall_time * max_workers)
+                if not self.sequential:
+                    stats['parallel_efficiency'] = (stats['short_tasks']['total_time'] + stats['long_tasks']['total_time']) / (wall_time * max_workers)
             
             return stats
             
@@ -309,7 +315,7 @@ class EnhancedWorkloadEvaluator:
             
         print(f"\nRunning test: {test_case['name']}")
         print(f"Description: {test_case['description']}")
-        print(f"Parallel tasks: {self.short_tasks} small + {self.long_tasks} large")
+        print(f"Tasks: {self.short_tasks} small + {self.long_tasks} large (mode: {'sequential' if self.sequential else 'parallel'})")
         
         # Check dependencies
         deps_ok, missing_deps = self.check_dependencies(test_case)
@@ -363,7 +369,8 @@ class EnhancedWorkloadEvaluator:
         
     def run_all_tests(self) -> Dict:
         """Run all test cases"""
-        print(f"Running all {len(self.config['test_cases'])} test cases with parallel execution tracking...")
+        mode = "sequential" if self.sequential else "parallel"
+        print(f"Running all {len(self.config['test_cases'])} test cases in {mode} mode...")
         print("=" * 80)
         
         all_results = {}
@@ -445,10 +452,12 @@ def main():
                        help='Run all test cases')
     parser.add_argument('--save', metavar='FILENAME', 
                        help='Save results to specified file')
+    parser.add_argument('--sequential', action='store_true',
+                       help='Run tasks sequentially instead of in parallel')
     
     args = parser.parse_args()
     
-    evaluator = EnhancedWorkloadEvaluator(args.config)
+    evaluator = EnhancedWorkloadEvaluator(args.config, sequential=args.sequential)
     
     if args.list:
         evaluator.list_tests()
