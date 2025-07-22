@@ -2,523 +2,318 @@
 
 ## Overview
 
-This document presents a comprehensive collection of benchmark test cases designed to demonstrate how custom Linux kernel schedulers can significantly improve performance on dual-CPU systems. These tests specifically target "long-tail" scenarios where one task takes significantly longer than others, creating inefficiencies in standard CFS (Completely Fair Scheduler) scheduling.
+This document presents a comprehensive collection of parallel benchmark test cases designed to demonstrate how custom Linux kernel schedulers can significantly improve performance on multi-CPU systems. These tests specifically target "long-tail" scenarios where one task takes significantly longer than others, creating inefficiencies in standard CFS (Completely Fair Scheduler) scheduling.
 
 ## Core Concept: The Long-Tail Problem
 
-In many real-world scenarios, workloads consist of multiple tasks where:
-- 99 tasks complete in ~6 seconds each
-- 1 task (the "straggler") takes ~600 seconds
+The framework implements a 40-task parallel configuration where:
+- 39 tasks complete quickly (short tasks)
+- 1 task takes significantly longer (long task)
 
-Under standard CFS scheduling on a 2-CPU system:
-- Total time = (99 × 6 sec / 2 cores) + 600 sec ≈ 894 seconds
-- One core sits idle after completing its share of short tasks
+This creates severe load imbalance typical in real-world scenarios:
+- Under standard CFS scheduling: cores become idle after completing short tasks
+- With custom schedulers: better load balancing and resource utilization
+- Expected performance improvement: 30-35% reduction in wall-clock time
 
-With a custom scheduler that detects and pins long-running tasks:
-- Total time ≈ 600 seconds (the duration of the longest task)
-- Both cores remain busy until all short tasks complete
-- Performance improvement: 25-40% reduction in wall-clock time
+## Test Case Implementations
 
-## Section 1: File Processing and Compression Workloads
+### 1. Pigz Directory Compression
 
-### 1.1 Pigz Directory Compression
+**ID:** `pigz_compression`
+**Category:** File Processing
+**Description:** Parallel compression of mixed-size files with severe load imbalance
 
-**Real-world scenario:** Backup systems often compress mixed-size files where source code files are small but VM images or database dumps are huge. This creates severe load imbalance when compressing in parallel.
+**Configuration:**
+- 39 short tasks: Compress small files (3M records each)
+- 1 long task: Compress large file (100M records)
+- Creates massive imbalance in compression time
 
-**Command:**
+**Setup Commands:**
 ```bash
-find ./linux-src -type f -print0 | xargs -0 -n1 -P2 pigz -1
+# Small file setup (executed 39 times)
+mkdir -p test_data
+seq 1 3000000 > test_data/short_file.dat
+
+# Large file setup (executed 1 time)
+mkdir -p test_data  
+seq 1 100000000 > test_data/large_file.dat
 ```
 
-**Workload Characteristics:**
-- 99 small files (≤100 KiB each)
-- 1 large ISO file (200 MiB)
-- The pigz thread processing the ISO lives 100x longer than others
+**Execution:**
+- Small commands: `pigz -9 test_data/short_file.dat`
+- Large commands: `pigz -9 test_data/large_file.dat`
 
-**Synthetic Data Generation:**
+**Expected Improvement:** 33%
+
+### 2. FFmpeg Split Transcode
+
+**ID:** `ffmpeg_transcode`
+**Category:** Media Processing
+**Description:** Video transcoding with one large file dominating processing time
+
+**Configuration:**
+- 39 short tasks: Process short video clips (6 seconds duration)
+- 1 long task: Process long video clip (70 seconds duration)
+- Severe imbalance in transcoding time
+
+**Setup Commands:**
 ```bash
-# Create 99 small files and 1 large file
-for i in {1..99}; do dd if=/dev/urandom of=file$i.dat bs=1K count=100; done
-dd if=/dev/urandom of=large.iso bs=1M count=200  # 200MB file
+# Short video setup
+mkdir -p clips out
+ffmpeg -f lavfi -i testsrc=duration=6:size=320x240:rate=30 -loglevel quiet clips/short.mp4
+
+# Long video setup  
+mkdir -p clips out
+ffmpeg -f lavfi -i testsrc=duration=70:size=1920x1080:rate=30 -loglevel quiet clips/long.mp4
 ```
 
+**Execution:**
+- Small commands: `ffmpeg -loglevel quiet -i clips/short.mp4 -vf scale=640:-1 -c:v libx264 -preset veryfast out/short_out.mp4`
+- Large commands: `ffmpeg -loglevel quiet -i clips/long.mp4 -vf scale=640:-1 -c:v libx264 -preset veryfast out/long_out.mp4`
 
-**Expected Results:**
-- End-to-end time reduction: ~15s → ~10s
-- Performance gain: ~33%
+**Expected Improvement:** 33%
 
-### 1.2 FFmpeg Split Transcode
+### 3. CTest Suite with Integration Test
 
-**Real-world scenario:** Video platforms batch-process user uploads where most are short clips but occasionally receive full-length movies or lectures. The long video blocks completion of the entire batch.
+**ID:** `ctest_suite`
+**Category:** Software Testing
+**Description:** Test suite with fast unit tests and one slow integration test
 
-**Command:**
+**Configuration:**
+- 39 short tasks: Quick unit test programs
+- 1 long task: Slow integration test program
+- Creates typical CI/CD pipeline imbalance
+
+**Setup Commands:**
 ```bash
-for f in clips/*.mp4; do 
-    ffmpeg -loglevel quiet -i "$f" -vf scale=640:-1 \
-           -c:v libx264 -preset veryfast out/"${f##*/}" & 
-done
-wait
+# Short test setup
+cp $ORIGINAL_CWD/assets/short.c .
+gcc -O2 short.c -lm -o short
+
+# Long test setup
+cp $ORIGINAL_CWD/assets/long.c .
+gcc -O2 long.c -lm -o long
 ```
 
-**Workload Characteristics:**
-- 99 short video clips (process in ~6 seconds each)
-- 1 4K/10-minute clip (processes in ~600 seconds)
-- Massive imbalance in processing time
+**Execution:**
+- Small commands: `./short`
+- Large commands: `./long`
 
-**Synthetic Data Generation:**
+**Expected Improvement:** 33%
+
+### 4. Git Incremental Compression
+
+**ID:** `git_compression`
+**Category:** Version Control
+**Description:** Git garbage collection with mixed object sizes
+
+**Configuration:**
+- 39 short tasks: Simple git log operations on small repositories
+- 1 long task: Heavy git repack operation on large repository
+- Simulates mixed repository processing scenarios
+
+**Setup Commands:**
 ```bash
-# Generate test videos using ffmpeg itself
-for i in {1..99}; do
-    ffmpeg -f lavfi -i testsrc=duration=0.1:size=320x240:rate=30 clip$i.mp4
-done
-# One long video
-ffmpeg -f lavfi -i testsrc=duration=10:size=1920x1080:rate=30 long_clip.mp4
+# Small repository setup
+mkdir -p test_repo && cd test_repo && git init
+cd test_repo && git config user.name 'Test User' && git config user.email 'test@example.com'
+cd test_repo && for i in {1..50}; do echo "change $i" > file_$i.txt && git add file_$i.txt && git commit -m "commit $i" --quiet; done
+
+# Large repository setup
+mkdir -p test_repo && cd test_repo && git init
+cd test_repo && git config user.name 'Test User' && git config user.email 'test@example.com'
+cd test_repo && for i in {1..200}; do dd if=/dev/urandom of=bin_$i.dat bs=1M count=2 2>/dev/null && git add bin_$i.dat && git commit -m "binary $i" --quiet; done
 ```
 
+**Expected Improvement:** 30%
 
-**Expected Results:**
-- Batch processing time reduced by ~33%
-- Better CPU utilization throughout the job
+### 5. Parallel File System Operations
 
-## Section 2: Software Testing and Development Workloads
+**ID:** `file_checksum`
+**Category:** File Processing  
+**Description:** Checksum operations with one large file blocking completion
 
-### 2.1 Pytest xdist Test Suite
+**Configuration:**
+- 39 short tasks: Checksum small files (200MB each)
+- 1 long task: Checksum large file (1000MB)
+- Creates file I/O imbalance
 
-**Real-world scenario:** CI/CD pipelines run test suites where most are quick unit tests but some integration tests require database setup or external service initialization. One slow test can delay the entire pipeline.
-
-**Command:**
+**Setup Commands:**
 ```bash
-pytest -q -n2 --durations=0
-```
-
-**Workload Characteristics:**
-- Test suite with 99 fast unit tests
-- 1 integration test that starts Postgres (takes 600 seconds)
-- xdist spawns 2 workers; one finishes fast tests in ~60s then idles
-
-**Synthetic Test Suite Creation:**
-```python
-# Create test_suite.py with mixed durations
-import time
-import pytest
-
-# 99 fast tests
-for i in range(99):
-    exec(f'''
-def test_fast_{i}():
-    time.sleep(0.1)  # Simulate quick test
-    assert True
-''')
-
-# 1 slow integration test
-def test_slow_integration():
-    time.sleep(10)  # Simulate database setup/teardown
-    assert True
-```
-
-
-**Expected Results:**
-- Suite wall time: 894 sec → ~600 sec
-- ~33% improvement in total test time
-
-### 2.2 Git Incremental Compression
-
-**Real-world scenario:** Large repositories accumulate binary artifacts (PDFs, images, build outputs) that create massive deltas during garbage collection. One large binary dominates the entire gc process.
-
-**Command:**
-```bash
-git clone --mirror linux.git big.git
-cd big.git
-time git gc
-```
-
-**Workload Characteristics:**
-- Packs hundreds of 4 MiB deltas
-- One massive 300 MiB delta
-- The large delta thread is 100x heavier
-
-**Synthetic Repository Creation:**
-```bash
-# Create a repo with mixed object sizes
-git init test-repo && cd test-repo
-# Add 99 small commits
-for i in {1..99}; do
-    echo "small change $i" > file$i.txt
-    git add file$i.txt && git commit -m "commit $i"
-done
-# Add one massive binary blob
-dd if=/dev/urandom of=large.bin bs=1M count=300  # 300MB
-git add large.bin && git commit -m "add large binary"
-```
-
-
-**Expected Results:**
-- GC time reduced by ~30%
-- More efficient delta compression parallelization
-
-## Section 3: Database and Storage Workloads
-
-### 3.1 RocksDB Compaction
-
-**Real-world scenario:** Database applications experience periodic compaction storms when many small writes accumulate and trigger a major compaction. This blocks foreground operations and degrades user experience.
-
-**Test Setup:**
-```bash
-# RocksDB db_bench with 1M keys
-db_bench --benchmarks=fillrandom --num=1000000
-```
-
-**Workload Characteristics:**
-- Multiple small file compactions
-- One large L0→L1 compaction dominates runtime
-
-**Synthetic Workload Setup:**
-```bash
-# Create simple RocksDB test without db_bench
-# Use any key-value workload generator or simple C++ program
-cat > rocksdb_test.cpp << 'EOF'
-#include <rocksdb/db.h>
-int main() {
-    rocksdb::DB* db;
-    rocksdb::Options options;
-    options.create_if_missing = true;
-    rocksdb::DB::Open(options, "/tmp/testdb", &db);
-    // Insert 1M keys to trigger compaction
-    for(int i = 0; i < 1000000; i++) {
-        db->Put(rocksdb::WriteOptions(), std::to_string(i), std::string(1024, 'x'));
-    }
-}
-EOF
-g++ -o rocksdb_test rocksdb_test.cpp -lrocksdb
-```
-
-
-**Expected Results:**
-- Improved 99th percentile latency during fill phase
-- Better isolation of background compaction work
-
-### 3.2 Parallel File System Operations
-
-**Real-world scenario:** Security scans or integrity checks must verify all files in a directory containing mostly config files but also large disk images or database backups. The large file blocks completion of the entire scan.
-
-**Command:**
-```bash
-# Parallel find and checksum operations
-find ./large-dir -type f -print0 | xargs -0 -n1 -P2 sha256sum > checksums.txt
-```
-
-**Workload Characteristics:**
-- 99 small files (< 10 MB each) checksum quickly
-- 1 large file (1 GB) takes 100x longer to process
-- Creates severe imbalance in xargs parallel execution
-
-**Synthetic Test Setup:**
-```bash
-# Create test directory with mixed file sizes
+# Small file setup
 mkdir -p large-dir
-for i in {1..99}; do
-    dd if=/dev/urandom of=large-dir/file$i.dat bs=1M count=1
-done
-# One large file
-dd if=/dev/urandom of=large-dir/largefile.dat bs=1M count=1024  # 1GB
+dd if=/dev/urandom of=large-dir/short_file.dat bs=1M count=200 2>/dev/null
 
-# Run the parallel checksum operation
-time find ./large-dir -type f -print0 | xargs -0 -n1 -P2 sha256sum > checksums.txt
+# Large file setup
+mkdir -p large-dir
+dd if=/dev/urandom of=large-dir/long_file.dat bs=1M count=1000 2>/dev/null
 ```
 
+**Expected Improvement:** 33%
 
-**Expected Results:**
-- Total checksum time: ~894 sec → ~600 sec
-- ~33% improvement in parallel file processing
+### 6. Log Processing with Skewed Chunks
 
-## Section 4: Data Processing and Analytics Workloads
+**ID:** `log_processing`
+**Category:** Data Processing
+**Description:** Processing log files with different sizes and compression
 
-### 4.1 Spark Local Shuffle with Skew
+**Configuration:**
+- 39 short tasks: Process small log files (500K entries each)
+- 1 long task: Process large log file (7M entries)
+- Simulates log analysis pipeline imbalance
 
-**Real-world scenario:** Analytics queries often have skewed joins or aggregations where one customer/product/region has orders of magnitude more data. This "hot key" problem is common in e-commerce and social media analytics.
-
-**Code:**
-```python
-from pyspark.sql import SparkSession
-s = SparkSession.builder.master("local[2]").getOrCreate()
-# 99 small keys, 1 hot key
-rdd = s.parallelize([(i%100, 1) for i in range(1_000_000)])
-result = rdd.groupByKey().mapValues(sum).collect()
-```
-
-**Workload Characteristics:**
-- Data skew: 1 hot key processes 100x more data
-- One executor thread runs for 600 seconds
-- Other executor completes 99 tasks quickly
-
-**Simplified Test Without Spark:**
-```python
-# Simple Python simulation of skewed workload
-import multiprocessing as mp
-import time
-
-def process_partition(key_count):
-    # Simulate processing time proportional to data
-    time.sleep(key_count / 100000)
-    return sum(range(key_count))
-
-if __name__ == '__main__':
-    # 99 small partitions + 1 huge partition
-    partitions = [1000] * 99 + [1000000]  # 100x skew
-    with mp.Pool(2) as pool:
-        results = pool.map(process_partition, partitions)
-```
-
-
-**Expected Results:**
-- Stage time: ~894 sec → ~600 sec
-- ~33% improvement in shuffle performance
-
-### 4.2 Sort and Compress with Skew
-
-**Real-world scenario:** Log processing pipelines split files by time/size for parallel processing, but one time period might have an unusual spike (Black Friday, system outage, viral event) creating a much larger chunk.
-
-**Commands:**
+**Setup Commands:**
 ```bash
-split -b100M big.tsv part_
-parallel -j2 --line-buffer 'sort {} | zstd -q -o {}.zst' ::: part_*
+# Small log setup
+mkdir -p log_chunks
+seq 1 500000 | awk '{print strftime("%Y-%m-%d %H:%M:%S"), "[INFO]", "Request from", "192.168.1."int(rand()*255), "processed in", int(rand()*100), "ms"}' > log_chunks/small.log
+
+# Large log setup  
+mkdir -p log_chunks
+seq 1 7000000 | awk '{print strftime("%Y-%m-%d %H:%M:%S"), "[INFO]", "Request from", "192.168.1."int(rand()*255), "processed in", int(rand()*100), "ms"}' > log_chunks/large.log
 ```
 
-**Workload Characteristics:**
-- One 1 GB chunk among 99 small chunks
-- Massive sorting time difference between chunks
+**Expected Improvement:** 35%
 
-**Synthetic Data Generation:**
+### 7. Spark-like Shuffle with Skew
+
+**ID:** `spark_shuffle`
+**Category:** Data Processing
+**Description:** Analytics with skewed data distribution (hot key problem)
+
+**Configuration:**
+- 39 short tasks: Process regular keys (8K regular keys, 15K hot keys)
+- 1 long task: Process heavily skewed data (100K regular keys, 800K hot keys)
+- Simulates distributed analytics imbalance
+
+**Data Generation:**
+Uses `spark_skew_prepare.py` to generate CSV files with configurable key distributions
+
+**Execution:**
+- Small commands: `python3 spark_skew_test.py spark_small.csv`
+- Large commands: `python3 spark_skew_test.py spark_large.csv`
+
+**Expected Improvement:** 33%
+
+### 8. Dask-like GroupBy with Power-law Distribution
+
+**ID:** `dask_groupby`
+**Category:** Data Processing
+**Description:** Customer analytics simulation with power-law distribution
+
+**Configuration:**
+- 39 short tasks: Process regular customer groups (8K regular, 15K hot)
+- 1 long task: Process heavily skewed groups (100K regular, 800K hot)
+- Simulates customer analytics workload imbalance
+
+**Data Generation:**
+Uses `dask_groupby_prepare.py` to generate CSV files with power-law distributions
+
+**Expected Improvement:** 33%
+
+### 9. Pandas ETL with DDoS Spike Simulation
+
+**ID:** `pandas_etl`
+**Category:** Data Processing  
+**Description:** ETL pipeline with sudden spike in data volume
+
+**Configuration:**
+- 39 short tasks: Process normal log volumes (30K normal, 8K error logs)
+- 1 long task: Process DDoS spike volume (1M normal, 500K error logs)
+- Simulates web traffic spike processing
+
+**Data Generation:**
+Uses `pandas_etl_prepare.py` to generate compressed log files with configurable volumes
+
+**Expected Improvement:** 33%
+
+### 10. Flink-like Join with Popular Items
+
+**ID:** `flink_join`
+**Category:** Data Processing
+**Description:** Retail analytics simulation with hot products
+
+**Configuration:**
+- 39 short tasks: Process regular transactions (8K regular, 12K hot transactions)
+- 1 long task: Process popular item transactions (100K regular, 700K hot transactions)  
+- Simulates retail analytics join imbalance
+
+**Data Generation:**
+Uses `flink_join_prepare.py` to generate transaction CSV files with hot product distributions
+
+**Expected Improvement:** 33%
+
+## Framework Configuration
+
+### Test Structure
+All test cases follow a consistent pattern defined in `test_cases_parallel.json`:
+
+```json
+{
+  "configuration": {
+    "short_tasks": 39,
+    "long_tasks": 1,
+    "total_tasks": 40
+  }
+}
+```
+
+### Common Fields
+- **small_setup**: Commands to prepare data for short tasks
+- **large_setup**: Commands to prepare data for long task
+- **small_commands**: Commands executed 39 times in parallel
+- **large_commands**: Commands executed 1 time in parallel
+- **cleanup_commands**: Resource cleanup after test
+- **expected_improvement**: Expected scheduler optimization ratio (0.30-0.35)
+- **dependencies**: Required system packages
+
+### Asset Scripts
+The framework includes Python preparation scripts for complex workloads:
+
+- **spark_skew_prepare.py**: Generates CSV with configurable key skew
+- **dask_groupby_prepare.py**: Creates power-law distributed group data  
+- **pandas_etl_prepare.py**: Generates compressed log files with volume spikes
+- **flink_join_prepare.py**: Creates transaction data with hot product distributions
+
+### Execution Environment
+- **Target platform**: Linux with 4+ CPU cores
+- **Total tasks**: 40 parallel (39 short + 1 long)
+- **Expected improvements**: 30-35% with optimized schedulers
+- **Test categories**: File processing, media, testing, version control, data analytics
+
+## Running the Framework
+
+### Basic Usage
 ```bash
-# Create skewed data files
-for i in {1..99}; do
-    seq 1 10000 | shuf > part_$i.tsv  # ~100KB files
-done
-seq 1 10000000 | shuf > part_100.tsv  # ~100MB file
+# List all available test cases
+python3 evaluate_workloads_parallel.py --list
+
+# Run a specific test case
+python3 evaluate_workloads_parallel.py --test pigz_compression
+
+# Run all test cases
+python3 evaluate_workloads_parallel.py --all
 ```
 
+### Analysis Features
+Each test provides detailed analysis including:
+- **Process monitoring**: Tracks CPU usage and runtime per task
+- **Long-tail detection**: Identifies tasks running significantly longer  
+- **Scheduler optimization**: Estimates potential improvement from custom schedulers
+- **JSON output**: Structured results for further analysis
 
-**Expected Results:**
-- Total processing time reduced by ~30%
-- Better parallel efficiency
+## Key Benefits
 
-### 4.3 Dask DataFrame Groupby
+1. **Realistic Workloads**: Based on real-world scenarios with authentic load imbalance patterns
+2. **Parallel Execution**: 40-task configuration creates measurable scheduler optimization opportunities  
+3. **Zero Application Changes**: Optimizations work at kernel level without code modifications
+4. **Quick Demonstration**: Tests complete in minutes, showing clear performance improvements
+5. **Comprehensive Coverage**: Spans file processing, media, testing, version control, and data analytics
 
-**Real-world scenario:** Customer analytics often show power-law distributions where one major customer generates 100x more transactions than others. Grouping by customer ID creates severe computational imbalance.
+## Expected Outcomes
 
-**Code:**
-```python
-import dask.dataframe as dd, pandas as pd, numpy as np
-pdf = pd.DataFrame({
-    'k': np.concatenate([np.arange(99), np.repeat(999, 500_000)]),
-    'v': 1
-})
-d = dd.from_pandas(pdf, npartitions=100)
-result = d.groupby('k').v.sum().compute()
-```
-
-**Workload Characteristics:**
-- Hot group (key 999) overwhelms one worker
-- Worker with key 999 occupies CPU for ~600 seconds
-- Severe workload imbalance
-
-**Simple Test Without Dask:**
-```python
-# Simulate without Dask dependency
-import pandas as pd
-import numpy as np
-from concurrent.futures import ProcessPoolExecutor
-
-def process_group(data):
-    return data.groupby('k')['v'].sum()
-
-# Create skewed data
-data = pd.DataFrame({
-    'k': np.concatenate([np.arange(99), np.repeat(999, 500_000)]),
-    'v': 1
-})
-# Split into chunks for parallel processing
-chunks = np.array_split(data, 2)
-
-with ProcessPoolExecutor(max_workers=2) as executor:
-    results = list(executor.map(process_group, chunks))
-```
-
-
-**Expected Results:**
-- Computation time significantly reduced
-- Better resource utilization
-
-### 4.4 DuckDB Threaded CSV Import
-
-**Real-world scenario:** Data warehouses import daily transaction files where most days have normal volume but month-end or year-end files are massive. The large file blocks the entire ETL pipeline.
-
-**Command:**
-```bash
-duckdb -c "PRAGMA threads=2; COPY (SELECT * FROM read_csv_auto('*.csv')) TO 'all.parquet'"
-```
-
-**Workload Characteristics:**
-- 99 × 1 MB CSV files
-- 1 × 100 MB CSV file
-- DuckDB splits import by file, creating imbalance
-
-**Synthetic CSV Generation:**
-```bash
-# Create test CSV files
-for i in {1..99}; do
-    echo "id,value" > file$i.csv
-    seq 1 10000 | awk '{print $1","rand()}' >> file$i.csv
-done
-# One large CSV
-echo "id,value" > file100.csv
-seq 1 1000000 | awk '{print $1","rand()}' >> file100.csv
-```
-
-
-**Expected Results:**
-- Import time reduced by 25-35%
-- More efficient parallel CSV processing
-
-### 4.5 Pandas Multiprocessing ETL
-
-**Real-world scenario:** Web servers rotate logs daily, but during DDoS attacks or viral traffic spikes, one day's log can be 100x larger. Processing these logs in parallel creates severe imbalance.
-
-**Code:**
-```python
-import multiprocessing as mp, pandas as pd, glob, gzip
-files = glob.glob('logs/*.gz')
-
-def parse(f):
-    return pd.read_csv(gzip.open(f))
-
-with mp.Pool(2) as p:
-    dfs = p.map(parse, files)
-```
-
-**Workload Characteristics:**
-- 99 × 1 MB gzipped files
-- 1 × 100 MB gzipped file
-- One pool worker spends excessive time decompressing large file
-
-**Synthetic Log File Generation:**
-```bash
-# Create test gzipped files
-for i in {1..99}; do
-    # Small log files
-    seq 1 1000 | awk '{print strftime("%Y-%m-%d %H:%M:%S"), "INFO", "Message", $1}' | 
-    gzip > logs/log$i.gz
-done
-# One large log file
-seq 1 100000 | awk '{print strftime("%Y-%m-%d %H:%M:%S"), "INFO", "Message", $1}' | 
-gzip > logs/log100.gz
-```
-
-
-**Expected Results:**
-- ETL pipeline completes 30-40% faster
-- Better multiprocessing pool utilization
-
-### 4.6 Local Flink Batch Join
-
-**Real-world scenario:** In retail analytics, joining sales with product data often shows skew where popular items (iPhone, bestseller books) have 100x more transactions than niche products, causing join operations to bottleneck.
-
-**Setup:**
-- MiniCluster with two slots
-- Submit join where one key contains all tuples
-- Extreme key skew in join operation
-
-**Workload Characteristics:**
-- Slot 1 processes giant key for extended time
-- Slot 2 completes other keys quickly
-- Classic distributed computing skew problem
-
-**Simple Join Simulation Without Flink:**
-```python
-# Simulate skewed join without Flink
-import multiprocessing as mp
-import time
-
-def process_join_partition(partition_data):
-    key, values = partition_data
-    # Simulate join processing time based on data size
-    time.sleep(len(values) / 10000)
-    return (key, sum(values))
-
-# Create skewed data: key 999 has 100x more values
-data = {}
-for i in range(99):
-    data[i] = list(range(1000))
-data[999] = list(range(10000))  # Hot key
-
-# Process in parallel
-with mp.Pool(2) as pool:
-    results = pool.map(process_join_partition, data.items())
-```
-
-
-**Expected Results:**
-- Join operation completes faster
-- Better slot utilization in MiniCluster
-
-## Test Case Implementation
-
-All test cases described above are implemented as automated tests in the `testcases/` directory. Each test case includes:
-
-- **Synthetic data generation** for reproducible results
-- **Process monitoring** to track CPU usage and identify long-tail tasks  
-- **Analysis tools** to measure scheduler optimization potential
-- **Makefile automation** for easy execution
-
-### Running Tests
-
-```bash
-# Navigate to testcases directory
-cd testcases/
-
-# List available tests
-make list-tests
-
-# Run all tests
-make run-all
-
-# Run specific test
-make run-pigz_compression
-
-# Analyze results
-make analyze-pigz_compression
-```
-
-### Process Analysis
-
-Each test automatically monitors:
-- **CPU Time**: Time spent on CPU per process
-- **Wall Clock Time**: Total runtime per process
-- **Long-tail Detection**: Processes running >0.5 seconds
-- **Scheduler Benefit**: Estimated improvement from optimization
-
-## Key Benefits of These Demonstrations
-
-1. **Zero Application Changes:** 
-   - Observe and optimize at kernel level
-   - No need to modify application code
-   - Works with existing binaries
-
-2. **Quick Iteration:**
-   - Tests run in seconds to minutes, not hours
-   - Faster than full cluster deployments
-   - Easy to iterate on scheduler policies
-
-3. **Visual Impact:**
-   - Clear before/after CPU utilization charts
-   - Obvious performance improvements
-   - Compelling demonstration of scheduler benefits
-
-4. **Real-World Relevance:**
-   - Patterns found in production systems
-   - Applicable to CI/CD, data processing, scientific computing
-   - Addresses common performance bottlenecks
-
-## Conclusion
-
-These test cases demonstrate that even simple, heuristic-based custom schedulers can provide significant performance improvements for workloads with long-tail characteristics. The 25-40% performance gains are achievable with minimal code changes and no application modifications, making custom scheduling an attractive optimization strategy for systems with predictable workload patterns.
+With optimized kernel schedulers, these test cases demonstrate:
+- **30-35% performance improvement** in wall-clock time
+- **Better resource utilization** across all CPU cores
+- **Reduced tail latency** in parallel workload completion
+- **Scalable optimization** applicable to production systems

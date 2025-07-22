@@ -1,20 +1,26 @@
 # Long-tail Workload Testing Framework
 
-This framework provides automated testing for workloads with long-tail characteristics to demonstrate the benefits of custom Linux kernel schedulers.
+This framework provides automated testing for parallel workloads with long-tail characteristics to demonstrate the benefits of custom Linux kernel schedulers. The framework uses a 40-task configuration with severe load imbalance (39 short tasks + 1 long task) to simulate real-world scenarios.
 
 ## Files Structure
 
 ```
-/home/yunwei37/schedCP/workloads/processing/
+/home/yunwei37/ai-os/workloads/processing/
 ├── README.md                    # This file
-├── test_cases.json             # Test case definitions
-├── evaluate_workloads.py       # Main evaluation framework
+├── test_cases_parallel.json    # Parallel test case definitions (40 tasks: 39 short + 1 long)
+├── evaluate_workloads_parallel.py  # Main parallel evaluation framework
 ├── install_deps.sh             # Dependency installer
 ├── case.md                     # Detailed workload documentation
 └── assets/                     # Test scripts and assets
+    ├── short.c                 # Short-running C program for testing
+    ├── long.c                  # Long-running C program for testing
+    ├── spark_skew_prepare.py   # Spark workload data generator
     ├── spark_skew_test.py      # Spark-like skewed workload simulation
+    ├── dask_groupby_prepare.py # Dask workload data generator
     ├── dask_groupby_test.py    # Dask-like groupby simulation
+    ├── pandas_etl_prepare.py   # Pandas ETL data generator
     ├── pandas_etl_test.py      # Pandas ETL simulation
+    ├── flink_join_prepare.py   # Flink workload data generator
     └── flink_join_test.py      # Flink-like join simulation
 ```
 
@@ -30,59 +36,60 @@ sudo ./install_deps.sh
 ### 2. List Available Tests
 
 ```bash
-python3 evaluate_workloads.py --list
+python3 evaluate_workloads_parallel.py --list
 ```
 
 ### 3. Run a Single Test
 
 ```bash
-# Run a specific test case
-python3 evaluate_workloads.py --test spark_shuffle
+# Run a specific test case with parallel execution
+python3 evaluate_workloads_parallel.py --test spark_shuffle
 
 # Run without process monitoring (if psutil unavailable)
-python3 evaluate_workloads.py --test spark_shuffle --no-monitor
+python3 evaluate_workloads_parallel.py --test spark_shuffle --no-monitor
 ```
 
 ### 4. Run All Tests
 
 ```bash
-# Run all test cases
-python3 evaluate_workloads.py --all
+# Run all test cases in parallel
+python3 evaluate_workloads_parallel.py --all
 
 # Save results to custom file
-python3 evaluate_workloads.py --all --save my_results.json
+python3 evaluate_workloads_parallel.py --all --save my_results.json
 ```
 
 ## Test Cases
 
-The framework includes 10 test cases across different categories:
+The framework includes 11 test cases across different categories, each configured with 40 parallel tasks (39 short + 1 long):
 
 ### File Processing
-- **pigz_compression**: Parallel compression with mixed file sizes
-- **file_checksum**: Parallel checksumming with size imbalance
+- **pigz_compression**: Parallel compression of mixed-size files with severe load imbalance
+- **file_checksum**: Parallel file system operations with one large file blocking completion
 
 ### Media Processing  
-- **ffmpeg_transcode**: Video transcoding with one large file
+- **ffmpeg_transcode**: Video transcoding with one large file dominating processing time
 
 ### Software Testing
-- **ctest_suite**: Test suite with slow integration test
+- **ctest_suite**: Test suite with fast unit tests and one slow integration test
 
 ### Version Control
-- **git_compression**: Git garbage collection with mixed objects
+- **git_compression**: Git incremental compression with mixed object sizes
 
 ### Data Processing
-- **log_processing**: Log processing with skewed chunks
-- **spark_shuffle**: Analytics with hot key problem
-- **dask_groupby**: Customer analytics with power-law distribution
-- **pandas_etl**: ETL with DDoS spike simulation
-- **flink_join**: Retail analytics with popular items
+- **log_processing**: Log processing with skewed chunks and different compression levels
+- **spark_shuffle**: Analytics with skewed data distribution (hot key problem)
+- **dask_groupby**: Customer analytics simulation with power-law distribution  
+- **pandas_etl**: ETL pipeline with sudden spike in data volume (DDoS simulation)
+- **flink_join**: Retail analytics simulation with hot products
 
 ## Expected Results
 
 All test cases demonstrate the "long-tail problem" where:
-- 99 tasks complete quickly (~6 seconds each)
-- 1 task takes much longer (~600 seconds)
-- Expected scheduler optimization: **25-35% improvement**
+- 39 short tasks complete quickly (few seconds each)
+- 1 long task takes much longer (significantly more time)
+- Expected scheduler optimization: **30-35% improvement**
+- Total workload: 40 parallel tasks with severe imbalance
 
 ## Framework Features
 
@@ -102,11 +109,12 @@ All test cases demonstrate the "long-tail problem" where:
 - Long-tail detection and analysis
 
 ### Test Configuration
-All test cases are defined in `test_cases.json` with:
-- Setup commands (data generation)
-- Test command (main workload)
+All test cases are defined in `test_cases_parallel.json` with:
+- Separate setup commands for small and large tasks
+- Small commands (executed 39 times in parallel)  
+- Large commands (executed 1 time in parallel)
 - Cleanup commands (resource cleanup)
-- Expected performance characteristics
+- Expected performance characteristics and improvement ratios
 - Dependencies and metadata
 
 ## Usage Examples
@@ -115,17 +123,21 @@ All test cases are defined in `test_cases.json` with:
 
 ```bash
 # Run only data processing tests
-python3 evaluate_workloads.py --test spark_shuffle
-python3 evaluate_workloads.py --test dask_groupby
-python3 evaluate_workloads.py --test pandas_etl
-python3 evaluate_workloads.py --test flink_join
+python3 evaluate_workloads_parallel.py --test spark_shuffle
+python3 evaluate_workloads_parallel.py --test dask_groupby
+python3 evaluate_workloads_parallel.py --test pandas_etl
+python3 evaluate_workloads_parallel.py --test flink_join
+
+# Run file processing tests
+python3 evaluate_workloads_parallel.py --test pigz_compression
+python3 evaluate_workloads_parallel.py --test file_checksum
 ```
 
 ### Custom Test Execution
 
 ```bash
 # Run with custom timeout and save results
-python3 evaluate_workloads.py --test pigz_compression --save pigz_results.json
+python3 evaluate_workloads_parallel.py --test pigz_compression --save pigz_results.json
 ```
 
 ### Analyzing Results
@@ -161,7 +173,7 @@ sudo ./install_deps.sh
 ### Process Monitoring Issues
 If psutil is unavailable, use `--no-monitor`:
 ```bash
-python3 evaluate_workloads.py --test TEST_ID --no-monitor
+python3 evaluate_workloads_parallel.py --test TEST_ID --no-monitor
 ```
 
 ### Permission Issues
@@ -173,20 +185,22 @@ Check the error output in the JSON results for specific failure reasons.
 ## Customization
 
 ### Adding New Test Cases
-1. Edit `test_cases.json`
-2. Add setup/test/cleanup commands
-3. Specify dependencies and expected characteristics
+1. Edit `test_cases_parallel.json`
+2. Add small_setup, large_setup, small_commands, and large_commands
+3. Specify dependencies and expected improvement ratios
 4. Create any required asset scripts in `assets/`
 
 ### Modifying Data Sizes
-Adjust the commands in `test_cases.json` to change:
-- File sizes (dd commands)
-- Record counts (seq commands) 
-- Processing times (sleep commands in Python scripts)
+Adjust the commands in `test_cases_parallel.json` to change:
+- File sizes (dd commands, count parameters)
+- Record counts (seq commands, loop ranges)
+- Processing intensity (parameters in Python preparation scripts)
 
 ## Performance Notes
 
 - Tests are designed for 4-CPU systems
-- Data sizes optimized for quick execution (seconds to minutes)
-- Maintains 100:1 skew ratio between small and large tasks
-- Total framework runtime: ~5-10 minutes for all tests
+- Configuration: 40 parallel tasks (39 short + 1 long)
+- Data sizes optimized for demonstrable imbalance
+- Expected improvement: 30-35% with custom schedulers
+- Total framework runtime: varies by test case complexity
+- Each test case specifically designed to create scheduler optimization opportunities

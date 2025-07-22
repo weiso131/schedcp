@@ -22,50 +22,142 @@ class NginxBenchmark:
         
         os.makedirs(results_dir, exist_ok=True)
         
+        # Validate dependencies
+        self.validate_dependencies()
+    
+    def validate_dependencies(self):
+        """Validate that all required dependencies are available"""
+        print("Validating dependencies...")
+        
+        # Check Nginx binary
+        if not os.path.exists(self.nginx_binary):
+            print(f"ERROR: Nginx binary not found at {self.nginx_binary}")
+            print(f"Current working directory: {os.getcwd()}")
+            print(f"Files in current directory: {os.listdir('.')}")
+            sys.exit(1)
+        else:
+            print(f"✓ Nginx binary found at {self.nginx_binary}")
+        
+        # Check Nginx config
+        if not os.path.exists(self.nginx_config):
+            print(f"ERROR: Nginx config not found at {self.nginx_config}")
+            sys.exit(1)
+        else:
+            print(f"✓ Nginx config found at {self.nginx_config}")
+        
+        # Check wrk2 binary
+        if not os.path.exists(self.wrk2_binary):
+            print(f"ERROR: wrk2 binary not found at {self.wrk2_binary}")
+            print(f"Expected path: {os.path.abspath(self.wrk2_binary)}")
+            if os.path.exists(self.wrk2_dir):
+                print(f"Files in {self.wrk2_dir}: {os.listdir(self.wrk2_dir)}")
+            else:
+                print(f"Directory {self.wrk2_dir} does not exist")
+            sys.exit(1)
+        else:
+            print(f"✓ wrk2 binary found at {self.wrk2_binary}")
+        
+        # Check HTML directory
+        html_dir = "/home/yunwei37/ai-os/workloads/nginx/html"
+        if not os.path.exists(html_dir):
+            print(f"ERROR: HTML directory not found at {html_dir}")
+            sys.exit(1)
+        else:
+            print(f"✓ HTML directory found at {html_dir}")
+        
+        print("All dependencies validated successfully!")
+        
     def start_nginx(self):
         """Start Nginx server"""
         print("Starting Nginx server...")
+        
+        # First, ensure nginx is not already running
+        self.stop_nginx()
+        
         cmd = [self.nginx_binary, "-c", self.nginx_config]
+        print(f"Running command: {' '.join(cmd)}")
         
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            print(f"Nginx command exit code: {result.returncode}")
+            
+            if result.stdout:
+                print(f"Nginx stdout: {result.stdout}")
+            if result.stderr:
+                print(f"Nginx stderr: {result.stderr}")
+                
             if result.returncode != 0:
-                print(f"Nginx failed to start. Return code: {result.returncode}")
-                print(f"Stderr: {result.stderr}")
+                print(f"ERROR: Nginx failed to start. Return code: {result.returncode}")
                 return False
                 
             time.sleep(2)
             
-            # Check if Nginx is running
-            health_result = subprocess.run(["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", 
-                                   "http://127.0.0.1:8080/"], 
-                                  capture_output=True, text=True, timeout=5)
+            # Check if Nginx process is running
+            try:
+                ps_result = subprocess.run(["pgrep", "-f", "nginx"], capture_output=True, text=True)
+                if ps_result.returncode == 0:
+                    print(f"✓ Nginx processes found: {ps_result.stdout.strip()}")
+                else:
+                    print("⚠ No nginx processes found")
+            except:
+                print("Could not check for nginx processes")
             
-            if health_result.stdout == "200":
-                print("Nginx server started successfully")
-                return True
-            else:
-                print(f"Nginx health check failed: HTTP {health_result.stdout}")
+            # Check if Nginx is responding
+            print("Checking Nginx health...")
+            try:
+                health_result = subprocess.run(["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", 
+                                       "http://127.0.0.1:8080/"], 
+                                      capture_output=True, text=True, timeout=5)
+                
+                print(f"Health check HTTP status: {health_result.stdout}")
+                if health_result.returncode != 0:
+                    print(f"Curl failed with return code: {health_result.returncode}")
+                    if health_result.stderr:
+                        print(f"Curl stderr: {health_result.stderr}")
+                
+                if health_result.stdout == "200":
+                    print("✓ Nginx server started successfully and responding")
+                    return True
+                else:
+                    print(f"✗ Nginx health check failed: HTTP {health_result.stdout}")
+                    return False
+            except Exception as e:
+                print(f"Health check failed with exception: {e}")
                 return False
                 
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
-            print(f"Failed to start Nginx server: {e}")
+            print(f"ERROR: Failed to start Nginx server: {e}")
             return False
     
     def stop_nginx(self):
         """Stop Nginx server"""
+        print("Stopping any existing Nginx processes...")
+        
+        # Try graceful shutdown first
         try:
-            subprocess.run([self.nginx_binary, "-s", "quit", "-c", self.nginx_config], 
-                          capture_output=True, timeout=5)
-        except:
-            pass
+            result = subprocess.run([self.nginx_binary, "-s", "quit", "-c", self.nginx_config], 
+                          capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                print("✓ Sent graceful shutdown signal to Nginx")
+            elif result.stderr:
+                print(f"Graceful shutdown attempt stderr: {result.stderr}")
+        except Exception as e:
+            print(f"Graceful shutdown attempt failed: {e}")
         
         # Force kill if still running
-        subprocess.run(["pkill", "-f", "nginx"], capture_output=True)
+        try:
+            result = subprocess.run(["pkill", "-f", "nginx"], capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                print("✓ Force killed any remaining nginx processes")
+        except Exception as e:
+            print(f"Force kill attempt failed: {e}")
+        
+        time.sleep(1)
     
     def run_wrk2_benchmark(self, test_name, threads, connections, duration, rate, url="http://127.0.0.1:8080/"):
         """Run a wrk2 benchmark test"""
-        print(f"Running {test_name} benchmark...")
+        print(f"\n--- Running {test_name} benchmark ---")
+        print(f"Threads: {threads}, Connections: {connections}, Duration: {duration}s, Rate: {rate} req/s")
         
         # Start monitoring
         start_time = time.time()
@@ -83,7 +175,25 @@ class NginxBenchmark:
             url
         ]
         
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        print(f"Running command: {' '.join(cmd)}")
+        
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=duration + 30)
+            print(f"wrk2 exit code: {result.returncode}")
+            
+            if result.returncode != 0:
+                print(f"ERROR: wrk2 failed with return code {result.returncode}")
+                if result.stderr:
+                    print(f"wrk2 stderr: {result.stderr}")
+            else:
+                print("✓ wrk2 completed successfully")
+                
+        except subprocess.TimeoutExpired:
+            print(f"ERROR: wrk2 benchmark timed out after {duration + 30} seconds")
+            result = subprocess.CompletedProcess(cmd, -1, "", "Timeout")
+        except Exception as e:
+            print(f"ERROR: wrk2 benchmark failed with exception: {e}")
+            result = subprocess.CompletedProcess(cmd, -1, "", str(e))
         
         # End monitoring
         end_time = time.time()
@@ -209,7 +319,9 @@ class NginxBenchmark:
         results = []
         
         try:
-            for benchmark in benchmarks:
+            for i, benchmark in enumerate(benchmarks):
+                print(f"\n=== Test {i+1}/{len(benchmarks)}: {benchmark['name']} ===")
+                
                 result = self.run_wrk2_benchmark(
                     benchmark["name"],
                     benchmark["threads"],
@@ -228,11 +340,17 @@ class NginxBenchmark:
                         "duration": benchmark["duration"],
                         "target_rate": benchmark["rate"]
                     }
+                else:
+                    print(f"⚠ Benchmark {benchmark['name']} failed, but continuing...")
                 
                 results.append(result)
                 time.sleep(2)  # Brief pause between tests
                 
+        except KeyboardInterrupt:
+            print("\n\n⚠ Benchmark interrupted by user (Ctrl+C)")
+            return results
         finally:
+            print("\nCleaning up...")
             self.stop_nginx()
         
         return results
@@ -274,44 +392,54 @@ class NginxBenchmark:
         return summary
 
 def main():
-    benchmark = NginxBenchmark()
-    
-    print("Starting Nginx benchmark suite with wrk2...")
-    print("=" * 50)
-    
-    results = benchmark.run_comprehensive_benchmark()
-    
-    if results:
-        # Save detailed results
-        results_file = benchmark.save_results(results)
+    try:
+        benchmark = NginxBenchmark()
         
-        # Generate and display summary
-        summary = benchmark.generate_summary(results)
-        
-        print("\n" + "=" * 50)
-        print("BENCHMARK SUMMARY")
+        print("Starting Nginx benchmark suite with wrk2...")
         print("=" * 50)
-        print(f"Total tests: {summary['total_tests']}")
-        print(f"Successful: {summary['successful_tests']}")
-        print(f"Failed: {summary['failed_tests']}")
-        print(f"Total duration: {summary['total_duration']:.2f} seconds")
-        print(f"Average CPU usage: {summary['average_cpu_usage']:.2f}%")
-        print(f"Average memory usage: {summary['average_memory_usage']:.2f}%")
         
-        print("\nTest Results:")
-        for test in summary['test_summary']:
-            status_symbol = "✓" if test['status'] == 'success' else "✗"
-            print(f"  {status_symbol} {test['test_name']}: {test['duration']:.2f}s")
+        results = benchmark.run_comprehensive_benchmark()
+        
+        if results and len(results) > 0:
+            # Save detailed results
+            results_file = benchmark.save_results(results)
             
-            if 'requests_per_second' in test['metrics']:
-                print(f"    RPS: {test['metrics']['requests_per_second']:,.0f}")
-            if 'latency_p99' in test['metrics']:
-                print(f"    P99 Latency: {test['metrics']['latency_p99']:.2f}ms")
-            if 'config' in test:
-                print(f"    Target Rate: {test['config']['target_rate']} RPS, Connections: {test['config']['connections']}")
-    
-    else:
-        print("Failed to run benchmarks")
+            # Generate and display summary
+            summary = benchmark.generate_summary(results)
+            
+            print("\n" + "=" * 50)
+            print("BENCHMARK SUMMARY")
+            print("=" * 50)
+            print(f"Total tests: {summary['total_tests']}")
+            print(f"Successful: {summary['successful_tests']}")
+            print(f"Failed: {summary['failed_tests']}")
+            print(f"Total duration: {summary['total_duration']:.2f} seconds")
+            print(f"Average CPU usage: {summary['average_cpu_usage']:.2f}%")
+            print(f"Average memory usage: {summary['average_memory_usage']:.2f}%")
+            
+            print("\nTest Results:")
+            for test in summary['test_summary']:
+                status_symbol = "✓" if test['status'] == 'success' else "✗"
+                print(f"  {status_symbol} {test['test_name']}: {test['duration']:.2f}s")
+                
+                if 'requests_per_second' in test.get('metrics', {}):
+                    print(f"    RPS: {test['metrics']['requests_per_second']:,.0f}")
+                if 'latency_p99' in test.get('metrics', {}):
+                    print(f"    P99 Latency: {test['metrics']['latency_p99']:.2f}ms")
+                if 'config' in test:
+                    print(f"    Target Rate: {test['config']['target_rate']} RPS, Connections: {test['config']['connections']}")
+        
+        else:
+            print("No benchmark results to show")
+            sys.exit(1)
+            
+    except KeyboardInterrupt:
+        print("\n\nBenchmark interrupted by user")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\nFATAL ERROR: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 if __name__ == "__main__":
