@@ -1,0 +1,15 @@
+*.o
+*.bpf.skel.h
+*.bpf.o
+*.bpf.l1o
+*.bpf.l2o
+*.bpf.l3o
+*.bpf.l4o
+*.bpf.l5o
+*.bpf.l6o
+*.bpf.l7o
+*.bpf.l8o
+*.bpf.l9o
+*.bpf.l10o
+scx_simple
+scx_ctest
