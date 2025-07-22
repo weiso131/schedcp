@@ -29,14 +29,14 @@ static bool is_long_task(struct task_struct *p)
 	int is_comm_large = (comm[0] == 'l' && comm[1] == 'a' && comm[2] == 'r' && 
 	        comm[3] == 'g' && comm[4] == 'e');
 	if (is_comm_large) {
-		bpf_printk("large task: %s\n", comm);
+		// bpf_printk("large task: %s\n", comm);
 		return true;
 	}
 
 	int is_comm_long = (comm[0] == 'l' && comm[1] == 'o' && comm[2] == 'n' && 
 	        comm[3] == 'g');
 	if (is_comm_long) {
-		bpf_printk("long task: %s\n", comm);
+		// bpf_printk("long task: %s\n", comm);
 		return true;
 	}
 	
@@ -51,7 +51,7 @@ static bool is_long_task(struct task_struct *p)
 		&& info->filename[6] == 'e');
 
 	if (is_large) {
-		bpf_printk("large task: %s\n", info->filename);
+		// bpf_printk("large task: %s\n", info->filename);
 		return true;
 	}
 
