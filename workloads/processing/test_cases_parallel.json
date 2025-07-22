@@ -6,29 +6,36 @@
   },
   "test_cases": [
     {
-      "id": "pigz_compression",
-      "name": "Pigz Directory Compression",
-      "description": "Parallel compression of mixed-size files with severe load imbalance",
+      "id": "compression",
+      "name": "File Compression",
+      "description": "Compression of mixed-size files with severe load imbalance",
       "category": "file_processing",
       "small_setup": [
         "mkdir -p test_data",
-        "seq 1 30000000 > test_data/short_file.dat"
+        "seq 1 3000000 > test_data/short_file.dat",
+        "cp $ORIGINAL_CWD/assets/compression.py .",
+        "cp compression.py small_compression.py",
+        "chmod +x small_compression.py"
       ],
       "large_setup": [
         "mkdir -p test_data",
-        "seq 1 200000000 > test_data/large_file.dat"
+        "seq 1 20000000 > test_data/large_file.dat",
+        "cp $ORIGINAL_CWD/assets/compression.py .",
+        "cp compression.py large_compression.py",
+        "chmod +x large_compression.py"
       ],
       "small_commands": [
-        "pigz -9 test_data/short_file.dat"
+        "python3 small_compression.py test_data/short_file.dat 9"
       ],
       "large_commands": [
-        "pigz -9 test_data/large_file.dat"
+        "python3 large_compression.py test_data/large_file.dat 9"
       ],
       "cleanup_commands": [
         "rm -rf test_data/",
-        "rm -f *.gz"
+        "rm -f *.gz",
+        "rm -f small_compression.py large_compression.py compression.py"
       ],
-      "dependencies": ["pigz"]
+      "dependencies": ["python3"]
     },
     {
       "id": "ffmpeg_transcode",
