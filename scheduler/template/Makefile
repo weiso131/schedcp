@@ -1,18 +1,12 @@
-# Standalone Makefile for scx_simple scheduler - out of tree build
-# This makefile compiles the scheduler independently from the main scx tree
+# Simplified config-driven Makefile for loader-based scheduler template
+# To add new scheduler: just add name to SCHEDULERS variable
 
-# Scheduler name
-SCHED_NAME = scx_simple
+# Configuration - Add new schedulers here
+SCHEDULERS = vruntime fifo
 
-# Source files
-BPF_SRC = $(SCHED_NAME).bpf.c
-USER_SRC = $(SCHED_NAME).c
-BPF_OBJ = $(SCHED_NAME).bpf.o
-BPF_L1O = $(SCHED_NAME).bpf.l1o
-BPF_L2O = $(SCHED_NAME).bpf.l2o
-BPF_L3O = $(SCHED_NAME).bpf.l3o
-SKEL_H = $(SCHED_NAME).bpf.skel.h
-TARGET = $(SCHED_NAME)
+# Build targets
+LOADER = loader
+BPF_TARGETS = $(addsuffix .bpf.o,$(SCHEDULERS))
 
 # Compiler and tools
 CLANG = clang
@@ -28,14 +22,14 @@ SCX_INCLUDES = \
 	-I$(PROJECT_ROOT)/scheduler/scx/scheds/include/bpf-compat \
 	-I$(PROJECT_ROOT)/scheduler/scx/scheds/include/lib
 
-# System includes (like the main build system does)
+# System includes
 SYS_INCLUDES = \
 	-idirafter /usr/lib/llvm-19/lib/clang/19/include \
 	-idirafter /usr/local/include \
 	-idirafter /usr/include/x86_64-linux-gnu \
 	-idirafter /usr/include
 
-# BPF compilation flags (matching main scx build)
+# BPF compilation flags
 BPF_CFLAGS = -g -O2 -Wall -Wno-compare-distinct-pointer-types \
 	-D__TARGET_ARCH_x86 -mcpu=v3 -mlittle-endian \
 	$(SYS_INCLUDES) \
@@ -50,48 +44,59 @@ USER_CFLAGS = -O2 -g -Wall -Werror \
 USER_LDFLAGS = $(shell pkg-config --libs libbpf) -lelf -lz -lzstd
 
 # Default target
-all: $(TARGET)
+all: $(LOADER) $(BPF_TARGETS)
 
-# Compile BPF program
-$(BPF_OBJ): $(BPF_SRC)
-	@echo "Compiling BPF program: $<"
+# Compile BPF programs
+%.bpf.o: %.bpf.c
+	@echo "Compiling BPF scheduler: $<"
 	$(CLANG) $(BPF_CFLAGS) -target bpf -c $< -o $@
 
-# Multi-stage BPF object processing (like main scx build)
-$(BPF_L1O): $(BPF_OBJ)
-	@echo "Processing BPF object L1: $@"
-	$(BPFTOOL) gen object $@ $<
-
-$(BPF_L2O): $(BPF_L1O)
-	@echo "Processing BPF object L2: $@"
-	$(BPFTOOL) gen object $@ $<
-
-$(BPF_L3O): $(BPF_L2O)
-	@echo "Processing BPF object L3: $@"
-	$(BPFTOOL) gen object $@ $<
-	@echo "Verifying L2 and L3 objects are identical"
-	cmp $(BPF_L2O) $(BPF_L3O)
-
-# Generate BPF skeleton from final processed object
-$(SKEL_H): $(BPF_L3O)
-	@echo "Generating BPF skeleton: $@"
-	$(BPFTOOL) gen skeleton $< name $(SCHED_NAME) > $@
-
-# Compile user space program
-$(TARGET): $(SKEL_H) $(USER_SRC)
-	@echo "Compiling user space program: $(USER_SRC)"
-	$(CC) $(USER_CFLAGS) $(USER_SRC) -o $@ $(USER_LDFLAGS)
+# Compile loader
+$(LOADER): $(LOADER).c
+	@echo "Compiling loader: $<"
+	$(CC) $(USER_CFLAGS) $< -o $@ $(USER_LDFLAGS)
 
 # Clean build artifacts
 clean:
-	rm -f $(BPF_OBJ) $(BPF_L1O) $(BPF_L2O) $(BPF_L3O) $(SKEL_H) $(TARGET)
+	rm -f $(LOADER) $(BPF_TARGETS)
+
+# Install to scheduler bin directory
+install: all
+	mkdir -p ../sche_bin/
+	cp $(LOADER) $(BPF_TARGETS) ../sche_bin/
+
+# List available schedulers
+list:
+	@echo "Available schedulers:"
+	@for sched in $(SCHEDULERS); do \
+		echo "  $$sched"; \
+	done
+	@echo ""
+	@echo "Usage:"
+	@echo "  ./loader        - Load vruntime scheduler (default)"
+	@echo "  ./loader -f     - Load FIFO scheduler"
 
 # Help target
 help:
+	@echo "Configuration-driven scheduler template"
+	@echo ""
+	@echo "To add new scheduler:"
+	@echo "  1. Create <name>.bpf.c file"
+	@echo "  2. Add <name> to SCHEDULERS variable in this Makefile"
+	@echo "  3. Update loader.c to handle new scheduler selection"
+	@echo ""
 	@echo "Available targets:"
-	@echo "  make         - Build the scheduler"
+	@echo "  make         - Build loader and all BPF schedulers"
 	@echo "  make clean   - Clean build artifacts"
 	@echo "  make install - Install to ../sche_bin/"
+	@echo "  make list    - List available schedulers"
 	@echo "  make help    - Show this help"
 
-.PHONY: all clean install help
+# Show current configuration
+config:
+	@echo "Current configuration:"
+	@echo "  Schedulers: $(SCHEDULERS)"
+	@echo "  BPF targets: $(BPF_TARGETS)"
+	@echo "  Loader: $(LOADER)"
+
+.PHONY: all clean install list help config
