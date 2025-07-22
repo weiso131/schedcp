@@ -28,9 +28,9 @@ static bool is_long_task(struct task_struct *p)
 	if (bpf_probe_read_kernel_str(comm, sizeof(comm), p->comm) < 0)
 		return false;
 	
-	/* Check for exact match "long" */
-	return (comm[0] == 'l' && comm[1] == 'o' && comm[2] == 'n' && 
-	        comm[3] == 'g' && comm[4] == '\0');
+	/* Check for start with "large" */
+	return (comm[0] == 'l' && comm[1] == 'a' && comm[2] == 'r' && 
+	        comm[3] == 'g' && comm[4] == 'e');
 }
 
 /* Get appropriate time slice based on task type */

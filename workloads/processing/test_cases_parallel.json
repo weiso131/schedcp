@@ -25,10 +25,10 @@
         "chmod +x large_compression.py"
       ],
       "small_commands": [
-        "python3 small_compression.py test_data/short_file.dat 9"
+        "./small_compression.py test_data/short_file.dat 9"
       ],
       "large_commands": [
-        "python3 large_compression.py test_data/large_file.dat 9"
+        "./large_compression.py test_data/large_file.dat 9"
       ],
       "cleanup_commands": [
         "rm -rf test_data/",
@@ -144,10 +144,10 @@
         "chmod +x large_file_checksum.py"
       ],
       "small_commands": [
-        "python3 small_file_checksum.py large-dir/short_file.dat"
+        "./small_file_checksum.py large-dir/short_file.dat"
       ],
       "large_commands": [
-        "python3 large_file_checksum.py large-dir/long_file.dat"
+        "./large_file_checksum.py large-dir/long_file.dat"
       ],
       "cleanup_commands": [
         "rm -rf large-dir/",
@@ -174,10 +174,10 @@
         "python3 spark_skew_prepare.py --regular-keys 100000 --hot-keys 800000 --output spark_large.csv"
       ],
       "small_commands": [
-        "python3 small_spark_skew_test.py spark_small.csv"
+        "./small_spark_skew_test.py spark_small.csv"
       ],
       "large_commands": [
-        "python3 large_spark_skew_test.py spark_large.csv"
+        "./large_spark_skew_test.py spark_large.csv"
       ],
       "cleanup_commands": [
         "rm -f spark_small.csv spark_large.csv",
@@ -227,10 +227,10 @@
         "python3 pandas_etl_prepare.py --normal-logs 1000000 --error-logs 500000 --output etl_large.gz"
       ],
       "small_commands": [
-        "python3 small_pandas_etl_test.py etl_small.gz"
+        "./small_pandas_etl_test.py etl_small.gz"
       ],
       "large_commands": [
-        "python3 large_pandas_etl_test.py etl_large.gz"
+        "./large_pandas_etl_test.py etl_large.gz"
       ],
       "cleanup_commands": [
         "rm -f etl_small.gz etl_large.gz",
@@ -257,10 +257,10 @@
         "python3 flink_join_prepare.py --regular-transactions 100000 --hot-transactions 700000 --output flink_large.csv"
       ],
       "small_commands": [
-        "python3 small_flink_join_test.py flink_small.csv"
+        "./small_flink_join_test.py flink_small.csv"
       ],
       "large_commands": [
-        "python3 large_flink_join_test.py flink_large.csv"
+        "./large_flink_join_test.py flink_large.csv"
       ],
       "cleanup_commands": [
         "rm -f flink_small.csv flink_large.csv",
