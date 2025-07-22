@@ -38,28 +38,33 @@
       "dependencies": ["python3"]
     },
     {
-      "id": "ffmpeg_transcode",
-      "name": "FFmpeg Split Transcode",
+      "id": "video_transcode",
+      "name": "FFmpeg Video Transcode",
       "description": "Video transcoding with one large file dominating processing time",
       "category": "media_processing",
       "small_setup": [
         "mkdir -p clips out",
-        "ffmpeg -f lavfi -i testsrc=duration=6:size=320x240:rate=30 -loglevel quiet clips/short.mp4"
+        "ffmpeg -f lavfi -i testsrc=duration=30:size=320x240:rate=30 -loglevel quiet clips/short.mp4",
+        "cp $ORIGINAL_CWD/assets/video_transcode.cpp .",
+        "g++ -o small_video_transcode video_transcode.cpp -lavformat -lavcodec -lavutil -lswscale -lpthread -lm -lz"
       ],
       "large_setup": [
         "mkdir -p clips out",
-        "ffmpeg -f lavfi -i testsrc=duration=70:size=1920x1080:rate=30 -loglevel quiet clips/long.mp4"
+        "ffmpeg -f lavfi -i testsrc=duration=70:size=1920x1080:rate=30 -loglevel quiet clips/long.mp4",
+        "cp $ORIGINAL_CWD/assets/video_transcode.cpp .",
+        "g++ -o large_video_transcode video_transcode.cpp -lavformat -lavcodec -lavutil -lswscale -lpthread -lm -lz"
       ],
       "small_commands": [
-        "ffmpeg -loglevel quiet -i clips/short.mp4 -vf scale=640:-1 -c:v libx264 -preset veryfast out/short_out.mp4"
+        "./small_video_transcode clips/short.mp4 out/short_out.mp4 640"
       ],
       "large_commands": [
-        "ffmpeg -loglevel quiet -i clips/long.mp4 -vf scale=640:-1 -c:v libx264 -preset veryfast out/long_out.mp4"
+        "./large_video_transcode clips/long.mp4 out/long_out.mp4 640"
       ],
       "cleanup_commands": [
-        "rm -rf clips/ out/"
+        "rm -rf clips/ out/",
+        "rm -f small_video_transcode large_video_transcode video_transcode.cpp"
       ],
-      "dependencies": ["ffmpeg"]
+      "dependencies": ["ffmpeg", "g++"]
     },
     {
       "id": "ctest_suite",

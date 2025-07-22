@@ -42,7 +42,11 @@ sudo apt-get install -y \
 echo "Installing development tools..."
 sudo apt-get install -y \
     g++ \
-    make
+    make \
+    libavcodec-dev \
+    libavformat-dev \
+    libavutil-dev \
+    libswscale-dev
 
 # Optional: DuckDB (if available in repos)
 echo "Attempting to install DuckDB..."
@@ -66,7 +70,7 @@ echo "✓ Core utilities: coreutils, git, parallel, gzip"
 echo "✓ Media processing: ffmpeg, pigz"
 echo "✓ Compression: zstd"
 echo "✓ Python: python3, pytest, pandas, numpy"
-echo "✓ Development: g++, make"
+echo "✓ Development: g++, make, FFmpeg libraries (libavcodec-dev, libavformat-dev, libavutil-dev, libswscale-dev)"
 echo ""
 echo "Optional packages attempted:"
 echo "- DuckDB (may not be available)"
