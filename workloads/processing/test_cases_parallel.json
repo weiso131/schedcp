@@ -21,7 +21,6 @@
       "large_commands": [
         "pigz -1 test_data/large_file.dat"
       ],
-      "test_command": "find ./test_data -name '*.dat' -o -name '*.iso' -print0 | xargs -0 -n1 -P2 pigz -1",
       "cleanup_commands": [
         "rm -rf test_data/",
         "rm -f *.gz"
@@ -45,7 +44,6 @@
       "large_commands": [
         "ffmpeg -loglevel quiet -i clips/long.mp4 -vf scale=640:-1 -c:v libx264 -preset veryfast out/long_out.mp4"
       ],
-      "test_command": "for f in clips/*.mp4; do ffmpeg -loglevel quiet -i \"$f\" -vf scale=640:-1 -c:v libx264 -preset veryfast out/\"${f##*/}\" & done; wait",
       "cleanup_commands": [
         "rm -rf clips/ out/"
       ],
@@ -58,19 +56,17 @@
       "description": "Compile suite with fast simple programs and one complex project",
       "category": "software_compilation",
       "setup_commands": [
-        "mkdir -p c_suite",
-        "echo '#include <stdio.h>\n#include <math.h>\nint main() { double sum=0; int n=500000; while(n--) { sum += sin(n*0.001)*cos(n*0.001); } printf(\"Short: %f\\n\", sum); return 0; }' > c_suite/short.c",
-        "echo '#include <stdio.h>\n#include <stdlib.h>\n#include <math.h>\nint main() { double sum=0; int n=2500000; while(n--) { double x = n*0.0001; sum += sin(x)*cos(x)*sqrt(x+1); } printf(\"Long: %f\\n\", sum); return 0; }' > c_suite/long.c"
+        "gcc -O2 assets/short.c -lm -o assets/short",
+        "gcc -O2 assets/long.c -lm -o assets/long"
       ],
       "small_commands": [
-        "gcc -O2 c_suite/short.c -o c_suite/short && c_suite/short > /dev/null"
+        "./assets/short"
       ],
       "large_commands": [
-        "gcc -O2 c_suite/long.c -lm -o c_suite/long && c_suite/long > /dev/null"
+        "./assets/long"
       ],
-      "test_command": "cd c_suite && for f in *.c; do gcc -O2 \"$f\" -lm -o \"${f%.c}\" && \"${f%.c}\" & done; wait",
       "cleanup_commands": [
-        "rm -rf c_suite/"
+        "rm -f assets/short assets/long"
       ],
       "expected_improvement": 0.33,
       "dependencies": ["gcc"]
@@ -92,7 +88,6 @@
       "large_commands": [
         "cd test_repo && echo \"Processing large repository\" && git repack -a -d -f --depth=50 --window=250"
       ],
-      "test_command": "cd test_repo && time git gc",
       "cleanup_commands": [
         "rm -rf test_repo/"
       ],
@@ -115,7 +110,6 @@
       "large_commands": [
         "sha256sum large-dir/long_file.dat"
       ],
-      "test_command": "find ./large-dir -type f -print0 | xargs -0 -n1 -P2 sha256sum > checksums.txt",
       "cleanup_commands": [
         "rm -rf large-dir/",
         "rm -f checksums.txt"
@@ -140,7 +134,6 @@
       "large_commands": [
         "sha256sum spark_data/long_data.txt | cut -d' ' -f1 > /tmp/long_result.txt"
       ],
-      "test_command": "python3 assets/spark_skew_test.py",
       "cleanup_commands": [
         "rm -rf spark_data/"
       ],
@@ -163,7 +156,6 @@
       "large_commands": [
         "zcat logs/long_log.gz | awk '{count[$2]++} END {for(i in count) print i, count[i]}' | sort -nr | sha256sum > /tmp/analysis_result"
       ],
-      "test_command": "for f in logs/*.gz; do zcat \"$f\" | wc -l & done; wait",
       "cleanup_commands": [
         "rm -rf logs/",
         "rm -f /tmp/analysis_result"
@@ -187,7 +179,6 @@
       "large_commands": [
         "cat text_data/long_file.txt | awk -F',' '{count[$1]++; sum[$1]+=$2} END {for(k in count) printf \"%s:%d:%s\\n\", k, count[k], sum[k]}' | sed 's/:/|/g' | sha256sum > /tmp/complex_result"
       ],
-      "test_command": "for f in text_data/*.txt; do wc -l \"$f\" & done; wait",
       "cleanup_commands": [
         "rm -rf text_data/",
         "rm -f /tmp/complex_result"
@@ -211,7 +202,6 @@
       "large_commands": [
         "gcc -O2 -lm ctest_project/integration_test.c -o ctest_project/integration_test && ctest_project/integration_test"
       ],
-      "test_command": "cd ctest_project && for i in {1..39}; do (gcc -O2 -lm unit_test.c -o unit_test_$i && ./unit_test_$i > /dev/null) & done; (gcc -O2 -lm integration_test.c -o integration_test && ./integration_test > /dev/null) & wait",
       "cleanup_commands": [
         "rm -rf ctest_project/"
       ],
@@ -234,7 +224,6 @@
       "large_commands": [
         "gzip -c log_chunks/large.log | zcat | grep -E '\\[INFO\\]' | awk '{print $4}' | sort | uniq -c | sort -nr > log_chunks/large_ips.txt"
       ],
-      "test_command": "for f in log_chunks/*.log; do gzip -c \"$f\" | zcat | grep -E '\\[INFO\\]' | awk '{print $4}' | sort | uniq -c | sort -nr > \"${f%.log}_analysis.txt\" & done; wait",
       "cleanup_commands": [
         "rm -rf log_chunks/"
       ],
@@ -258,7 +247,6 @@
       "large_commands": [
         "python3 assets/dask_groupby_test.py"
       ],
-      "test_command": "python3 assets/dask_groupby_test.py",
       "cleanup_commands": [
         "rm -rf dask_data/",
         "rm -f /tmp/dask_*"
@@ -283,7 +271,6 @@
       "large_commands": [
         "python3 assets/pandas_etl_test.py"
       ],
-      "test_command": "python3 assets/pandas_etl_test.py",
       "cleanup_commands": [
         "rm -rf logs/",
         "rm -f /tmp/pandas_*"
@@ -308,7 +295,6 @@
       "large_commands": [
         "python3 assets/flink_join_test.py"
       ],
-      "test_command": "python3 assets/flink_join_test.py",
       "cleanup_commands": [
         "rm -rf flink_data/",
         "rm -f /tmp/flink_*"
