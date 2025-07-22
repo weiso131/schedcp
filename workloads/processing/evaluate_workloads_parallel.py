@@ -329,7 +329,6 @@ class EnhancedWorkloadEvaluator:
             'test_id': test_id,
             'test_name': test_case['name'],
             'start_time': time.time(),
-            'expected_improvement': test_case['expected_improvement']
         }
         
         # Setup phase

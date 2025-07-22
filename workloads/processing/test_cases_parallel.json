@@ -111,23 +111,30 @@
       "category": "file_processing",
       "small_setup": [
         "mkdir -p large-dir",
-        "dd if=/dev/urandom of=large-dir/short_file.dat bs=1M count=200 2>/dev/null"
+        "dd if=/dev/urandom of=large-dir/short_file.dat bs=1M count=200 2>/dev/null",
+        "cp $ORIGINAL_CWD/assets/file_checksum.py .",
+        "cp file_checksum.py small_file_checksum.py",
+        "chmod +x small_file_checksum.py"
       ],
       "large_setup": [
         "mkdir -p large-dir",
-        "dd if=/dev/urandom of=large-dir/long_file.dat bs=1M count=1000 2>/dev/null"
+        "dd if=/dev/urandom of=large-dir/long_file.dat bs=1M count=1000 2>/dev/null",
+        "cp $ORIGINAL_CWD/assets/file_checksum.py .",
+        "cp file_checksum.py large_file_checksum.py",
+        "chmod +x large_file_checksum.py"
       ],
       "small_commands": [
-        "sha256sum large-dir/short_file.dat"
+        "python3 small_file_checksum.py large-dir/short_file.dat"
       ],
       "large_commands": [
-        "sha256sum large-dir/long_file.dat"
+        "python3 large_file_checksum.py large-dir/long_file.dat"
       ],
       "cleanup_commands": [
         "rm -rf large-dir/",
-        "rm -f checksums.txt"
+        "rm -f checksums.txt",
+        "rm -f small_file_checksum.py large_file_checksum.py file_checksum.py"
       ],
-      "dependencies": ["sha256sum"]
+      "dependencies": ["python3"]
     },
     {
       "id": "hotkey_aggregation",
