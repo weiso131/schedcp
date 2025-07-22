@@ -46,7 +46,8 @@ sudo apt-get install -y \
     libavcodec-dev \
     libavformat-dev \
     libavutil-dev \
-    libswscale-dev
+    libswscale-dev \
+    libgit2-dev
 
 # Optional: DuckDB (if available in repos)
 echo "Attempting to install DuckDB..."
@@ -70,7 +71,7 @@ echo "✓ Core utilities: coreutils, git, parallel, gzip"
 echo "✓ Media processing: ffmpeg, pigz"
 echo "✓ Compression: zstd"
 echo "✓ Python: python3, pytest, pandas, numpy"
-echo "✓ Development: g++, make, FFmpeg libraries (libavcodec-dev, libavformat-dev, libavutil-dev, libswscale-dev)"
+echo "✓ Development: g++, make, FFmpeg libraries (libavcodec-dev, libavformat-dev, libavutil-dev, libswscale-dev), libgit2-dev"
 echo ""
 echo "Optional packages attempted:"
 echo "- DuckDB (may not be available)"
