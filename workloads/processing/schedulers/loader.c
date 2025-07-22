@@ -56,6 +56,7 @@ static int load_bpf_scheduler(const char *obj_path)
 	struct bpf_object *obj;
 	struct bpf_link *link;
 	struct bpf_map *ops_map = NULL;
+	struct bpf_program *prog;
 	int err;
 
 	obj = bpf_object__open(obj_path);
@@ -69,6 +70,26 @@ static int load_bpf_scheduler(const char *obj_path)
 		fprintf(stderr, "Failed to load BPF object: %s\n", strerror(-err));
 		bpf_object__close(obj);
 		return -1;
+	}
+
+	/* Attach any tracepoint programs (for pid_filename tracking) */
+	bpf_object__for_each_program(prog, obj) {
+		const char *prog_name = bpf_program__name(prog);
+		
+		/* Check if this is one of our pid_filename tracepoint handlers */
+		if (strstr(prog_name, "pid_filename_handle_exec") ||
+		    strstr(prog_name, "pid_filename_handle_exit")) {
+			struct bpf_link *tp_link = bpf_program__attach(prog);
+			if (!tp_link) {
+				fprintf(stderr, "Warning: Failed to attach tracepoint %s: %s\n",
+				        prog_name, strerror(errno));
+				/* Continue anyway - not critical for scheduler operation */
+			} else {
+				printf("Attached tracepoint: %s\n", prog_name);
+				/* Note: We're not storing these links, they'll be cleaned up
+				 * when the object is closed */
+			}
+		}
 	}
 
 	bpf_object__for_each_map(ops_map, obj) {
@@ -95,6 +116,12 @@ static int load_bpf_scheduler(const char *obj_path)
 	current_sched.sched_name = strdup(basename((char *)obj_path));
 
 	printf("BPF scheduler %s loaded successfully\n", current_sched.sched_name);
+	
+	/* Check if pid_to_filename map exists */
+	if (bpf_object__find_map_by_name(obj, "pid_to_filename")) {
+		printf("Note: This scheduler uses PID-to-filename tracking\n");
+	}
+	
 	return 0;
 }
 
