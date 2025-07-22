@@ -59,11 +59,13 @@ class ParallelTaskTracker:
         
         return stats
 
-def run_single_task(task_cmd: str, task_type: str, task_id: int) -> Tuple[str, float, str]:
-    """Execute a single task and return its type, duration, and output"""
+def run_single_task(task_info: Tuple[str, int, str, str]) -> Tuple[str, float, str]:
+    """Execute a single task in its own directory and return its type, duration, and output"""
+    task_type, task_id, cmd, work_dir = task_info
     start_time = time.time()
     try:
-        result = subprocess.run(task_cmd, shell=True, capture_output=True, text=True)
+        # Change to task-specific directory
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=work_dir)
         duration = time.time() - start_time
         output = f"{task_type}_{task_id}: {result.stdout[:100]}" if result.stdout else f"{task_type}_{task_id}: completed"
         return task_type, duration, output
@@ -142,6 +144,10 @@ class EnhancedWorkloadEvaluator:
         
     def _run_parallel_workload(self, test_case: Dict) -> Dict:
         """Run workload with proper parallel execution and tracking"""
+        import os
+        import shutil
+        import tempfile
+        
         # Use configured values instead of reading from characteristics
         small_tasks = self.short_tasks
         large_tasks = self.long_tasks
@@ -156,72 +162,102 @@ class EnhancedWorkloadEvaluator:
                 'wall_clock_time': 0
             }
         
-        # Generate task commands from JSON templates
-        small_cmds = []
-        large_cmds = []
+        # Create a base temporary directory for this test
+        base_dir = tempfile.mkdtemp(prefix=f"test_{test_case['id']}_")
+        created_dirs = []
         
-        # Process small commands - repeat for each short task
-        for cmd_template in test_case['small_commands']:
+        try:
+            # Setup phase - create directories and run setup for each task
+            all_tasks = []
+            
+            
+            # Setup for small tasks
+            small_setup_cmds = test_case.get('small_setup', test_case.get('setup_commands', []))
             for i in range(small_tasks):
-                small_cmds.append(cmd_template)
+                task_dir = os.path.join(base_dir, f"small_{i}")
+                os.makedirs(task_dir, exist_ok=True)
+                created_dirs.append(task_dir)
                 
-        # Process large commands - repeat for each long task  
-        for cmd_template in test_case['large_commands']:
+                # Run setup commands in this directory
+                for setup_cmd in small_setup_cmds:
+                    if setup_cmd.strip():
+                        result = subprocess.run(setup_cmd, shell=True, cwd=task_dir, capture_output=True, text=True)
+                        if result.returncode != 0:
+                            print(f"  Setup failed for small_{i}: {setup_cmd}")
+                            print(f"  Error: {result.stderr}")
+                
+                # Add task with its directory
+                for cmd in test_case['small_commands']:
+                    all_tasks.append(('small', i, cmd, task_dir))
+            
+            # Setup for large tasks
+            large_setup_cmds = test_case.get('large_setup', test_case.get('setup_commands', []))
             for i in range(large_tasks):
-                large_cmds.append(cmd_template)
-            
-        # Execute tasks in parallel and track times
-        tracker = ParallelTaskTracker()
-        all_tasks = []
-        
-        # Add small tasks
-        for i, cmd in enumerate(small_cmds):
-            all_tasks.append(('small', i, cmd))
-            
-        # Add large tasks
-        for i, cmd in enumerate(large_cmds):
-            all_tasks.append(('large', i, cmd))
-            
-        # Run all tasks in parallel using process pool
-        max_workers = multiprocessing.cpu_count()
-        wall_start = time.time()
-        
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
-            # Submit all tasks
-            future_to_task = {}
-            for task_type, task_id, cmd in all_tasks:
-                future = executor.submit(run_single_task, cmd, task_type, task_id)
-                future_to_task[future] = (task_type, task_id)
+                task_dir = os.path.join(base_dir, f"large_{i}")
+                os.makedirs(task_dir, exist_ok=True)
+                created_dirs.append(task_dir)
                 
-            # Collect results as they complete
-            for future in as_completed(future_to_task):
-                task_type, task_id = future_to_task[future]
-                try:
-                    result_type, duration, _ = future.result()
-                    if result_type == 'small':
-                        tracker.add_short_task(duration)
-                    else:
-                        tracker.add_long_task(duration)
-                    print(f"  Completed {result_type} task {task_id} in {duration:.2f}s")
-                except Exception as e:
-                    print(f"  Task {task_type}_{task_id} failed: {e}")
+                # Run setup commands in this directory
+                for setup_cmd in large_setup_cmds:
+                    if setup_cmd.strip():
+                        result = subprocess.run(setup_cmd, shell=True, cwd=task_dir, capture_output=True, text=True)
+                        if result.returncode != 0:
+                            print(f"  Setup failed for large_{i}: {setup_cmd}")
+                            print(f"  Error: {result.stderr}")
+                
+                # Add task with its directory
+                for cmd in test_case['large_commands']:
+                    all_tasks.append(('large', i, cmd, task_dir))
+            
+            # Execute tasks in parallel and track times
+            tracker = ParallelTaskTracker()
+            
+            # Run all tasks in parallel using process pool
+            max_workers = multiprocessing.cpu_count()
+            wall_start = time.time()
+            
+            with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                # Submit all tasks
+                future_to_task = {}
+                for task_info in all_tasks:
+                    task_type, task_id, _, _ = task_info
+                    future = executor.submit(run_single_task, task_info)
+                    future_to_task[future] = (task_type, task_id)
                     
-        wall_end = time.time()
-        wall_time = wall_end - wall_start
-        
-        # Get statistics
-        stats = tracker.get_stats()
-        stats['wall_clock_time'] = wall_time
-        
-        # Calculate completion times
-        if stats['short_tasks']['times'] and stats['long_tasks']['times']:
-            # All short tasks should complete around the same time in parallel
-            # The long task dominates the total completion time
-            stats['short_tasks_completion_time'] = max(stats['short_tasks']['times'])
-            stats['long_tasks_completion_time'] = max(stats['long_tasks']['times'])
-            stats['parallel_efficiency'] = (stats['short_tasks']['total_time'] + stats['long_tasks']['total_time']) / (wall_time * max_workers)
-        
-        return stats
+                # Collect results as they complete
+                for future in as_completed(future_to_task):
+                    task_type, task_id = future_to_task[future]
+                    try:
+                        result_type, duration, _ = future.result()
+                        if result_type == 'small':
+                            tracker.add_short_task(duration)
+                        else:
+                            tracker.add_long_task(duration)
+                        print(f"  Completed {result_type} task {task_id} in {duration:.2f}s")
+                    except Exception as e:
+                        print(f"  Task {task_type}_{task_id} failed: {e}")
+                        
+            wall_end = time.time()
+            wall_time = wall_end - wall_start
+            
+            # Get statistics
+            stats = tracker.get_stats()
+            stats['wall_clock_time'] = wall_time
+            
+            # Calculate completion times
+            if stats['short_tasks']['times'] and stats['long_tasks']['times']:
+                # All short tasks should complete around the same time in parallel
+                # The long task dominates the total completion time
+                stats['short_tasks_completion_time'] = max(stats['short_tasks']['times'])
+                stats['long_tasks_completion_time'] = max(stats['long_tasks']['times'])
+                stats['parallel_efficiency'] = (stats['short_tasks']['total_time'] + stats['long_tasks']['total_time']) / (wall_time * max_workers)
+            
+            return stats
+            
+        finally:
+            # Cleanup all created directories
+            print("\nCleaning up task directories...")
+            shutil.rmtree(base_dir, ignore_errors=True)
         
     def _run_original_command(self, test_case: Dict) -> Dict:
         """Fallback to run original command when parallel execution not implemented"""
@@ -313,17 +349,7 @@ class EnhancedWorkloadEvaluator:
                 'error': str(e)
             })
             
-        # Cleanup phase
-        print("\nRunning cleanup...")
-        cleanup_start = time.time()
-        for cmd in test_case.get('cleanup_commands', []):
-            if cmd.strip():
-                try:
-                    subprocess.run(cmd, shell=True, capture_output=True)
-                except:
-                    pass  # Ignore cleanup errors
-                    
-        result['cleanup_time'] = time.time() - cleanup_start
+        # Cleanup is handled in _run_parallel_workload's finally block
         result['total_time'] = time.time() - result['start_time']
         
         return result
