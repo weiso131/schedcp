@@ -4,7 +4,7 @@
 
 int main() {
     double sum = 0;
-    int n = 2500000;
+    int n = 600000000;
     while (n--) {
         double x = n * 0.0001;
         sum += sin(x) * cos(x) * sqrt(x + 1);

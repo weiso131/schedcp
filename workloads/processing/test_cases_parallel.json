@@ -12,8 +12,8 @@
       "category": "file_processing",
       "setup_commands": [
         "mkdir -p test_data",
-        "seq 1 150000 > test_data/short_file.dat",
-        "seq 1 4000000 > test_data/large_file.dat"
+        "seq 1 2000000 > test_data/short_file.dat",
+        "seq 1 10000000 > test_data/large_file.dat"
       ],
       "small_commands": [
         "pigz -1 test_data/short_file.dat"
@@ -36,7 +36,7 @@
       "setup_commands": [
         "mkdir -p clips out",
         "ffmpeg -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -loglevel quiet clips/short.mp4",
-        "ffmpeg -f lavfi -i testsrc=duration=5:size=1920x1080:rate=30 -loglevel quiet clips/long.mp4"
+        "ffmpeg -f lavfi -i testsrc=duration=5:size=640x480:rate=30 -loglevel quiet clips/long.mp4"
       ],
       "small_commands": [
         "ffmpeg -loglevel quiet -i clips/short.mp4 -vf scale=640:-1 -c:v libx264 -preset veryfast out/short_out.mp4"
@@ -80,7 +80,7 @@
         "rm -rf test_repo && mkdir -p test_repo && cd test_repo && git init",
         "cd test_repo && git config user.name 'Test User' && git config user.email 'test@example.com'",
         "cd test_repo && echo 'small change' > small_file.txt && git add small_file.txt && git commit -m 'small commit' --quiet",
-        "cd test_repo && dd if=/dev/urandom of=large.bin bs=1M count=300 2>/dev/null && git add large.bin && git commit -m 'add large binary' --quiet"
+        "cd test_repo && dd if=/dev/urandom of=large.bin bs=1M count=20 2>/dev/null && git add large.bin && git commit -m 'add large binary' --quiet"
       ],
       "small_commands": [
         "cd test_repo && git log --oneline -n 5 > /tmp/short_log.txt && sha256sum /tmp/short_log.txt"
@@ -101,8 +101,8 @@
       "category": "file_processing",
       "setup_commands": [
         "mkdir -p large-dir",
-        "dd if=/dev/urandom of=large-dir/short_file.dat bs=1M count=5 2>/dev/null",
-        "dd if=/dev/urandom of=large-dir/long_file.dat bs=1M count=100 2>/dev/null"
+        "dd if=/dev/urandom of=large-dir/short_file.dat bs=1M count=50 2>/dev/null",
+        "dd if=/dev/urandom of=large-dir/long_file.dat bs=1M count=250 2>/dev/null"
       ],
       "small_commands": [
         "sha256sum large-dir/short_file.dat"
@@ -124,8 +124,8 @@
       "category": "data_processing",
       "setup_commands": [
         "chmod +x assets/spark_skew_prepare.py assets/spark_skew_test.py",
-        "python3 assets/spark_skew_prepare.py --regular-keys 100 --hot-keys 5000 --output spark_small.csv",
-        "python3 assets/spark_skew_prepare.py --regular-keys 100 --hot-keys 100000 --output spark_large.csv"
+        "python3 assets/spark_skew_prepare.py --regular-keys 2000 --hot-keys 4000 --output spark_small.csv",
+        "python3 assets/spark_skew_prepare.py --regular-keys 2000 --hot-keys 20000 --output spark_large.csv"
       ],
       "small_commands": [
         "python3 assets/spark_skew_test.py spark_small.csv"
@@ -146,8 +146,8 @@
       "category": "data_processing",
       "setup_commands": [
         "mkdir -p logs",
-        "seq 1 10000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"INFO\", \"Message\", $1}' | gzip > logs/short_log.gz",
-        "seq 1 500000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"INFO\", \"Message\", $1}' | gzip > logs/long_log.gz"
+        "seq 1 200000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"INFO\", \"Message\", $1}' | gzip > logs/short_log.gz",
+        "seq 1 1000000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"INFO\", \"Message\", $1}' | gzip > logs/long_log.gz"
       ],
       "small_commands": [
         "zcat logs/short_log.gz | grep -c 'INFO'"
@@ -169,8 +169,8 @@
       "category": "data_processing",
       "setup_commands": [
         "mkdir -p text_data",
-        "seq 1 10000 | awk '{printf \"key_short,value_%d\\n\", $1}' > text_data/short_file.txt",
-        "seq 1 250000 | awk '{printf \"key_long,value_%d\\n\", $1}' > text_data/long_file.txt"
+        "seq 1 500000 | awk '{printf \"key_short,value_%d\\n\", $1}' > text_data/short_file.txt",
+        "seq 1 2500000 | awk '{printf \"key_long,value_%d\\n\", $1}' > text_data/long_file.txt"
       ],
       "small_commands": [
         "grep -c 'key' text_data/short_file.txt"
@@ -193,7 +193,7 @@
       "setup_commands": [
         "mkdir -p ctest_project",
         "echo '#include <stdio.h>\n#include <math.h>\nint main() { double sum = 0; for(int i = 0; i < 1000000; i++) { sum += sin(i * 0.001) * cos(i * 0.001); } printf(\"Unit test result: %.6f\\n\", sum); return 0; }' > ctest_project/unit_test.c",
-        "echo '#include <stdio.h>\n#include <math.h>\n#include <stdlib.h>\nint main() { double sum = 0; for(long i = 0; i < 100000000L; i++) { sum += sin(i * 0.00001) * cos(i * 0.00001) * sqrt(i % 1000 + 1); } printf(\"Integration test result: %.6f\\n\", sum); return 0; }' > ctest_project/integration_test.c"
+        "echo '#include <stdio.h>\n#include <math.h>\n#include <stdlib.h>\nint main() { double sum = 0; for(long i = 0; i < 20000000L; i++) { sum += sin(i * 0.00001) * cos(i * 0.00001) * sqrt(i % 1000 + 1); } printf(\"Integration test result: %.6f\\n\", sum); return 0; }' > ctest_project/integration_test.c"
       ],
       "small_commands": [
         "gcc -O2 -lm ctest_project/unit_test.c -o ctest_project/unit_test && ctest_project/unit_test"
@@ -214,8 +214,8 @@
       "category": "data_processing",
       "setup_commands": [
         "mkdir -p log_chunks",
-        "seq 1 50000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[INFO]\", \"Request from\", \"192.168.1.\"int(rand()*255), \"processed in\", int(rand()*100), \"ms\"}' > log_chunks/small.log",
-        "seq 1 2000000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[INFO]\", \"Request from\", \"192.168.1.\"int(rand()*255), \"processed in\", int(rand()*100), \"ms\"}' > log_chunks/large.log"
+        "seq 1 500000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[INFO]\", \"Request from\", \"192.168.1.\"int(rand()*255), \"processed in\", int(rand()*100), \"ms\"}' > log_chunks/small.log",
+        "seq 1 2500000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[INFO]\", \"Request from\", \"192.168.1.\"int(rand()*255), \"processed in\", int(rand()*100), \"ms\"}' > log_chunks/large.log"
       ],
       "small_commands": [
         "gzip -c log_chunks/small.log | zcat | grep -E '\\[INFO\\]' | awk '{print $4}' | sort | uniq -c | sort -nr > log_chunks/small_ips.txt"
@@ -236,8 +236,8 @@
       "category": "data_processing",
       "setup_commands": [
         "chmod +x assets/dask_groupby_prepare.py assets/dask_groupby_test.py",
-        "python3 assets/dask_groupby_prepare.py --regular-size 100 --hot-size 5000 --output dask_small.csv",
-        "python3 assets/dask_groupby_prepare.py --regular-size 100 --hot-size 100000 --output dask_large.csv"
+        "python3 assets/dask_groupby_prepare.py --regular-size 2000 --hot-size 4000 --output dask_small.csv",
+        "python3 assets/dask_groupby_prepare.py --regular-size 2000 --hot-size 20000 --output dask_large.csv"
       ],
       "small_commands": [
         "python3 assets/dask_groupby_test.py dask_small.csv"
@@ -259,8 +259,8 @@
       "category": "data_processing",
       "setup_commands": [
         "chmod +x assets/pandas_etl_prepare.py assets/pandas_etl_test.py",
-        "python3 assets/pandas_etl_prepare.py --normal-logs 1000 --error-logs 5000 --output etl_small.gz",
-        "python3 assets/pandas_etl_prepare.py --normal-logs 1000 --error-logs 100000 --output etl_large.gz"
+        "python3 assets/pandas_etl_prepare.py --normal-logs 10000 --error-logs 2000 --output etl_small.gz",
+        "python3 assets/pandas_etl_prepare.py --normal-logs 10000 --error-logs 10000 --output etl_large.gz"
       ],
       "small_commands": [
         "python3 assets/pandas_etl_test.py etl_small.gz"
@@ -282,8 +282,8 @@
       "category": "data_processing",
       "setup_commands": [
         "chmod +x assets/flink_join_prepare.py assets/flink_join_test.py",
-        "python3 assets/flink_join_prepare.py --regular-transactions 100 --hot-transactions 5000 --output flink_small.csv",
-        "python3 assets/flink_join_prepare.py --regular-transactions 100 --hot-transactions 100000 --output flink_large.csv"
+        "python3 assets/flink_join_prepare.py --regular-transactions 2000 --hot-transactions 4000 --output flink_small.csv",
+        "python3 assets/flink_join_prepare.py --regular-transactions 2000 --hot-transactions 20000 --output flink_large.csv"
       ],
       "small_commands": [
         "python3 assets/flink_join_test.py flink_small.csv"
