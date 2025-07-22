@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <assert.h>
 #include <libgen.h>
 #include <string.h>
 #include <errno.h>
@@ -35,6 +36,7 @@ static struct {
 	struct bpf_object *obj;
 	struct bpf_link *link;
 	char *sched_name;
+	struct bpf_map *uei_map;
 } current_sched;
 
 static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va_list args)
@@ -52,8 +54,8 @@ static void sigint_handler(int sig)
 static int load_bpf_scheduler(const char *obj_path)
 {
 	struct bpf_object *obj;
-	struct bpf_program *prog;
 	struct bpf_link *link;
+	struct bpf_map *ops_map = NULL;
 	int err;
 
 	obj = bpf_object__open(obj_path);
@@ -69,24 +71,21 @@ static int load_bpf_scheduler(const char *obj_path)
 		return -1;
 	}
 
-	prog = bpf_object__find_program_by_name(obj, "simple_ops");
-	if (!prog) {
-		bpf_object__for_each_program(prog, obj) {
-			const char *prog_name = bpf_program__name(prog);
-			if (strstr(prog_name, "_ops")) {
-				break;
-			}
-		}
-		if (!prog) {
-			fprintf(stderr, "Failed to find scheduler ops program\n");
-			bpf_object__close(obj);
-			return -1;
+	bpf_object__for_each_map(ops_map, obj) {
+		if (bpf_map__type(ops_map) == BPF_MAP_TYPE_STRUCT_OPS) {
+			break;
 		}
 	}
+	
+	if (!ops_map) {
+		fprintf(stderr, "Failed to find struct_ops map\n");
+		bpf_object__close(obj);
+		return -1;
+	}
 
-	link = bpf_program__attach(prog);
+	link = bpf_map__attach_struct_ops(ops_map);
 	if (!link) {
-		fprintf(stderr, "Failed to attach BPF program: %s\n", strerror(errno));
+		fprintf(stderr, "Failed to attach struct_ops: %s\n", strerror(errno));
 		bpf_object__close(obj);
 		return -1;
 	}
@@ -143,7 +142,9 @@ int main(int argc, char **argv)
 
 	bpf_link__destroy(current_sched.link);
 	bpf_object__close(current_sched.obj);
-	free(current_sched.sched_name);
-	printf("Scheduler %s unloaded\n", current_sched.sched_name ? current_sched.sched_name : "unknown");
+	if (current_sched.sched_name) {
+		printf("Scheduler %s unloaded\n", current_sched.sched_name);
+		free(current_sched.sched_name);
+	}
 	return 0;
 }
