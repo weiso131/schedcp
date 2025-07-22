@@ -123,19 +123,18 @@
       "description": "Analytics with skewed data distribution (hot key problem)",
       "category": "data_processing",
       "setup_commands": [
-        "chmod +x assets/spark_skew_test.py",
-        "mkdir -p spark_data",
-        "seq 1 100000 > spark_data/short_data.txt",
-        "seq 1 500000 > spark_data/long_data.txt"
+        "chmod +x assets/spark_skew_prepare.py assets/spark_skew_test.py",
+        "python3 assets/spark_skew_prepare.py --regular-keys 100 --hot-keys 5000 --output spark_small.csv",
+        "python3 assets/spark_skew_prepare.py --regular-keys 100 --hot-keys 100000 --output spark_large.csv"
       ],
       "small_commands": [
-        "sha256sum spark_data/short_data.txt | cut -d' ' -f1 > /tmp/short_hash.txt"
+        "python3 assets/spark_skew_test.py spark_small.csv"
       ],
       "large_commands": [
-        "sha256sum spark_data/long_data.txt | cut -d' ' -f1 > /tmp/long_result.txt"
+        "python3 assets/spark_skew_test.py spark_large.csv"
       ],
       "cleanup_commands": [
-        "rm -rf spark_data/"
+        "rm -f spark_small.csv spark_large.csv"
       ],
       "expected_improvement": 0.33,
       "dependencies": ["python3"]
@@ -236,19 +235,18 @@
       "description": "Customer analytics simulation with skewed group sizes",
       "category": "data_processing",
       "setup_commands": [
-        "mkdir -p dask_data",
-        "chmod +x assets/dask_groupby_test.py",
-        "for i in {1..99}; do echo \"customer_$i,$(shuf -i 100-500 -n 1)\" >> dask_data/small_groups.csv; done",
-        "for i in {1..50000}; do echo \"customer_999,$(shuf -i 100-500 -n 1)\" >> dask_data/large_group.csv; done"
+        "chmod +x assets/dask_groupby_prepare.py assets/dask_groupby_test.py",
+        "python3 assets/dask_groupby_prepare.py --regular-size 100 --hot-size 5000 --output dask_small.csv",
+        "python3 assets/dask_groupby_prepare.py --regular-size 100 --hot-size 100000 --output dask_large.csv"
       ],
       "small_commands": [
-        "python3 assets/dask_groupby_test.py"
+        "python3 assets/dask_groupby_test.py dask_small.csv"
       ],
       "large_commands": [
-        "python3 assets/dask_groupby_test.py"
+        "python3 assets/dask_groupby_test.py dask_large.csv"
       ],
       "cleanup_commands": [
-        "rm -rf dask_data/",
+        "rm -f dask_small.csv dask_large.csv",
         "rm -f /tmp/dask_*"
       ],
       "expected_improvement": 0.33,
@@ -260,19 +258,18 @@
       "description": "ETL pipeline with sudden spike in data volume",
       "category": "data_processing",
       "setup_commands": [
-        "mkdir -p logs",
-        "chmod +x assets/pandas_etl_test.py",
-        "for i in {1..39}; do seq 1 1000 | awk -v i=$i '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[INFO]\", \"server\"i, \"Request processed\", $1}' | gzip > logs/log_$i.gz; done",
-        "seq 1 100000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[ERROR]\", \"server40\", \"DDoS attack detected\", $1}' | gzip > logs/log_40.gz"
+        "chmod +x assets/pandas_etl_prepare.py assets/pandas_etl_test.py",
+        "python3 assets/pandas_etl_prepare.py --normal-logs 1000 --error-logs 5000 --output etl_small.gz",
+        "python3 assets/pandas_etl_prepare.py --normal-logs 1000 --error-logs 100000 --output etl_large.gz"
       ],
       "small_commands": [
-        "python3 assets/pandas_etl_test.py"
+        "python3 assets/pandas_etl_test.py etl_small.gz"
       ],
       "large_commands": [
-        "python3 assets/pandas_etl_test.py"
+        "python3 assets/pandas_etl_test.py etl_large.gz"
       ],
       "cleanup_commands": [
-        "rm -rf logs/",
+        "rm -f etl_small.gz etl_large.gz",
         "rm -f /tmp/pandas_*"
       ],
       "expected_improvement": 0.33,
@@ -284,19 +281,18 @@
       "description": "Retail analytics simulation with hot products",
       "category": "data_processing",
       "setup_commands": [
-        "mkdir -p flink_data",
-        "chmod +x assets/flink_join_test.py",
-        "for i in {1..99}; do for j in {1..100}; do echo \"product_$i,$(shuf -i 10-50 -n 1),$(date +%s -d \"$j hours ago\")\" >> flink_data/regular_products.csv; done; done",
-        "for i in {1..10000}; do echo \"product_999,$(shuf -i 10-50 -n 1),$(date +%s -d \"$((RANDOM % 24)) hours ago\")\" >> flink_data/popular_product.csv; done"
+        "chmod +x assets/flink_join_prepare.py assets/flink_join_test.py",
+        "python3 assets/flink_join_prepare.py --regular-transactions 100 --hot-transactions 5000 --output flink_small.csv",
+        "python3 assets/flink_join_prepare.py --regular-transactions 100 --hot-transactions 100000 --output flink_large.csv"
       ],
       "small_commands": [
-        "python3 assets/flink_join_test.py"
+        "python3 assets/flink_join_test.py flink_small.csv"
       ],
       "large_commands": [
-        "python3 assets/flink_join_test.py"
+        "python3 assets/flink_join_test.py flink_large.csv"
       ],
       "cleanup_commands": [
-        "rm -rf flink_data/",
+        "rm -f flink_small.csv flink_large.csv",
         "rm -f /tmp/flink_*"
       ],
       "expected_improvement": 0.33,
