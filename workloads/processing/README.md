@@ -14,6 +14,9 @@ This framework provides automated testing for parallel workloads with long-tail 
 └── assets/                     # Test scripts and assets
     ├── short.c                 # Short-running C program for testing
     ├── long.c                  # Long-running C program for testing
+    ├── video_transcode.cpp     # C++ video transcoding implementation
+    ├── compression.py          # File compression utility
+    ├── file_checksum.py        # File checksum calculator
     ├── spark_skew_prepare.py   # Hot key aggregation data generator
     ├── spark_skew_test.py      # Hot key aggregation workload simulation
     ├── pandas_etl_prepare.py   # DDoS log analysis data generator
@@ -62,17 +65,17 @@ python3 evaluate_workloads_parallel.py --all --save my_results.json
 The framework includes 9 test cases across different categories, each configured with 40 parallel tasks (39 short + 1 long):
 
 ### File Processing
-- **pigz_compression**: Parallel compression of mixed-size files with severe load imbalance
+- **compression**: Compression of mixed-size files with severe load imbalance (Python implementation)
 - **file_checksum**: Parallel file system operations with one large file blocking completion
 
 ### Media Processing  
-- **ffmpeg_transcode**: Video transcoding with one large file dominating processing time
+- **video_transcode**: Video transcoding with one large file dominating processing time (C++ implementation)
 
 ### Software Testing
 - **ctest_suite**: Test suite with fast unit tests and one slow integration test
 
 ### Version Control
-- **git_compression**: Git incremental compression with mixed object sizes
+- **git_add_different**: Git add operations with different numbers of files
 
 ### Data Processing
 - **log_processing**: Log processing with skewed chunks and different compression levels

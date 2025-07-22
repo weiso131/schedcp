@@ -17,15 +17,15 @@ This creates severe load imbalance typical in real-world scenarios:
 
 ## Test Case Implementations
 
-### 1. Pigz Directory Compression
+### 1. File Compression
 
-**ID:** `pigz_compression`
+**ID:** `compression`
 **Category:** File Processing
-**Description:** Parallel compression of mixed-size files with severe load imbalance
+**Description:** Compression of mixed-size files with severe load imbalance
 
 **Configuration:**
 - 39 short tasks: Compress small files (3M records each)
-- 1 long task: Compress large file (100M records)
+- 1 long task: Compress large file (20M records)
 - Creates massive imbalance in compression time
 
 **Setup Commands:**
@@ -33,26 +33,32 @@ This creates severe load imbalance typical in real-world scenarios:
 # Small file setup (executed 39 times)
 mkdir -p test_data
 seq 1 3000000 > test_data/short_file.dat
+cp $ORIGINAL_CWD/assets/compression.py .
+cp compression.py small_compression.py
+chmod +x small_compression.py
 
 # Large file setup (executed 1 time)
 mkdir -p test_data  
-seq 1 100000000 > test_data/large_file.dat
+seq 1 20000000 > test_data/large_file.dat
+cp $ORIGINAL_CWD/assets/compression.py .
+cp compression.py large_compression.py
+chmod +x large_compression.py
 ```
 
 **Execution:**
-- Small commands: `pigz -9 test_data/short_file.dat`
-- Large commands: `pigz -9 test_data/large_file.dat`
+- Small commands: `python3 small_compression.py test_data/short_file.dat 9`
+- Large commands: `python3 large_compression.py test_data/large_file.dat 9`
 
 **Expected Improvement:** 33%
 
-### 2. FFmpeg Split Transcode
+### 2. Video Transcode (C++ Implementation)
 
-**ID:** `ffmpeg_transcode`
+**ID:** `video_transcode`
 **Category:** Media Processing
 **Description:** Video transcoding with one large file dominating processing time
 
 **Configuration:**
-- 39 short tasks: Process short video clips (6 seconds duration)
+- 39 short tasks: Process short video clips (30 seconds duration)
 - 1 long task: Process long video clip (70 seconds duration)
 - Severe imbalance in transcoding time
 
@@ -60,16 +66,20 @@ seq 1 100000000 > test_data/large_file.dat
 ```bash
 # Short video setup
 mkdir -p clips out
-ffmpeg -f lavfi -i testsrc=duration=6:size=320x240:rate=30 -loglevel quiet clips/short.mp4
+ffmpeg -f lavfi -i testsrc=duration=30:size=320x240:rate=30 -loglevel quiet clips/short.mp4
+cp $ORIGINAL_CWD/assets/video_transcode.cpp .
+g++ -o small_video_transcode video_transcode.cpp -lavformat -lavcodec -lavutil -lswscale -lpthread -lm -lz
 
 # Long video setup  
 mkdir -p clips out
 ffmpeg -f lavfi -i testsrc=duration=70:size=1920x1080:rate=30 -loglevel quiet clips/long.mp4
+cp $ORIGINAL_CWD/assets/video_transcode.cpp .
+g++ -o large_video_transcode video_transcode.cpp -lavformat -lavcodec -lavutil -lswscale -lpthread -lm -lz
 ```
 
 **Execution:**
-- Small commands: `ffmpeg -loglevel quiet -i clips/short.mp4 -vf scale=640:-1 -c:v libx264 -preset veryfast out/short_out.mp4`
-- Large commands: `ffmpeg -loglevel quiet -i clips/long.mp4 -vf scale=640:-1 -c:v libx264 -preset veryfast out/long_out.mp4`
+- Small commands: `./small_video_transcode clips/short.mp4 out/short_out.mp4 640`
+- Large commands: `./large_video_transcode clips/long.mp4 out/long_out.mp4 640`
 
 **Expected Improvement:** 33%
 
@@ -101,29 +111,37 @@ gcc -O2 long.c -lm -o long
 
 **Expected Improvement:** 33%
 
-### 4. Git Incremental Compression
+### 4. Git Add Different Size Directories
 
-**ID:** `git_compression`
+**ID:** `git_add_different`
 **Category:** Version Control
-**Description:** Git garbage collection with mixed object sizes
+**Description:** Git add operations with different numbers of files
 
 **Configuration:**
-- 39 short tasks: Simple git log operations on small repositories
-- 1 long task: Heavy git repack operation on large repository
-- Simulates mixed repository processing scenarios
+- 39 short tasks: Git add on small repository (200MB data)
+- 1 long task: Git add on large repository (~2GB data)
+- Simulates repository staging imbalance scenarios
 
 **Setup Commands:**
 ```bash
 # Small repository setup
-mkdir -p test_repo && cd test_repo && git init
-cd test_repo && git config user.name 'Test User' && git config user.email 'test@example.com'
-cd test_repo && for i in {1..50}; do echo "change $i" > file_$i.txt && git add file_$i.txt && git commit -m "commit $i" --quiet; done
+mkdir -p small_repo && cd small_repo && git init
+cd small_repo && git config user.name 'Test User' && git config user.email 'test@example.com'
+cd small_repo && dd if=/dev/urandom of=large_file_1.bin bs=100M count=1 2>/dev/null
+cd small_repo && dd if=/dev/urandom of=large_file_2.bin bs=100M count=1 2>/dev/null
+cd small_repo && mkdir -p src && for i in {1..200}; do echo "// File $i" > src/file_$i.js; done
 
 # Large repository setup
-mkdir -p test_repo && cd test_repo && git init
-cd test_repo && git config user.name 'Test User' && git config user.email 'test@example.com'
-cd test_repo && for i in {1..200}; do dd if=/dev/urandom of=bin_$i.dat bs=1M count=2 2>/dev/null && git add bin_$i.dat && git commit -m "binary $i" --quiet; done
+mkdir -p large_repo && cd large_repo && git init
+cd large_repo && git config user.name 'Test User' && git config user.email 'test@example.com'
+cd large_repo && dd if=/dev/urandom of=huge_file_1.bin bs=500M count=1 2>/dev/null
+cd large_repo && dd if=/dev/urandom of=huge_file_2.bin bs=500M count=1 2>/dev/null
+cd large_repo && mkdir -p src && for i in {1..1000}; do dd if=/dev/urandom of=src/file_$i.dat bs=1M count=1 2>/dev/null; done
 ```
+
+**Execution:**
+- Small commands: `cd small_repo && git add .`
+- Large commands: `cd large_repo && git add .`
 
 **Expected Improvement:** 30%
 

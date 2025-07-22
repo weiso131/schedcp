@@ -91,28 +91,30 @@
       "dependencies": ["gcc"]
     },
     {
-      "id": "git_compression",
-      "name": "Git Incremental Compression",
-      "description": "Git garbage collection with mixed object sizes",
+      "id": "git_add_different",
+      "name": "Git Add Different Size Directories",
+      "description": "Git add operations with different numbers of files",
       "category": "version_control",
       "small_setup": [
-        "mkdir -p test_repo && cd test_repo && git init",
-        "cd test_repo && git config user.name 'Test User' && git config user.email 'test@example.com'",
-        "cd test_repo && for i in {1..50}; do echo \"change $i\" > file_$i.txt && git add file_$i.txt && git commit -m \"commit $i\" --quiet; done"
+        "mkdir -p small_repo && cd small_repo && git init",
+        "cd small_repo && git config user.name 'Test User' && git config user.email 'test@example.com'",
+        "cd small_repo && dd if=/dev/urandom of=large_file_1.bin bs=20M count=1 2>/dev/null",
+        "cd small_repo && dd if=/dev/urandom of=large_file_2.bin bs=20M count=1 2>/dev/null"
       ],
       "large_setup": [
-        "mkdir -p test_repo && cd test_repo && git init",
-        "cd test_repo && git config user.name 'Test User' && git config user.email 'test@example.com'",
-        "cd test_repo && for i in {1..200}; do dd if=/dev/urandom of=bin_$i.dat bs=1M count=2 2>/dev/null && git add bin_$i.dat && git commit -m \"binary $i\" --quiet; done"
+        "mkdir -p large_repo && cd large_repo && git init",
+        "cd large_repo && git config user.name 'Test User' && git config user.email 'test@example.com'",
+        "cd large_repo && dd if=/dev/urandom of=huge_file_1.bin bs=100M count=1 2>/dev/null",
+        "cd large_repo && dd if=/dev/urandom of=huge_file_2.bin bs=100M count=1 2>/dev/null"
       ],
       "small_commands": [
-        "cd test_repo && git log --oneline -n 5 > /tmp/short_log.txt && sha256sum /tmp/short_log.txt"
+        "cd small_repo && git add ."
       ],
       "large_commands": [
-        "cd test_repo && echo \"Processing large repository\" && git repack -a -d -f --depth=10 --window=50"
+        "cd large_repo && git add ."
       ],
       "cleanup_commands": [
-        "rm -rf test_repo/"
+        "rm -rf small_repo/ large_repo/"
       ],
       "dependencies": ["git"]
     },
