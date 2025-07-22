@@ -451,8 +451,25 @@ def main():
             evaluator.save_results(results)
             
     else:
-        print("Please specify an action: --list, --test TEST_ID, or --all")
-        print("Use --help for more information")
+        # Default to running all tests
+        results = evaluator.run_all_tests()
+        
+        print("\n\nSummary:")
+        print("=" * 60)
+        summary = results['summary']
+        print(f"Total tests: {summary['total_tests']}")
+        print(f"Successful: {summary['successful_tests']}")
+        print(f"With parallel tracking: {summary['parallel_tracked_tests']}")
+        print(f"Success rate: {summary['success_rate']*100:.1f}%")
+        
+        if 'avg_imbalance_ratio' in summary:
+            print(f"Average imbalance ratio: {summary['avg_imbalance_ratio']:.1f}x")
+            print(f"Maximum imbalance ratio: {summary['max_imbalance_ratio']:.1f}x")
+            
+        if args.save:
+            evaluator.save_results(results, args.save)
+        else:
+            evaluator.save_results(results)
 
 if __name__ == '__main__':
     main()
