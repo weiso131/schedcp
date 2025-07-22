@@ -89,12 +89,12 @@
       "small_setup": [
         "mkdir -p test_repo && cd test_repo && git init",
         "cd test_repo && git config user.name 'Test User' && git config user.email 'test@example.com'",
-        "cd test_repo && echo 'small change' > small_file.txt && git add small_file.txt && git commit -m 'small commit' --quiet"
+        "cd test_repo && for i in {1..50}; do echo \"change $i\" > file_$i.txt && git add file_$i.txt && git commit -m \"commit $i\" --quiet; done"
       ],
       "large_setup": [
         "mkdir -p test_repo && cd test_repo && git init",
         "cd test_repo && git config user.name 'Test User' && git config user.email 'test@example.com'",
-        "cd test_repo && dd if=/dev/urandom of=large.bin bs=1M count=5 2>/dev/null && git add large.bin && git commit -m 'add large binary' --quiet"
+        "cd test_repo && for i in {1..200}; do dd if=/dev/urandom of=bin_$i.dat bs=1M count=2 2>/dev/null && git add bin_$i.dat && git commit -m \"binary $i\" --quiet; done"
       ],
       "small_commands": [
         "cd test_repo && git log --oneline -n 5 > /tmp/short_log.txt && sha256sum /tmp/short_log.txt"
@@ -142,12 +142,12 @@
       "small_setup": [
         "cp $ORIGINAL_CWD/assets/spark_skew_prepare.py $ORIGINAL_CWD/assets/spark_skew_test.py .",
         "chmod +x spark_skew_prepare.py spark_skew_test.py",
-        "python3 spark_skew_prepare.py --regular-keys 5000 --hot-keys 10000 --output spark_small.csv"
+        "python3 spark_skew_prepare.py --regular-keys 8000 --hot-keys 15000 --output spark_small.csv"
       ],
       "large_setup": [
         "cp $ORIGINAL_CWD/assets/spark_skew_prepare.py $ORIGINAL_CWD/assets/spark_skew_test.py .",
         "chmod +x spark_skew_prepare.py spark_skew_test.py",
-        "python3 spark_skew_prepare.py --regular-keys 5000 --hot-keys 50000 --output spark_large.csv"
+        "python3 spark_skew_prepare.py --regular-keys 100000 --hot-keys 800000 --output spark_large.csv"
       ],
       "small_commands": [
         "python3 spark_skew_test.py spark_small.csv"
@@ -168,11 +168,11 @@
       "category": "data_processing",
       "small_setup": [
         "mkdir -p log_chunks",
-        "seq 1 2000000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[INFO]\", \"Request from\", \"192.168.1.\"int(rand()*255), \"processed in\", int(rand()*100), \"ms\"}' > log_chunks/small.log"
+        "seq 1 500000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[INFO]\", \"Request from\", \"192.168.1.\"int(rand()*255), \"processed in\", int(rand()*100), \"ms\"}' > log_chunks/small.log"
       ],
       "large_setup": [
         "mkdir -p log_chunks",
-        "seq 1 10000000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[INFO]\", \"Request from\", \"192.168.1.\"int(rand()*255), \"processed in\", int(rand()*100), \"ms\"}' > log_chunks/large.log"
+        "seq 1 7000000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[INFO]\", \"Request from\", \"192.168.1.\"int(rand()*255), \"processed in\", int(rand()*100), \"ms\"}' > log_chunks/large.log"
       ],
       "small_commands": [
         "gzip -c log_chunks/small.log | zcat | grep -E '\\[INFO\\]' | awk '{print $4}' | sort | uniq -c | sort -nr > log_chunks/small_ips.txt"
@@ -194,12 +194,12 @@
       "small_setup": [
         "cp $ORIGINAL_CWD/assets/dask_groupby_prepare.py $ORIGINAL_CWD/assets/dask_groupby_test.py .",
         "chmod +x dask_groupby_prepare.py dask_groupby_test.py",
-        "python3 dask_groupby_prepare.py --regular-size 5000 --hot-size 10000 --output dask_small.csv"
+        "python3 dask_groupby_prepare.py --regular-size 8000 --hot-size 15000 --output dask_small.csv"
       ],
       "large_setup": [
         "cp $ORIGINAL_CWD/assets/dask_groupby_prepare.py $ORIGINAL_CWD/assets/dask_groupby_test.py .",
         "chmod +x dask_groupby_prepare.py dask_groupby_test.py",
-        "python3 dask_groupby_prepare.py --regular-size 5000 --hot-size 50000 --output dask_large.csv"
+        "python3 dask_groupby_prepare.py --regular-size 100000 --hot-size 800000 --output dask_large.csv"
       ],
       "small_commands": [
         "python3 dask_groupby_test.py dask_small.csv"
@@ -222,12 +222,12 @@
       "small_setup": [
         "cp $ORIGINAL_CWD/assets/pandas_etl_prepare.py $ORIGINAL_CWD/assets/pandas_etl_test.py .",
         "chmod +x pandas_etl_prepare.py pandas_etl_test.py",
-        "python3 pandas_etl_prepare.py --normal-logs 20000 --error-logs 5000 --output etl_small.gz"
+        "python3 pandas_etl_prepare.py --normal-logs 30000 --error-logs 8000 --output etl_small.gz"
       ],
       "large_setup": [
         "cp $ORIGINAL_CWD/assets/pandas_etl_prepare.py $ORIGINAL_CWD/assets/pandas_etl_test.py .",
         "chmod +x pandas_etl_prepare.py pandas_etl_test.py",
-        "python3 pandas_etl_prepare.py --normal-logs 20000 --error-logs 25000 --output etl_large.gz"
+        "python3 pandas_etl_prepare.py --normal-logs 1000000 --error-logs 500000 --output etl_large.gz"
       ],
       "small_commands": [
         "python3 pandas_etl_test.py etl_small.gz"
@@ -250,12 +250,12 @@
       "small_setup": [
         "cp $ORIGINAL_CWD/assets/flink_join_prepare.py $ORIGINAL_CWD/assets/flink_join_test.py .",
         "chmod +x flink_join_prepare.py flink_join_test.py",
-        "python3 flink_join_prepare.py --regular-transactions 5000 --hot-transactions 10000 --output flink_small.csv"
+        "python3 flink_join_prepare.py --regular-transactions 8000 --hot-transactions 12000 --output flink_small.csv"
       ],
       "large_setup": [
         "cp $ORIGINAL_CWD/assets/flink_join_prepare.py $ORIGINAL_CWD/assets/flink_join_test.py .",
         "chmod +x flink_join_prepare.py flink_join_test.py",
-        "python3 flink_join_prepare.py --regular-transactions 5000 --hot-transactions 50000 --output flink_large.csv"
+        "python3 flink_join_prepare.py --regular-transactions 100000 --hot-transactions 700000 --output flink_large.csv"
       ],
       "small_commands": [
         "python3 flink_join_test.py flink_small.csv"
