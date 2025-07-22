@@ -16,7 +16,8 @@ class NginxBenchmark:
         self.nginx_dir = nginx_dir
         self.wrk2_dir = wrk2_dir
         self.results_dir = results_dir
-        self.nginx_binary = "/tmp/nginx/nginx"
+        self.nginx_binary = "./nginx-bin"
+        self.nginx_config = os.path.abspath("nginx-local.conf")
         self.wrk2_binary = os.path.join(wrk2_dir, "wrk")
         
         os.makedirs(results_dir, exist_ok=True)
@@ -24,22 +25,27 @@ class NginxBenchmark:
     def start_nginx(self):
         """Start Nginx server"""
         print("Starting Nginx server...")
-        cmd = [self.nginx_binary, "-c", "/tmp/nginx/nginx.conf"]
+        cmd = [self.nginx_binary, "-c", self.nginx_config]
         
         try:
-            subprocess.run(cmd, check=True, capture_output=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            if result.returncode != 0:
+                print(f"Nginx failed to start. Return code: {result.returncode}")
+                print(f"Stderr: {result.stderr}")
+                return False
+                
             time.sleep(2)
             
             # Check if Nginx is running
-            result = subprocess.run(["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", 
+            health_result = subprocess.run(["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", 
                                    "http://127.0.0.1:8080/"], 
                                   capture_output=True, text=True, timeout=5)
             
-            if result.stdout == "200":
+            if health_result.stdout == "200":
                 print("Nginx server started successfully")
                 return True
             else:
-                print(f"Nginx health check failed: HTTP {result.stdout}")
+                print(f"Nginx health check failed: HTTP {health_result.stdout}")
                 return False
                 
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
@@ -49,7 +55,7 @@ class NginxBenchmark:
     def stop_nginx(self):
         """Stop Nginx server"""
         try:
-            subprocess.run([self.nginx_binary, "-s", "quit"], 
+            subprocess.run([self.nginx_binary, "-s", "quit", "-c", self.nginx_config], 
                           capture_output=True, timeout=5)
         except:
             pass
