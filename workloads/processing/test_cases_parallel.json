@@ -62,16 +62,18 @@
       "description": "Test suite with fast unit tests and one slow integration test",
       "category": "software_testing",
       "small_setup": [
-        "gcc -O2 assets/short.c -lm -o assets/short"
+        "cp $ORIGINAL_CWD/assets/short.c .",
+        "gcc -O2 short.c -lm -o short"
       ],
       "large_setup": [
-        "gcc -O2 assets/long.c -lm -o assets/long"
+        "cp $ORIGINAL_CWD/assets/long.c .",
+        "gcc -O2 long.c -lm -o long"
       ],
       "small_commands": [
-        "./assets/short"
+        "./short"
       ],
       "large_commands": [
-        "./assets/long"
+        "./long"
       ],
       "cleanup_commands": [
         "rm -f assets/short assets/long"
@@ -138,18 +140,20 @@
       "description": "Analytics with skewed data distribution (hot key problem)",
       "category": "data_processing",
       "small_setup": [
-        "chmod +x assets/spark_skew_prepare.py assets/spark_skew_test.py",
-        "python3 assets/spark_skew_prepare.py --regular-keys 5000 --hot-keys 10000 --output spark_small.csv"
+        "cp $ORIGINAL_CWD/assets/spark_skew_prepare.py $ORIGINAL_CWD/assets/spark_skew_test.py .",
+        "chmod +x spark_skew_prepare.py spark_skew_test.py",
+        "python3 spark_skew_prepare.py --regular-keys 5000 --hot-keys 10000 --output spark_small.csv"
       ],
       "large_setup": [
-        "chmod +x assets/spark_skew_prepare.py assets/spark_skew_test.py",
-        "python3 assets/spark_skew_prepare.py --regular-keys 5000 --hot-keys 50000 --output spark_large.csv"
+        "cp $ORIGINAL_CWD/assets/spark_skew_prepare.py $ORIGINAL_CWD/assets/spark_skew_test.py .",
+        "chmod +x spark_skew_prepare.py spark_skew_test.py",
+        "python3 spark_skew_prepare.py --regular-keys 5000 --hot-keys 50000 --output spark_large.csv"
       ],
       "small_commands": [
-        "python3 assets/spark_skew_test.py spark_small.csv"
+        "python3 spark_skew_test.py spark_small.csv"
       ],
       "large_commands": [
-        "python3 assets/spark_skew_test.py spark_large.csv"
+        "python3 spark_skew_test.py spark_large.csv"
       ],
       "cleanup_commands": [
         "rm -f spark_small.csv spark_large.csv"
@@ -188,18 +192,20 @@
       "description": "Customer analytics simulation with skewed group sizes",
       "category": "data_processing",
       "small_setup": [
-        "chmod +x assets/dask_groupby_prepare.py assets/dask_groupby_test.py",
-        "python3 assets/dask_groupby_prepare.py --regular-size 5000 --hot-size 10000 --output dask_small.csv"
+        "cp $ORIGINAL_CWD/assets/dask_groupby_prepare.py $ORIGINAL_CWD/assets/dask_groupby_test.py .",
+        "chmod +x dask_groupby_prepare.py dask_groupby_test.py",
+        "python3 dask_groupby_prepare.py --regular-size 5000 --hot-size 10000 --output dask_small.csv"
       ],
       "large_setup": [
-        "chmod +x assets/dask_groupby_prepare.py assets/dask_groupby_test.py",
-        "python3 assets/dask_groupby_prepare.py --regular-size 5000 --hot-size 50000 --output dask_large.csv"
+        "cp $ORIGINAL_CWD/assets/dask_groupby_prepare.py $ORIGINAL_CWD/assets/dask_groupby_test.py .",
+        "chmod +x dask_groupby_prepare.py dask_groupby_test.py",
+        "python3 dask_groupby_prepare.py --regular-size 5000 --hot-size 50000 --output dask_large.csv"
       ],
       "small_commands": [
-        "python3 assets/dask_groupby_test.py dask_small.csv"
+        "python3 dask_groupby_test.py dask_small.csv"
       ],
       "large_commands": [
-        "python3 assets/dask_groupby_test.py dask_large.csv"
+        "python3 dask_groupby_test.py dask_large.csv"
       ],
       "cleanup_commands": [
         "rm -f dask_small.csv dask_large.csv",
@@ -214,18 +220,20 @@
       "description": "ETL pipeline with sudden spike in data volume",
       "category": "data_processing",
       "small_setup": [
-        "chmod +x assets/pandas_etl_prepare.py assets/pandas_etl_test.py",
-        "python3 assets/pandas_etl_prepare.py --normal-logs 20000 --error-logs 5000 --output etl_small.gz"
+        "cp $ORIGINAL_CWD/assets/pandas_etl_prepare.py $ORIGINAL_CWD/assets/pandas_etl_test.py .",
+        "chmod +x pandas_etl_prepare.py pandas_etl_test.py",
+        "python3 pandas_etl_prepare.py --normal-logs 20000 --error-logs 5000 --output etl_small.gz"
       ],
       "large_setup": [
-        "chmod +x assets/pandas_etl_prepare.py assets/pandas_etl_test.py",
-        "python3 assets/pandas_etl_prepare.py --normal-logs 20000 --error-logs 25000 --output etl_large.gz"
+        "cp $ORIGINAL_CWD/assets/pandas_etl_prepare.py $ORIGINAL_CWD/assets/pandas_etl_test.py .",
+        "chmod +x pandas_etl_prepare.py pandas_etl_test.py",
+        "python3 pandas_etl_prepare.py --normal-logs 20000 --error-logs 25000 --output etl_large.gz"
       ],
       "small_commands": [
-        "python3 assets/pandas_etl_test.py etl_small.gz"
+        "python3 pandas_etl_test.py etl_small.gz"
       ],
       "large_commands": [
-        "python3 assets/pandas_etl_test.py etl_large.gz"
+        "python3 pandas_etl_test.py etl_large.gz"
       ],
       "cleanup_commands": [
         "rm -f etl_small.gz etl_large.gz",
@@ -240,18 +248,20 @@
       "description": "Retail analytics simulation with hot products",
       "category": "data_processing",
       "small_setup": [
-        "chmod +x assets/flink_join_prepare.py assets/flink_join_test.py",
-        "python3 assets/flink_join_prepare.py --regular-transactions 5000 --hot-transactions 10000 --output flink_small.csv"
+        "cp $ORIGINAL_CWD/assets/flink_join_prepare.py $ORIGINAL_CWD/assets/flink_join_test.py .",
+        "chmod +x flink_join_prepare.py flink_join_test.py",
+        "python3 flink_join_prepare.py --regular-transactions 5000 --hot-transactions 10000 --output flink_small.csv"
       ],
       "large_setup": [
-        "chmod +x assets/flink_join_prepare.py assets/flink_join_test.py",
-        "python3 assets/flink_join_prepare.py --regular-transactions 5000 --hot-transactions 50000 --output flink_large.csv"
+        "cp $ORIGINAL_CWD/assets/flink_join_prepare.py $ORIGINAL_CWD/assets/flink_join_test.py .",
+        "chmod +x flink_join_prepare.py flink_join_test.py",
+        "python3 flink_join_prepare.py --regular-transactions 5000 --hot-transactions 50000 --output flink_large.csv"
       ],
       "small_commands": [
-        "python3 assets/flink_join_test.py flink_small.csv"
+        "python3 flink_join_test.py flink_small.csv"
       ],
       "large_commands": [
-        "python3 assets/flink_join_test.py flink_large.csv"
+        "python3 flink_join_test.py flink_large.csv"
       ],
       "cleanup_commands": [
         "rm -f flink_small.csv flink_large.csv",

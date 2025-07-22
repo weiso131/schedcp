@@ -166,6 +166,9 @@ class EnhancedWorkloadEvaluator:
         base_dir = tempfile.mkdtemp(prefix=f"test_{test_case['id']}_")
         created_dirs = []
         
+        # Store the original working directory
+        original_cwd = os.getcwd()
+        
         try:
             # Setup phase - create directories and run setup for each task
             all_tasks = []
@@ -181,6 +184,8 @@ class EnhancedWorkloadEvaluator:
                 # Run setup commands in this directory
                 for setup_cmd in small_setup_cmds:
                     if setup_cmd.strip():
+                        # Replace $ORIGINAL_CWD with actual path
+                        setup_cmd = setup_cmd.replace('$ORIGINAL_CWD', original_cwd)
                         result = subprocess.run(setup_cmd, shell=True, cwd=task_dir, capture_output=True, text=True)
                         if result.returncode != 0:
                             print(f"  Setup failed for small_{i}: {setup_cmd}")
@@ -200,6 +205,8 @@ class EnhancedWorkloadEvaluator:
                 # Run setup commands in this directory
                 for setup_cmd in large_setup_cmds:
                     if setup_cmd.strip():
+                        # Replace $ORIGINAL_CWD with actual path
+                        setup_cmd = setup_cmd.replace('$ORIGINAL_CWD', original_cwd)
                         result = subprocess.run(setup_cmd, shell=True, cwd=task_dir, capture_output=True, text=True)
                         if result.returncode != 0:
                             print(f"  Setup failed for large_{i}: {setup_cmd}")
