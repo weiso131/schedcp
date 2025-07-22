@@ -28,7 +28,6 @@
         "rm -rf test_data/",
         "rm -f *.gz"
       ],
-      "expected_improvement": 0.33,
       "dependencies": ["pigz"]
     },
     {
@@ -53,7 +52,6 @@
       "cleanup_commands": [
         "rm -rf clips/ out/"
       ],
-      "expected_improvement": 0.33,
       "dependencies": ["ffmpeg"]
     },
     {
@@ -78,7 +76,6 @@
       "cleanup_commands": [
         "rm -f assets/short assets/long"
       ],
-      "expected_improvement": 0.33,
       "dependencies": ["gcc"]
     },
     {
@@ -105,7 +102,6 @@
       "cleanup_commands": [
         "rm -rf test_repo/"
       ],
-      "expected_improvement": 0.30,
       "dependencies": ["git"]
     },
     {
@@ -131,7 +127,6 @@
         "rm -rf large-dir/",
         "rm -f checksums.txt"
       ],
-      "expected_improvement": 0.33,
       "dependencies": ["sha256sum"]
     },
     {
@@ -141,24 +136,26 @@
       "category": "data_processing",
       "small_setup": [
         "cp $ORIGINAL_CWD/assets/spark_skew_prepare.py $ORIGINAL_CWD/assets/spark_skew_test.py .",
-        "chmod +x spark_skew_prepare.py spark_skew_test.py",
+        "cp spark_skew_test.py small_spark_skew_test.py",
+        "chmod +x spark_skew_prepare.py small_spark_skew_test.py",
         "python3 spark_skew_prepare.py --regular-keys 8000 --hot-keys 15000 --output spark_small.csv"
       ],
       "large_setup": [
         "cp $ORIGINAL_CWD/assets/spark_skew_prepare.py $ORIGINAL_CWD/assets/spark_skew_test.py .",
-        "chmod +x spark_skew_prepare.py spark_skew_test.py",
+        "cp spark_skew_test.py large_spark_skew_test.py",
+        "chmod +x spark_skew_prepare.py large_spark_skew_test.py",
         "python3 spark_skew_prepare.py --regular-keys 100000 --hot-keys 800000 --output spark_large.csv"
       ],
       "small_commands": [
-        "python3 spark_skew_test.py spark_small.csv"
+        "python3 small_spark_skew_test.py spark_small.csv"
       ],
       "large_commands": [
-        "python3 spark_skew_test.py spark_large.csv"
+        "python3 large_spark_skew_test.py spark_large.csv"
       ],
       "cleanup_commands": [
-        "rm -f spark_small.csv spark_large.csv"
+        "rm -f spark_small.csv spark_large.csv",
+        "rm -f small_spark_skew_test.py large_spark_skew_test.py spark_skew_prepare.py spark_skew_test.py"
       ],
-      "expected_improvement": 0.33,
       "dependencies": ["python3"]
     },
     {
@@ -183,7 +180,6 @@
       "cleanup_commands": [
         "rm -rf log_chunks/"
       ],
-      "expected_improvement": 0.35,
       "dependencies": ["gzip", "grep", "awk", "sort", "uniq"]
     },
     {
@@ -193,25 +189,27 @@
       "category": "data_processing",
       "small_setup": [
         "cp $ORIGINAL_CWD/assets/pandas_etl_prepare.py $ORIGINAL_CWD/assets/pandas_etl_test.py .",
-        "chmod +x pandas_etl_prepare.py pandas_etl_test.py",
+        "cp pandas_etl_test.py small_pandas_etl_test.py",
+        "chmod +x pandas_etl_prepare.py small_pandas_etl_test.py",
         "python3 pandas_etl_prepare.py --normal-logs 30000 --error-logs 8000 --output etl_small.gz"
       ],
       "large_setup": [
         "cp $ORIGINAL_CWD/assets/pandas_etl_prepare.py $ORIGINAL_CWD/assets/pandas_etl_test.py .",
-        "chmod +x pandas_etl_prepare.py pandas_etl_test.py",
+        "cp pandas_etl_test.py large_pandas_etl_test.py",
+        "chmod +x pandas_etl_prepare.py large_pandas_etl_test.py",
         "python3 pandas_etl_prepare.py --normal-logs 1000000 --error-logs 500000 --output etl_large.gz"
       ],
       "small_commands": [
-        "python3 pandas_etl_test.py etl_small.gz"
+        "python3 small_pandas_etl_test.py etl_small.gz"
       ],
       "large_commands": [
-        "python3 pandas_etl_test.py etl_large.gz"
+        "python3 large_pandas_etl_test.py etl_large.gz"
       ],
       "cleanup_commands": [
         "rm -f etl_small.gz etl_large.gz",
-        "rm -f /tmp/pandas_*"
+        "rm -f /tmp/pandas_*",
+        "rm -f small_pandas_etl_test.py large_pandas_etl_test.py pandas_etl_prepare.py pandas_etl_test.py"
       ],
-      "expected_improvement": 0.33,
       "dependencies": ["python3", "gzip", "awk"]
     },
     {
@@ -221,25 +219,27 @@
       "category": "data_processing",
       "small_setup": [
         "cp $ORIGINAL_CWD/assets/flink_join_prepare.py $ORIGINAL_CWD/assets/flink_join_test.py .",
-        "chmod +x flink_join_prepare.py flink_join_test.py",
+        "cp flink_join_test.py small_flink_join_test.py",
+        "chmod +x flink_join_prepare.py small_flink_join_test.py",
         "python3 flink_join_prepare.py --regular-transactions 8000 --hot-transactions 12000 --output flink_small.csv"
       ],
       "large_setup": [
         "cp $ORIGINAL_CWD/assets/flink_join_prepare.py $ORIGINAL_CWD/assets/flink_join_test.py .",
-        "chmod +x flink_join_prepare.py flink_join_test.py",
+        "cp flink_join_test.py large_flink_join_test.py",
+        "chmod +x flink_join_prepare.py large_flink_join_test.py",
         "python3 flink_join_prepare.py --regular-transactions 100000 --hot-transactions 700000 --output flink_large.csv"
       ],
       "small_commands": [
-        "python3 flink_join_test.py flink_small.csv"
+        "python3 small_flink_join_test.py flink_small.csv"
       ],
       "large_commands": [
-        "python3 flink_join_test.py flink_large.csv"
+        "python3 large_flink_join_test.py flink_large.csv"
       ],
       "cleanup_commands": [
         "rm -f flink_small.csv flink_large.csv",
-        "rm -f /tmp/flink_*"
+        "rm -f /tmp/flink_*",
+        "rm -f small_flink_join_test.py large_flink_join_test.py flink_join_prepare.py flink_join_test.py"
       ],
-      "expected_improvement": 0.33,
       "dependencies": ["python3", "awk"]
     }
   ],
@@ -248,7 +248,6 @@
     "description": "Long-tail workload test cases with system-level parallel commands",
     "target_platform": "Linux",
     "cpu_count": 8,
-    "total_test_cases": 9,
-    "average_expected_improvement": 0.32
+    "total_test_cases": 9
   }
 }
