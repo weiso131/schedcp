@@ -135,8 +135,8 @@
       "dependencies": ["sha256sum"]
     },
     {
-      "id": "hotkey_aggregation",
-      "name": "Hot Key Aggregation",
+      "id": "spark_shuffle",
+      "name": "Spark Local Shuffle with Skew",
       "description": "Analytics with skewed data distribution (hot key problem)",
       "category": "data_processing",
       "small_setup": [
@@ -187,9 +187,37 @@
       "dependencies": ["gzip", "grep", "awk", "sort", "uniq"]
     },
     {
-      "id": "ddos_log_analysis",
-      "name": "DDoS Log Analysis",
-      "description": "Security log analysis with temporal spike pattern (DDoS simulation)",
+      "id": "dask_groupby",
+      "name": "Dask-like GroupBy with Power-law Distribution",
+      "description": "Customer analytics simulation with skewed group sizes",
+      "category": "data_processing",
+      "small_setup": [
+        "cp $ORIGINAL_CWD/assets/dask_groupby_prepare.py $ORIGINAL_CWD/assets/dask_groupby_test.py .",
+        "chmod +x dask_groupby_prepare.py dask_groupby_test.py",
+        "python3 dask_groupby_prepare.py --regular-size 8000 --hot-size 15000 --output dask_small.csv"
+      ],
+      "large_setup": [
+        "cp $ORIGINAL_CWD/assets/dask_groupby_prepare.py $ORIGINAL_CWD/assets/dask_groupby_test.py .",
+        "chmod +x dask_groupby_prepare.py dask_groupby_test.py",
+        "python3 dask_groupby_prepare.py --regular-size 100000 --hot-size 800000 --output dask_large.csv"
+      ],
+      "small_commands": [
+        "python3 dask_groupby_test.py dask_small.csv"
+      ],
+      "large_commands": [
+        "python3 dask_groupby_test.py dask_large.csv"
+      ],
+      "cleanup_commands": [
+        "rm -f dask_small.csv dask_large.csv",
+        "rm -f /tmp/dask_*"
+      ],
+      "expected_improvement": 0.33,
+      "dependencies": ["python3", "awk"]
+    },
+    {
+      "id": "pandas_etl",
+      "name": "Pandas ETL with DDoS Spike Simulation",
+      "description": "ETL pipeline with sudden spike in data volume",
       "category": "data_processing",
       "small_setup": [
         "cp $ORIGINAL_CWD/assets/pandas_etl_prepare.py $ORIGINAL_CWD/assets/pandas_etl_test.py .",
@@ -215,9 +243,9 @@
       "dependencies": ["python3", "gzip", "awk"]
     },
     {
-      "id": "viral_product_analytics",
-      "name": "Viral Product Analytics",
-      "description": "Retail analytics with temporal hot product pattern (trending item simulation)",
+      "id": "flink_join",
+      "name": "Flink-like Join with Popular Items",
+      "description": "Retail analytics simulation with hot products",
       "category": "data_processing",
       "small_setup": [
         "cp $ORIGINAL_CWD/assets/flink_join_prepare.py $ORIGINAL_CWD/assets/flink_join_test.py .",
@@ -247,8 +275,8 @@
     "version": "2.1",
     "description": "Long-tail workload test cases with system-level parallel commands",
     "target_platform": "Linux",
-    "cpu_count": 8,
-    "total_test_cases": 9,
+    "cpu_count": 4,
+    "total_test_cases": 10,
     "average_expected_improvement": 0.32
   }
 }

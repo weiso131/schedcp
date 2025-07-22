@@ -175,9 +175,9 @@ seq 1 7000000 | awk '{print strftime("%Y-%m-%d %H:%M:%S"), "[INFO]", "Request fr
 
 **Expected Improvement:** 35%
 
-### 7. Spark-like Shuffle with Skew
+### 7. Hot Key Aggregation
 
-**ID:** `spark_shuffle`
+**ID:** `hotkey_aggregation`
 **Category:** Data Processing
 **Description:** Analytics with skewed data distribution (hot key problem)
 
@@ -195,27 +195,11 @@ Uses `spark_skew_prepare.py` to generate CSV files with configurable key distrib
 
 **Expected Improvement:** 33%
 
-### 8. Dask-like GroupBy with Power-law Distribution
+### 8. DDoS Log Analysis
 
-**ID:** `dask_groupby`
-**Category:** Data Processing
-**Description:** Customer analytics simulation with power-law distribution
-
-**Configuration:**
-- 39 short tasks: Process regular customer groups (8K regular, 15K hot)
-- 1 long task: Process heavily skewed groups (100K regular, 800K hot)
-- Simulates customer analytics workload imbalance
-
-**Data Generation:**
-Uses `dask_groupby_prepare.py` to generate CSV files with power-law distributions
-
-**Expected Improvement:** 33%
-
-### 9. Pandas ETL with DDoS Spike Simulation
-
-**ID:** `pandas_etl`
+**ID:** `ddos_log_analysis`
 **Category:** Data Processing  
-**Description:** ETL pipeline with sudden spike in data volume
+**Description:** Security log analysis with temporal spike pattern (DDoS simulation)
 
 **Configuration:**
 - 39 short tasks: Process normal log volumes (30K normal, 8K error logs)
@@ -227,11 +211,11 @@ Uses `pandas_etl_prepare.py` to generate compressed log files with configurable 
 
 **Expected Improvement:** 33%
 
-### 10. Flink-like Join with Popular Items
+### 9. Viral Product Analytics
 
-**ID:** `flink_join`
+**ID:** `viral_product_analytics`
 **Category:** Data Processing
-**Description:** Retail analytics simulation with hot products
+**Description:** Retail analytics with temporal hot product pattern (trending item simulation)
 
 **Configuration:**
 - 39 short tasks: Process regular transactions (8K regular, 12K hot transactions)
@@ -271,7 +255,6 @@ All test cases follow a consistent pattern defined in `test_cases_parallel.json`
 The framework includes Python preparation scripts for complex workloads:
 
 - **spark_skew_prepare.py**: Generates CSV with configurable key skew
-- **dask_groupby_prepare.py**: Creates power-law distributed group data  
 - **pandas_etl_prepare.py**: Generates compressed log files with volume spikes
 - **flink_join_prepare.py**: Creates transaction data with hot product distributions
 

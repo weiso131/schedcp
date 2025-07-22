@@ -14,14 +14,12 @@ This framework provides automated testing for parallel workloads with long-tail 
 └── assets/                     # Test scripts and assets
     ├── short.c                 # Short-running C program for testing
     ├── long.c                  # Long-running C program for testing
-    ├── spark_skew_prepare.py   # Spark workload data generator
-    ├── spark_skew_test.py      # Spark-like skewed workload simulation
-    ├── dask_groupby_prepare.py # Dask workload data generator
-    ├── dask_groupby_test.py    # Dask-like groupby simulation
-    ├── pandas_etl_prepare.py   # Pandas ETL data generator
-    ├── pandas_etl_test.py      # Pandas ETL simulation
-    ├── flink_join_prepare.py   # Flink workload data generator
-    └── flink_join_test.py      # Flink-like join simulation
+    ├── spark_skew_prepare.py   # Hot key aggregation data generator
+    ├── spark_skew_test.py      # Hot key aggregation workload simulation
+    ├── pandas_etl_prepare.py   # DDoS log analysis data generator
+    ├── pandas_etl_test.py      # DDoS log analysis simulation
+    ├── flink_join_prepare.py   # Viral product analytics data generator
+    └── flink_join_test.py      # Viral product analytics simulation
 ```
 
 ## Quick Start
@@ -43,7 +41,7 @@ python3 evaluate_workloads_parallel.py --list
 
 ```bash
 # Run a specific test case with parallel execution
-python3 evaluate_workloads_parallel.py --test spark_shuffle
+python3 evaluate_workloads_parallel.py --test hotkey_aggregation
 
 # Run without process monitoring (if psutil unavailable)
 python3 evaluate_workloads_parallel.py --test spark_shuffle --no-monitor
@@ -61,7 +59,7 @@ python3 evaluate_workloads_parallel.py --all --save my_results.json
 
 ## Test Cases
 
-The framework includes 11 test cases across different categories, each configured with 40 parallel tasks (39 short + 1 long):
+The framework includes 9 test cases across different categories, each configured with 40 parallel tasks (39 short + 1 long):
 
 ### File Processing
 - **pigz_compression**: Parallel compression of mixed-size files with severe load imbalance
@@ -78,10 +76,9 @@ The framework includes 11 test cases across different categories, each configure
 
 ### Data Processing
 - **log_processing**: Log processing with skewed chunks and different compression levels
-- **spark_shuffle**: Analytics with skewed data distribution (hot key problem)
-- **dask_groupby**: Customer analytics simulation with power-law distribution  
-- **pandas_etl**: ETL pipeline with sudden spike in data volume (DDoS simulation)
-- **flink_join**: Retail analytics simulation with hot products
+- **hotkey_aggregation**: Analytics with skewed data distribution (hot key problem)
+- **ddos_log_analysis**: Security log analysis with temporal spike pattern (DDoS simulation)
+- **viral_product_analytics**: Retail analytics with temporal hot product pattern (trending item simulation)
 
 ## Expected Results
 
@@ -123,10 +120,9 @@ All test cases are defined in `test_cases_parallel.json` with:
 
 ```bash
 # Run only data processing tests
-python3 evaluate_workloads_parallel.py --test spark_shuffle
-python3 evaluate_workloads_parallel.py --test dask_groupby
-python3 evaluate_workloads_parallel.py --test pandas_etl
-python3 evaluate_workloads_parallel.py --test flink_join
+python3 evaluate_workloads_parallel.py --test hotkey_aggregation
+python3 evaluate_workloads_parallel.py --test ddos_log_analysis
+python3 evaluate_workloads_parallel.py --test viral_product_analytics
 
 # Run file processing tests
 python3 evaluate_workloads_parallel.py --test pigz_compression
@@ -151,7 +147,7 @@ The framework saves results in JSON format with:
 Example result structure:
 ```json
 {
-  "test_id": "spark_shuffle",
+  "test_id": "hotkey_aggregation",
   "status": "success",
   "test_time": 10.58,
   "expected_improvement": 0.33,
