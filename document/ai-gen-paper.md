@@ -129,3 +129,9 @@ We present **Sched-Agent**, a novel approach to dynamic scheduling that uses an
 [**AutoSched: An Adaptive Self-configured Framework for Scheduling Deep Learning Training Workloads**https://tianweiz07.github.io/Papers/24-ics-1.pdf](https://tianweiz07.github.io/Papers/24-ics-1.pdf#:~:text=three%20representative%20DLT%20schedulers%20and,132%C3%97%20configuration%20tuning%20latency%20reduction)
 [**INSPIRIT: Optimizing Heterogeneous Task Scheduling through Adaptive Priority in Task-based Runtime Systems**https://arxiv.org/html/2404.03226v1](https://arxiv.org/html/2404.03226v1#:~:text=several%20drawbacks%20to%20determine%20task,effectively%20reducing%20the%20overhead%20for)
 [**INSPIRIT: Optimizing Heterogeneous Task Scheduling through Adaptive Priority in Task-based Runtime Systems**https://arxiv.org/html/2404.03226v1](https://arxiv.org/html/2404.03226v1#:~:text=Due%20to%20the%20low%20complexity,Therefore%2C%20when)
+
+## key papers related
+
+https://dl.acm.org/doi/10.5555/3692070.3692362
+https://arxiv.org/abs/2503.09663
+https://arxiv.org/abs/2502.17606
