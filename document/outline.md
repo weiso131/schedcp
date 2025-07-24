@@ -9,6 +9,7 @@
 - Workloads change over time - impossible for humans to redesign scheduler algorithms hourly, but AI can
 
 ### B. Current State and Limitations
+
 - Many RL algorithms for Linux schedulers proposed at top conferences and applied in production
 - However, RL algorithms cannot understand application-level requirements:
   - Is it latency-critical or throughput-critical?
@@ -17,6 +18,7 @@
   - No one designs kernel schedulers for such specific cases, but AI agents can
 
 ### C. Research Significance
+
 - Among the first frameworks using fully automatic execution LLM AI agents for optimizing OS and computer systems
 - Only feasible now (2025) due to recent dramatic improvements in AI agent performance
 
@@ -83,6 +85,7 @@
 ## III. Motivation
 
 ### A. Key Motivations
+
 1. **Domain Knowledge Gap in Modern Infrastructure**
    - In modern infrastructure, especially cloud platforms and serverless environments, system managers who optimize the system are not the ones who deploy the applications
    - System managers don't know the requirements and behavior of their workloads
@@ -117,12 +120,14 @@
 - **Comparison**: Experienced human takes only 5 minutes for same task
 
 #### Key Observations
+
 1. AI-generated code doesn't always improve system performance
    - Sometimes worse due to higher scheduler overhead
 2. Cost and time are prohibitive for production use
 3. Process requires wide privileges and extensive iterations
 
 ### C. Research Challenges
+
 1. **Safety and Reliability**
    - How to ensure generated code won't break the system?
    - How to prevent soft-lockups, stalls, starvation?
@@ -133,6 +138,7 @@
    - How to minimize cost for production deployment?
 
 ### D. Preliminary Results
+
 - LLM agent can generate application profiles
 - Successfully chose and configured schedulers
 - Performance improvements achieved:
@@ -159,9 +165,11 @@
 ### B. Core System Components
 
 #### 1. Multi-Layer RL LLM Agent
+
 **Key Innovation**: Multi-layer reinforcement learning LLM agent for intelligent scheduler management
 
 **Agent Layers**:
+
 - **Decision Layer**: High-level strategy selection (configure, modify, or create)
 - **Implementation Layer**: Code generation and modification
 - **Learning Layer**: Reinforcement learning from performance feedback
@@ -247,6 +255,59 @@
 3. **Adaptive Strategies**: Agent learns which schedulers work for which workloads
 4. **Library Growth**: New schedulers added as needed for novel workloads
 
+### E. System Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          Production System                               │
+│                                                                         │
+│  ┌─────────────────┐                    ┌─────────────────────────┐   │
+│  │   Application   │                    │  Performance Monitor    │   │
+│  │   Workloads     │◄──────────────────►│  Daemon                │   │
+│  └────────┬────────┘                    └───────────┬─────────────┘   │
+│           │                                          │                  │
+│           ▼                                          │ Metrics         │
+│  ┌─────────────────┐                                │                  │
+│  │  Linux Kernel   │                                │                  │
+│  │  ┌────────────┐ │                                ▼                  │
+│  │  │ sched_ext  │ │                    ┌─────────────────────────┐   │
+│  │  │   (BPF)    │◄├────────────────────┤   MCP Server          │   │
+│  │  └────────────┘ │     Deploy         │  (Tool Interface)      │   │
+│  └─────────────────┘                    └───────────┬─────────────┘   │
+│                                                      │                  │
+└──────────────────────────────────────────────────────┼──────────────────┘
+                                                       │
+                                              Workload Analysis
+                                              Performance Data
+                                                       │
+┌──────────────────────────────────────────────────────▼──────────────────┐
+│                        AI Agent System                                   │
+│                                                                         │
+│  ┌─────────────────────┐        ┌──────────────────────────────────┐  │
+│  │  Multi-Layer RL     │        │   Scheduler Library              │  │
+│  │  LLM Agent          │        │                                  │  │
+│  │                     │        │  ┌──────────────┐ ┌────────────┐│  │
+│  │ ┌─────────────────┐ │◄──────►│  │ Description  │ │HistoricalP││  │
+│  │ │ Decision Layer  │ │Retrieve│  │ Config Params│ │erformance ││  │
+│  │ ├─────────────────┤ │        │  │ Source Code  │ │   Data    ││  │
+│  │ │Implementation   │ │        │  │ Test Results │ └────────────┘│  │
+│  │ │     Layer       │ │        │  └──────────────┘                │  │
+│  │ ├─────────────────┤ │        └──────────────────────────────────┘  │
+│  │ │ Learning Layer  │ │                                               │
+│  │ │ (In-Context RL) │ │        ┌──────────────────────────────────┐  │
+│  │ └─────────────────┘ │        │  Safety & Validation Pipeline    │  │
+│  └──────────┬──────────┘        │                                  │  │
+│             │                   │  ┌──────────┐ ┌───────────────┐  │  │
+│             ▼                   │  │ Static   │ │   Sandbox     │  │  │
+│  ┌──────────────────┐           │  │ Analysis │ │   Testing     │  │  │
+│  │ Code Generation  │───────────►  │          │ │               │  │  │
+│  │ - eBPF C Code   │  Generate  │  └──────────┘ └───────────────┘  │  │
+│  │ - Rust Userspace│           └──────────────────────────────────┘  │
+│  └──────────────────┘                                                 │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
 ## IV. Key Technical Challenges and Solutions
 
 ### A. Code Generation Efficiency
@@ -309,10 +370,38 @@
   - Sonnet and other models may not recognize these patterns
 - AI-generated schedulers achieve 30-50% average speedup for batch processing workloads
 
-### B. Expected Results
-- Configuration improvements: 30-80% performance gains
-- New scheduler generation: 30-50% speedup for specific workloads
-- RL refinement: Additional 10-20% improvement over initial configuration
+### B. Research Questions and Metrics
+
+#### RQ1: Can LLM agents effectively configure existing schedulers?
+**Metrics**: Performance improvement vs baseline Linux scheduler
+**Current Results**: 
+- schbench: 50% lower latency, 30% higher throughput
+- Linux kernel build: ~80% speedup (11s → 6s)
+
+#### RQ2: Can LLM agents generate new schedulers for specific workloads?
+**Metrics**: Speedup for batch processing workloads with uneven task durations
+**Current Results**: 30-50% average speedup by identifying correct optimization strategies
+- SJF for minimizing average waiting time
+- LJF for minimizing total completion time
+
+#### RQ3: What is the cost and efficiency of AI-driven scheduler generation?
+**Metrics**: Time, API calls, and monetary cost
+**Current Results**: 
+- Basic FIFO scheduler: 33 minutes, 221 API calls, ~$6
+- Human expert baseline: 5 minutes
+
+#### RQ4: How much can the RL improve the performance of the scheduler after the initial generation?
+**Metrics**: Performance improvement using RL vs initial generation
+
+#### RQ5: How effective can llm understand the workload?
+**Metrics**: Accuracy of workload classification and cost
+
+### C. Expected Results
+- Cost and accuracy for understand the workload: 
+- Configuration improvements: 30-80% performance gains across different workloads
+- New scheduler generation: 30-50% speedup for specific applications
+- RL refinement: Additional 10-20% improvement through feedback loop
+- Cost reduction through scheduler library reuse and early feedback
 
 ## VI. Related Work
 
