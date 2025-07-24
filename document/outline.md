@@ -2,7 +2,15 @@
 
 ## I. Introduction
 
+**Writing Notes:**
+- Lead with the 80% speedup result to grab attention
+- Clearly state this is the first fully automatic approach for OS optimization
+- Emphasize production readiness via sched_ext framework
+- Position as "AI agents as expert system administrators"
+- Show the vision of self-optimizing systems that adapt to workloads
+
 ### A. Problem Statement
+
 - The OS kernel policy cannot understand what the application needs
 - System managers who optimize systems are not the ones who deploy them, lacking knowledge of workload requirements and behavior
 - Understanding workloads requires deep domain knowledge (e.g., traditional DevOps cannot easily optimize ML workloads)
@@ -126,6 +134,10 @@
 2. Cost and time are prohibitive for production use
 3. Process requires wide privileges and extensive iterations
 
+- Create comparison Human Expert vs Naive AI vs Our System
+- Show cost breakdown and time analysis
+- Include flowchart of failed attempts to highlight challenges
+
 ### C. Research Challenges
 
 1. **Safety and Reliability**
@@ -181,6 +193,7 @@
 - **Creation**: Write new scheduler code when no suitable scheduler exists
 
 #### 2. AI-Managed Scheduler Library
+
 **Library Entry Components**:
 - **Description**: Textual summary of purpose, characteristics, use-cases
 - **Configuration Parameters**: Clearly defined adjustable parameters
@@ -189,6 +202,11 @@
 - **Test Results**: Static analysis and runtime test outcomes
 
 #### 3. Implementation Framework
+
+**Code Examples to Add:**
+
+- Show generated eBPF scheduler code snippet with annotations
+
 **Dual-Language Code Generation**:
 - **eBPF C Code**: Kernel-space scheduler logic
   - Direct generation without DSL
@@ -212,6 +230,7 @@
   - Faster iteration cycles
 
 #### 4. Retrieval and Matching Mechanism
+
 **Multi-strategy Retrieval**:
 - **Description Matching**: RAG-like but lightweight, matching workload descriptions
 - **Tag-based Search**: Structured tags (e.g., "IO-heavy", "CPU-bound") for filtering
@@ -256,6 +275,16 @@
 4. **Library Growth**: New schedulers added as needed for novel workloads
 
 ### E. System Architecture Diagram
+
+**Additional Diagrams to Include:** State diagram for scheduler lifecycle (development → testing → deployment → monitoring)
+- Add sequence diagram showing agent workflow:
+  1. Workload analysis
+  2. Library search
+  3. Decision (configure/modify/create)
+  4. Validation
+  5. Deployment
+  6. Feedback collection
+
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -405,6 +434,10 @@
 
 ## VI. Related Work
 
+**Positioning Strategy:**
+- Highlight unique aspects: code generation, self-evolution, production readiness
+- Acknowledge limitations of current approach while showing clear advantages
+
 ### A. RL-based Scheduler Optimization
 - Previous work at top conferences on RL for schedulers
 - Limited to parameter tuning, not code generation
@@ -427,10 +460,24 @@
 - Unified framework for OS optimization
 - Cross-component optimization
 
+### B. Industry Adoption Path
+- Include quotes from industry partners if available
+- Show clear deployment roadmap
+- Address concerns about AI in production systems
+- Highlight cost savings and efficiency gains
+
+- This is just the beginning of AI-powered OS optimization
+- The framework extends beyond schedulers to all OS policies
+- We're entering an era where systems can truly understand and adapt to their workloads
+
+
 ### C. Broader Impact
 - Democratize OS optimization
 - Enable application-specific kernel policies
 - Bridge the gap between application needs and kernel capabilities
+
+**Vision Statement to Include:**
+"We envision a future where every application runs on an OS perfectly tuned for its needs, where system optimization is no longer the domain of a few experts but accessible to all through AI assistance."
 
 ## VIII. Conclusion
 
