@@ -146,18 +146,6 @@ The remainder of this paper is organized as follows. Section II provides backgro
    - How to ensure reasonable generation time?
    - How to minimize cost for production deployment?
 
-### D. Preliminary Results
-
-- LLM agent can generate application profiles
-- Successfully chose and configured schedulers
-- Performance improvements achieved:
-  - **schbench** (benchmark recommended by sched_ext project):
-    - 50% lower latency
-    - 30% more throughput
-  - **Linux kernel build**:
-    - ~80% speedup (from ~11s to ~6s)
-- Demonstrates potential for significant performance gains through AI-driven optimization
-
 ## III. System Design
 
 ### A. Design Philosophy and Constraints
