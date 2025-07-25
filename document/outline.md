@@ -2,33 +2,24 @@
 
 ## I. Introduction
 
-**Writing Notes:**
-- Lead with the 80% speedup result to grab attention
-- Clearly state this is the first fully automatic approach for OS optimization
-- Emphasize production readiness via sched_ext framework
-- Position as "AI agents as expert system administrators"
-- Show the vision of self-optimizing systems that adapt to workloads
+Operating system schedulers face a fundamental challenge: kernel policies cannot understand what applications need. This semantic gap leads to suboptimal performance across modern computing infrastructure. In cloud platforms, system administrators who manage schedulers are not the developers who understand application behavior. On personal devices, users lack the kernel expertise to optimize their systems for gaming or creative workloads. Meanwhile, workloads themselves are increasingly dynamic—a machine learning training job may shift from compute-intensive to I/O-bound phases, requiring different scheduling strategies that no human can adjust in real-time.
 
-### A. Problem Statement
+Recent advances in reinforcement learning have attempted to address scheduler optimization through automated parameter tuning. Systems like Decima and Firm have shown promise in specific domains. However, these approaches remain fundamentally limited: they cannot understand application-level requirements such as whether a workload is latency-critical or throughput-oriented. They miss optimization opportunities that require semantic understanding—for instance, prioritizing compilation tasks based on code dependencies could significantly accelerate software builds, but no existing system can automatically discover and implement such strategies.
 
-- The OS kernel policy cannot understand what the application needs
-- System managers who optimize systems are not the ones who deploy them, lacking knowledge of workload requirements and behavior
-- Understanding workloads requires deep domain knowledge (e.g., traditional DevOps cannot easily optimize ML workloads)
-- Workloads change over time - impossible for humans to redesign scheduler algorithms hourly, but AI can
+The rapid advancement of Large Language Model (LLM) agents in 2024-2025 presents an unprecedented opportunity. Modern LLM agents can understand complex system behaviors, generate code, and reason about optimization strategies. However, our motivation experiments reveal significant challenges: automatic generating a basic FIFO scheduler from scratch required 33 minutes, 221 API calls for Claude Code with many trial-and-error iterations, and ~$6 in Cost, and sometimes the generated code can slow down the system instead of improving it. This highlights the need for carefully designed interfaces that balance AI capabilities with practical constraints. We propose treating these AI agents as expert system administrators—but with appropriate safety constraints and interfaces designed for their unique capabilities and limitations.
 
-### B. Current State and Limitations
+This paper presents the first framework for using fully automatic LLM agents to dynamically optimize Linux schedulers. Our system enables AI agents to select, configure, modify, or generate entirely new scheduling algorithms tailored to specific workloads. Built on the production-ready sched_ext infrastructure, our framework maintains a self-evolving library of schedulers that grows and improves through experience. Unlike traditional approaches, our system can identify optimization strategies that require deep semantic understanding.. Our framework achieves up to 80% speedup for Linux kernel builds and 50% latency reduction for scheduler benchmarks.
 
-- Many RL algorithms for Linux schedulers proposed at top conferences and applied in production
-- However, RL algorithms cannot understand application-level requirements:
-  - Is it latency-critical or throughput-critical?
-  - What about pure application-level optimization goals?
-  - Example: In software building process, if scheduler can prioritize based on code dependencies, we can achieve huge wins compared to baseline
-  - No one designs kernel schedulers for such specific cases, but AI agents can
+Our design is guided by four key principles derived from treating AI agents as context engineering systems: (1) **Decoupling** the "what to optimize" (AI's domain) from "how to observe and act" (system's domain); (2) **Context Balance** to provide sufficient information for decisions while controlling costs; (3) **Composable Tools** that leverage LLM code generation capabilities; and (4) **Safety-First Design** that treats AI as potentially non-cautious actors requiring defensive interfaces. These principles ensure our system remains effective as AI models evolve while preventing catastrophic failures.
 
-### C. Research Significance
+We make the following contributions:
+• Design and implementation of the first LLM agent framework for OS scheduler optimization
+• A set of design principles for AI-system interfaces that balance capability, cost, and safety
+• A self-evolving scheduler library with reinforcement learning for continuous improvement  
+• Comprehensive evaluation demonstrating 30-80% performance improvements across diverse workloads
+• Open-source implementation showing the feasibility of AI-driven OS optimization in production
 
-- Among the first frameworks using fully automatic execution LLM AI agents for optimizing OS and computer systems
-- Only feasible now (2025) due to recent dramatic improvements in AI agent performance
+The remainder of this paper is organized as follows. Section II provides background on scheduler evolution and LLM capabilities. Section III details our motivation through concrete experiments. Section IV presents our system design. Section V evaluates performance across multiple workloads. Section VI discusses related work, and Section VII concludes.
 
 ## II. Background
 
@@ -173,7 +164,7 @@
 
 Keep in mind that we are building a system interface that can be used by AI. As the AI Agent becomes more powerful and general, all software we currently design will be used by and maintained by AI in next few years.
 
-**Core Insight**: AI agents are fundamentally context engineering systems - they need sufficient information to make decisions but not so much that costs become prohibitive. It's the same as human experts and engineers when doing profiling and optimization: we need to use the right tool to collect the profiling data and write programable policy or improve alogorithm with the right framework. choosing the wrong toolset and framework will cost a lot of extra time, when time is money.
+**Core Insight**: AI agents are fundamentally context engineering systems - they need sufficient information to make decisions but not so much that costs become prohibitive. It's the same as human experts and engineers when doing profiling and optimization: we need to use the right tool to collect the profiling data and write programable policy or improve alogorithm with the right framework. choosing the wrong toolset and framework will cost a lot of extra time, when time is money. As a system researcher, our goal is not to design better AI agents, but to design better system and interfaces that can be used by AI agents.
 
 #### 1. **Decoupling and Role Separation for better AI model**
 
@@ -543,3 +534,6 @@ Keep in mind that we are building a system interface that can be used by AI. As 
 ## VIII. Conclusion
 
 We present the first framework for using fully automatic LLM agents to dynamically optimize Linux schedulers. By maintaining a self-evolving library of schedulers and leveraging reinforcement learning for continuous improvement, our system achieves significant performance gains while reducing the expertise required for OS optimization. This work opens new possibilities for adaptive, application-aware operating systems that can automatically optimize themselves for changing workloads.
+
+
+This work has implications beyond schedulers. As AI agents become more powerful, the interfaces we design today will shape how AI interacts with systems software tomorrow. Our framework demonstrates that with proper design, AI can democratize system optimization—making expert-level performance accessible to users from cloud operators to gamers, while paving the way for truly self-optimizing operating systems.
