@@ -1,4 +1,4 @@
-# AI-Powered Dynamic Operating System Optimization with LLM Agents: A Framework for Self-Evolving Linux Schedulers
+# Towards Agentic OS: An LLM Agent Framework for Linux Schedulers
 
 ## I. Introduction
 
@@ -10,7 +10,7 @@ The rapid advancement of Large Language Model (LLM) agents in 2024-2025 presents
 
 This paper presents the first framework for using fully automatic LLM agents to dynamically optimize Linux schedulers. Our framework can be leveraged by any AI agent, from open-source Gemini CLI to proprietary Agents like Claude Code. A key insight is that LLM agents operate on the control plane, not the data plane—while scheduling decisions occur at microsecond timescales in the kernel, workload patterns change at minute-to-hour timescales, well-suited for LLM optimization. Our system enables AI agents to select, configure, modify, or generate entirely new scheduling algorithms tailored to specific workloads. Built on the production-ready sched_ext infrastructure, our framework maintains a self-evolving library of schedulers that grows and improves through experience.
 
-To achieve this vision while addressing the challenges revealed in our experiments, our design is guided by four key principles derived from treating AI agents as context engineering systems and similar to human experts: (1) **Decoupling** the "what to optimize" (AI's domain) from "how to observe and act" (system's domain); (2) **Context Balance** to provide sufficient information for decisions while controlling costs; (3) **Composable Tools** that leverage LLM code generation capabilities; and (4) **Safety-First Design** that treats AI as potentially non-cautious actors requiring defensive interfaces. These principles ensure our system remains effective as AI models evolve while preventing catastrophic failures.
+To achieve this vision while addressing the challenges revealed in our experiments, our design is guided by four key principles derived from treating AI agents as context engineering systems and similar to human experts: (1) **Decoupling** the "what to optimize" (AI's domain) from "how to observe and act" (system's domain); (2) **Context Balance** to provide sufficient information for decisions while controlling costs, and give feedback earlier; (3) **Composable Tools** that leverage LLM Agent's dynamic planning, code generation and tool usage capabilities; and (4) **Safety-First Design** that treats AI as potentially non-cautious actors requiring defensive interfaces. These principles ensure our system remains effective as AI models evolve while preventing catastrophic failures. We think these principles also are generalizable to other domains and systems.
 
 Following these principles, we implement a framework with five core components: (1) static analysis and testing for safe code deployment, (2) scheduler libraries with reusable optimization patterns, (3) reinforcement learning for continuous improvement, (4) profiling tools for workload characterization, and (5) a unified interface enabling any LLM to optimize schedulers. This modular design evolves with AI capabilities without system redesign. Once generated, schedulers execute as native eBPF code with no LLM overhead in the critical path, achieving up to 80% speedup for Linux kernel builds and 50% latency reduction for scheduler benchmarks.
 
@@ -19,8 +19,8 @@ We make the following contributions:
 • A modular extension system that can be leveraged by any AI agent, from open-source to proprietary models
 • A set of design principles for AI-system interfaces that balance capability, cost, and safety
 • A self-evolving scheduler library that grows through experience and improves with model capabilities
-• Comprehensive evaluation demonstrating 30-80% performance improvements across diverse workloads
-• Open-source implementation showing the feasibility of AI-driven OS optimization in production
+• Evaluation demonstrating 30-80% performance improvements across diverse workloads
+• Discussion on the challenges and future directions of AI-driven system optimizations.
 
 The remainder of this paper is organized as follows. Section II provides background on scheduler evolution and LLM capabilities. Section III details our motivation through concrete experiments. Section IV presents our system design. Section V evaluates performance across multiple workloads. Section VI discusses related work, and Section VII concludes.
 
