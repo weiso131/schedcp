@@ -171,14 +171,69 @@
 
 ### A. Design Philosophy and Constraints
 
-1. **Separation of Concerns**
-   - Let AI handle decision-making
-   - System focuses on exposing right signals, tools, and abstractions
-   - Future, more capable models can immediately perform better without system redesign
+Keep in mind that we are building a system interface that can be used by AI. As the AI Agent becomes more powerful and general, all software we currently design will be used by and maintained by AI in next few years.
 
-2. **AI Agents as Performance Engineers**
-   - Treat AI agents as human performance engineers
-   - Provide similar tools and interfaces
+**Core Insight**: AI agents are fundamentally context engineering systems - they need sufficient information to make decisions but not so much that costs become prohibitive. It's the same as human experts and engineers when doing profiling and optimization: we need to use the right tool to collect the profiling data and write programable policy or improve alogorithm with the right framework. choosing the wrong toolset and framework will cost a lot of extra time, when time is money.
+
+#### 1. **Decoupling and Role Separation for better AI model**
+
+   - **AI Agents as Performance Engineers**: Treat AI agents like human experts
+   - **Clear Interface Boundaries**: System provides tools and observations, AI gathers context information and provides decisions and actions
+   - **Evolution-Ready Design**: Future models can leverage same interfaces without system changes
+   - **Principle**: Separate "what to do" (AI problem) from "how to observe and act" (system problem)
+
+#### 2. **Context and Feedback Balance for cost-efficiency**
+
+   - **Context Engineering Challenge**: AI agents need sufficient information to make good decisions
+   - **Information Filtering**: Not too much (cost/token limits), not too little (poor decisions)
+   - **Adaptive Context Window**:
+     - Start with minimal context for simple decisions
+     - Progressively add detail for complex scenarios
+     - Learn which context matters for which workload types
+     - Adding feedback loop or previous results to the context window can help the agent make better decisions
+   - **Cost-Efficiency Trade-off**: Expose APIs to control information granularity
+
+#### 3. **Composable Tool Architecture for scalable**
+
+   - **Programmable, Not Prescriptive**: Leverage LLM's code generation abilities as the orginal unix philosophy
+   - **Tool Decomposition**:
+     - Atomic tools for basic operations (read stats, modify parameters)
+     - Compositional tools for complex workflows
+     - No fixed workflows - AI decides tool sequences
+   - **Dynamic Tool Chains**: AI can create new tool combinations for novel scenarios
+   - **Examples**:
+     - Basic: `get_cpu_stats()`, `set_scheduler_param()`
+     - Composed: `profile_workload()` = multiple stat reads + analysis
+     - Generated: AI writes custom analysis scripts on demand
+
+#### 4. **Safety-First Interface Design for AI Agents**
+**Core Principle**: Treat AI as a potentially non-cautious human that can make wrong decisions - design interfaces that inherently prevent catastrophic failures.
+
+   - **Defensive API Design**: 
+     - No single API call can crash the system
+     - All operations have built-in bounds and limits and need to be validated before execution
+     - Example: `set_cpu_limit()` has hard max of 95% to prevent starvation
+   
+   - **Staged Execution with Validation**:
+     - Preview mode: Show what would happen before execution
+     - Dry-run capabilities for all destructive operations
+     - Mandatory validation checks between generation and deployment
+   
+   - **Constrained Action Space**:
+     - Whitelist allowed operations, not blacklist dangerous ones
+     - Graduated permissions: earn trust through successful operations
+     - Example: New AI agents can only tune parameters within 20% of defaults
+   
+   - **Automatic Safety Rails**:
+     - Resource limits enforced at system level, not trust AI to respect them
+     - Automatic circuit breakers when performance degrades
+     - Watchdog timers for all AI-initiated operations
+   
+   - **Human-in-the-Loop Fallback only when necessary**:
+     - fully automatic system is the goal so we should only use human-in-the-loop when necessary
+     - Critical operations require confirmation for first N times
+     - Anomaly detection triggers human review
+     - Clear audit trail for all AI decisions and actions
 
 ### B. Core System Components
 
