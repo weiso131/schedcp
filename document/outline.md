@@ -292,23 +292,27 @@ Keep in mind that we are building a system interface that can be used by AI. As 
 ### C. Reinforcement Learning Integration
 
 #### 1. Simple Memory-based RL (In-Context RL)
+
 - Maintain feedback-driven memory file (e.g., claude.md)
 - Performance feedback updates memory after each trial
 - Influences future scheduler selection and tuning
 - Similar to prompting-based feedback loops in language models
 
 #### 2. Parameter-tuning with Small-scale RL
+
 - Lightweight algorithms adjust retrieval parameters
 - Iterative refinement based on workload outcomes
 - Adjust similarity thresholds, performance weights, matching heuristics
 
 #### 3. Feedback Mechanism
+
 - Capture performance metrics after each scheduler deployment
 - Store results in library for future reference
 - Update agent's decision-making memory
 - No complex training procedures required
 
 ### D. Self-Evolution Process
+
 1. **Continuous Learning**: Each workload execution enriches the library
 2. **Feedback Integration**: Performance data guides future decisions
 3. **Adaptive Strategies**: Agent learns which schedulers work for which workloads
