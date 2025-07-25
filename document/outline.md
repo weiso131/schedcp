@@ -97,9 +97,15 @@
 1. **Domain Knowledge Gap in Modern Infrastructure**
    - In modern infrastructure, especially cloud platforms and serverless environments, system managers who optimize the system are not the ones who deploy the applications
    - System managers don't know the requirements and behavior of their workloads
+   - **Edge and Personal Device Users**: Even more challenging for non-CS experts
+     - Personal computer users are not programmers and don't know how to optimize applications
+     - Edge device operators lack systems programming expertise
+     - Gaming enthusiasts want better performance but lack kernel knowledge
+     - Creative professionals (video editors, 3D artists) need optimized systems but aren't CS experts
    - Understanding workloads requires deep domain knowledge
    - Example: Traditional DevOps personnel cannot easily optimize ML workloads
    - LLM Agents can help understand workload patterns and requirements, providing specifications and suggestions for optimizations
+   - **Democratization**: AI agents make expert-level optimization accessible to all users, not just system administrators
 
 2. **Technical Complexity of Scheduler Development**
    - Designing and implementing new schedulers for Linux kernel requires deep domain knowledge
