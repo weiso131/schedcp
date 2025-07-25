@@ -13,9 +13,15 @@ This paper presents the first framework for using fully automatic LLM agents to 
 Our design is guided by four key principles derived from treating AI agents as context engineering systems: (1) **Decoupling** the "what to optimize" (AI's domain) from "how to observe and act" (system's domain); (2) **Context Balance** to provide sufficient information for decisions while controlling costs; (3) **Composable Tools** that leverage LLM code generation capabilities; and (4) **Safety-First Design** that treats AI as potentially non-cautious actors requiring defensive interfaces. These principles ensure our system remains effective as AI models evolve while preventing catastrophic failures.
 
 We make the following contributions:
-• Design and implementation of the first LLM agent framework for OS scheduler optimization
+• Design and implementation of the first LLM agent framework for OS scheduler optimization, providing a modular extension framework that can be used by any open-source or proprietary AI agent
+• A comprehensive toolkit consisting of five key components:
+  - Static analysis and testing framework for safe scheduler deployment
+  - Scheduler optimization libraries with proven patterns and templates
+  - Reinforcement learning algorithm suite for continuous improvement
+  - Profiling and monitoring toolkit for workload characterization
+  - Unified agent extension framework enabling any LLM to optimize schedulers
 • A set of design principles for AI-system interfaces that balance capability, cost, and safety
-• A self-evolving scheduler library with reinforcement learning for continuous improvement  
+• A self-evolving scheduler library that grows through experience and improves with model capabilities
 • Comprehensive evaluation demonstrating 30-80% performance improvements across diverse workloads
 • Open-source implementation showing the feasibility of AI-driven OS optimization in production
 
@@ -216,6 +222,8 @@ Keep in mind that we are building a system interface that can be used by AI. As 
 
 ### B. Core System Components
 
+Our framework provides a modular extension system that can be used by any AI agent—from open-source models like Llama to proprietary systems like GPT-4 or Claude. As AI capabilities grow, the framework evolves to leverage these improvements without requiring system redesign.
+
 #### 1. Multi-Layer RL LLM Agent
 
 **Key Innovation**: Multi-layer reinforcement learning LLM agent for intelligent scheduler management
@@ -241,75 +249,60 @@ Keep in mind that we are building a system interface that can be used by AI. As 
 - **Historical Performance Data**: Metrics from previous uses (makespan, throughput, latency, fairness)
 - **Test Results**: Static analysis and runtime test outcomes
 
-#### 3. Implementation Framework
+#### 3. Static Analysis & Testing Framework
 
-**Code Examples to Add:**
+**Purpose**: Ensure AI-generated schedulers are safe and correct before deployment
 
-- Show generated eBPF scheduler code snippet with annotations
+**Key Features**:
+- **BPF Safety Verification**: Pre-validate code against kernel verifier rules
+- **Performance Estimation**: Predict scheduler overhead before deployment
+- **Automated Testing Pipeline**: Unit tests, integration tests, and benchmarks
+- **Sandbox Environment**: Safe testing without affecting production
+- **Early Feedback Loop**: Rapid iteration based on test results
 
-**Dual-Language Code Generation**:
-- **eBPF C Code**: Kernel-space scheduler logic
-  - Direct generation without DSL
-  - Standard sched_ext framework patterns
-  - BPF-compatible data structures
-- **Rust Userspace Library**: Control plane and configuration
-  - Parameter management
-  - Runtime statistics collection
-  - Dynamic configuration updates
+#### 4. Scheduler Optimization Libraries
 
-**Safety and Validation Pipeline**:
-- **Static Analysis**: Verify BPF code before compilation
-  - Check for infinite loops, invalid memory access
-  - Ensure BPF verifier compliance
-- **Test Framework**: Isolated testing before kernel deployment
-  - Userspace simulation of scheduler behavior
-  - Performance micro-benchmarks
-  - Stress testing with synthetic workloads
-- **Early Feedback**: Get validation results before kernel installation
-  - Reduces risk of system instability
-  - Faster iteration cycles
+**Purpose**: Pre-built scheduler templates and patterns for AI retrieval and adaptation
 
-#### 4. Retrieval and Matching Mechanism
+**Key Components**:
+- **Production Scheduler Collection**: Battle-tested schedulers (scx_rusty, scx_layered, etc.)
+- **Algorithm Primitives**: FIFO, SJF, CFS-style, work-stealing patterns
+- **Optimization Patterns**: Workload-specific optimizations (batch, interactive, ML)
+- **Smart Retrieval**: Semantic search with performance-based ranking
+- **Self-Evolution**: Automatically extract patterns from successful AI-generated schedulers
 
-**Multi-strategy Retrieval**:
-- **Description Matching**: RAG-like but lightweight, matching workload descriptions
-- **Tag-based Search**: Structured tags (e.g., "IO-heavy", "CPU-bound") for filtering
-- **Historical Performance Matching**: Prioritize based on past effectiveness on similar workloads
+#### 5. Profiling & Monitoring Toolkit
 
-#### 5. Tool Set Interface and Knowledge Database
-- MCP server design (https://modelcontextprotocol.io/introduction)
-- Helps AI understand current system state
-- Provides workload analysis capabilities
-- Enables dynamic configuration and programming
-- Integration with system monitoring tools
+**Purpose**: Comprehensive workload analysis and system observability
 
-#### 6. Performance Monitoring Daemon
-- Continuous system monitoring
-- Triggers AI agent when performance degrades
-- Collects metrics for feedback loop
-- Automatic rollback on performance regression
+**Core Tools**:
+- **Workload Profiling**: CPU patterns, memory access, I/O behavior analysis
+- **Real-time Monitoring**: Scheduler metrics, latencies, throughput tracking
+- **Historical Analysis**: Pattern mining and predictive analytics
+- **Low-overhead Integration**: eBPF probes, PMU counters, tracing frameworks
+- **Anomaly Detection**: Automatic alerts for performance degradation
 
-### C. Reinforcement Learning Integration
+#### 6. Unified Agent Extension Framework
 
-#### 1. Simple Memory-based RL (In-Context RL)
+**Purpose**: Enable any AI agent to optimize schedulers through standardized interfaces
 
-- Maintain feedback-driven memory file (e.g., claude.md)
-- Performance feedback updates memory after each trial
-- Influences future scheduler selection and tuning
-- Similar to prompting-based feedback loops in language models
+**Key Features**:
+- **Model-Agnostic Interface**: Works with GPT, Claude, Llama, and future models
+- **MCP Server**: Standardized API following Model Context Protocol
+- **Tool Library**: Atomic operations and composite workflows
+- **Safety Governance**: Permission system, audit logging, resource quotas
+- **Plugin Architecture**: Extensible without core system changes
 
-#### 2. Parameter-tuning with Small-scale RL
+### C. RL Algorithm Suite
 
-- Lightweight algorithms adjust retrieval parameters
-- Iterative refinement based on workload outcomes
-- Adjust similarity thresholds, performance weights, matching heuristics
+**Purpose**: Enable continuous improvement through reinforcement learning
 
-#### 3. Feedback Mechanism
-
-- Capture performance metrics after each scheduler deployment
-- Store results in library for future reference
-- Update agent's decision-making memory
-- No complex training procedures required
+**Key Algorithms**:
+- **In-Context Learning**: Memory-based adaptation using performance feedback
+- **Bayesian Optimization**: Efficient parameter tuning with uncertainty modeling
+- **Multi-Armed Bandits**: Balance exploration and exploitation for scheduler selection
+- **Workload Pattern Learning**: Detect and adapt to changing workload phases
+- **Meta-Learning**: Transfer knowledge across similar workloads for rapid adaptation
 
 ### D. Self-Evolution Process
 
