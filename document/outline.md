@@ -219,50 +219,56 @@ Keep in mind that we are building a system interface that can be used by AI. As 
 
 ### B. System Architecture
 
-Our core insight is that safely and efficiently harnessing a powerful LLM agent for OS optimization requires a new architectural pattern. We are not building a better AI; we are building a better **interface for AI**. To that end, we present **schedCP**, a novel control plane designed to intelligently manage the Linux scheduler (the **data plane**).
+Our core insight is that safely and efficiently harnessing a powerful LLM agent for OS optimization requires a new architectural pattern. We see the problem as a Reinforcement Learning problem., but we are not building a better AI; we are building a better **interface for AI**. To that end, we present **schedCP**, a novel control plane designed to intelligently manage the Linux scheduler (the **data plane**).
 
 In this architecture, the data plane is the Linux kernel itself, where a `sched_ext` eBPF scheduler executes at microsecond speeds. The control plane is our framework, operating at a slower timescale to observe, analyze, and safely update the policy running in the data plane. The LLM agent acts as a pluggable, autonomous **policy agent** within this control plane.
 
-The core here is a framework that enables a Large Language Model to perform a highly sophisticated form of Reinforcement Learning. If we consider the black-box agent (Claude Code) as the "core agent" in an RL paradigm, then the other components of our framework are the essential scaffolding that makes it possible for this agent to operate effectively and safely in the real world.
-The core agent is the "policy agent" in our framework.
+The core here is a framework that enables an LLM agent to perform a highly sophisticated form of Reinforcement Learning. If we consider the black-box agent (Claude Code) as the "core agent" in an RL paradigm, then the other components of our framework are the essential scaffolding that makes it possible for this agent to operate effectively and safely in the real world.
 
-While the agent operates with full autonomy—choosing which tools to use and when—its workflow is guided by a principled, four-stage control loop: **State Abstraction**, **Policy Generation**, **Safe Actuation**, and **Feedback Integration**. This structure provides a scaffold for the agent's reasoning, ensuring its actions are safe, efficient, and effective.
+While the agent operates with full autonomy—choosing which tools to use and when—its workflow is guided by a principled, four-stage control loop: **Observation**, **Planning**, **Execution**, and **Learning**. This structure provides a scaffold for the agent's reasoning, ensuring its actions are safe, efficient, and effective. The agent is the "policy agent" in our framework.
 
-#### Stage 1: State Abstraction - A Principled View of the Environment
+#### Stage 1: Observation & Analysis - Building a Workload Profile
 
-**Purpose**: To provide the policy agent with a clean, structured, and cost-effective representation of the environment's state. This stage is the "senses" of our system.
+**Purpose**: To enable the policy agent to perform a deep, semantic analysis of a workload and synthesize its findings into a structured **"Workload Profile"**. This profile serves as the foundational understanding and specification for all subsequent optimization steps.
 
 **Principles Embodied**:
-- **Context Balance**: Prevents overwhelming the agent with raw data, managing the cost-vs-information trade-off.
-- **Composable Tools**: Provides a flexible toolbox for observation that the agent can dynamically compose.
+- **Context Balance**: The agent pulls the information it needs, from high-level source code to low-level performance counters, ensuring it has the right context without being flooded.
+- **Composable Tools**: Provides a rich sandbox of tools that the agent can use to conduct its investigation.
 
 **Implementation Details**:
-`schedCP` exposes a rich **State Interface** that the agent uses to probe the environment. This is not a static data dump but a library of tools for dynamic exploration.
+`schedCP` provides the agent with access to a secure **Analysis Sandbox**. This is a containerized environment where the agent can actively investigate the workload using a wide array of tools, much like a human developer.
 
-- **Low-Overhead Sensing**: The tools are powered by eBPF probes, hardware performance monitoring units (PMUs), and kernel tracepoints to gather data with minimal impact on the production workload.
-- **Atomic Observation Tools**: The agent has access to a rich set of fine-grained, low-cost API calls like `get_cpu_utilization(core=5)` or `get_task_queue_depth(task_type='interactive')`.
-- **Agent-Driven Dynamic Profiling**: The agent decides which tools to call and in what order. For a complex task, it can generate and execute its own small analysis scripts (within a secure sandbox) that compose atomic tools to perform custom, targeted analysis, thereby adapting its observation strategy to the specific problem.
+- **Multi-modal Sensing Capabilities**: Within the sandbox, the agent has access to:
+  - **File System Access**: To read source code, `Makefiles`, dependency manifests, and configuration files to understand the software's structure.
+  - **Command Execution**: The ability to run various diagnostic shell commands (`git log`, `make`, `perf stat`, `strace`) to observe the software's build process and runtime behavior.
+  - **Structured Metric APIs**: The agent can still call fine-grained, low-cost APIs (e.g., `get_cpu_utilization()`) for real-time performance data.
+- **The "Workload Profile" Artifact**: The ultimate output of this stage is not raw data, but a structured specification file generated by the agent. This profile contains:
+  - A **natural language summary** of the workload's purpose (e.g., "This is a latency-sensitive web server that handles user authentication requests").
+  - A list of key **performance characteristics** and **resource requirements** (e.g., "I/O-bound during database access; benefits from low-latency NUMA-local memory").
+  - An explicit set of **optimization goals** that will guide the next stage (e.g., "Goal: Minimize p99 request latency while keeping CPU utilization below 70%").
+- **Event-Driven Callbacks**: The agent can register a callback URL with the `schedCP Server`. This allows our `Performance Monitor Daemon` to **proactively notify the agent** of critical events, such as a sudden drop in performance or a detected workload phase change, triggering a new analysis cycle without waiting for the agent to poll.
 
-#### Stage 2: Policy Generation - An LLM-Powered Reasoning Engine
+#### Stage 2: Planning - Policy Synthesis and Selection
 
-**Purpose**: To translate the abstracted state into a concrete optimization plan (a new scheduling policy). This is the "brains" of the control plane, where the agent's reasoning takes center stage.
+**Purpose**: To use the **Workload Profile** generated in Stage 1 to synthesize a concrete optimization plan (a new scheduling policy). This is the "brains" of the control plane, where the agent's reasoning takes center stage.
 
 **Principles Embodied**:
 - **Decoupling & Role Separation**: The LLM is treated as a pluggable, autonomous agent. Its job is to reason about "what" to do, not the low-level details of "how" to do it.
 
 **Implementation Details**:
 
-- **Pluggable Policy Agent**: `schedCP` can work with any capable agent (Claude, GPT-4, etc.). The agent's internal **Decision Layer** analyzes the state gathered in the previous stage.
+- **Pluggable Policy Agent**: `schedCP` can work with any capable agent (Claude, GPT-4, etc.). The agent's internal **Decision Layer** now uses the rich, natural language goals and requirements from the Workload Profile to guide its strategy.
 - **The Scheduler Knowledge Base**: To act efficiently, the agent's first step is typically to query this strategic resource. It serves as a long-term memory or cache of successful policies, containing:
   - **A Curated Collection of Production Schedulers**: Battle-tested schedulers like `scx_rusty`.
   - **A Library of Algorithm Primitives**: Reusable code blocks for patterns like FIFO, work-stealing, etc.
+  - **A Suite of RL Algorithms for finding parameters**: Bayesian Optimization is used to efficiently find the best parameters for a given scheduler; Multi-Armed Bandits help the agent balance exploiting known-good schedulers versus exploring novel ones; and Meta-Learning techniques help transfer knowledge gained from one workload to accelerate the optimization of new, similar workloads.
   - **Rich Metadata and Performance History**: Each entry is annotated with its intended use case and empirical performance data.
-- **The Agent's Decision Workflow**: Based on its observations and knowledge base queries, the agent autonomously chooses one of three pathways:
+- **The Agent's Decision Workflow**: Using the profile's keywords (e.g., "latency-sensitive", "I/O-bound") to perform a more accurate semantic search of the knowledge base, the agent autonomously chooses one of three pathways:
   1. **Reconfigure**: An existing scheduler is a perfect fit. The agent's plan is to provide new configuration parameters.
   2. **Revise**: A close match is found. The agent retrieves the source code and its **Implementation Layer** generates a patch to adapt it.
   3. **Generate**: No suitable scheduler exists. The agent's plan is to generate a new one from scratch, often using the algorithm primitives as building blocks.
 
-#### Stage 3: Safe Actuation - The Execution Gauntlet
+#### Stage 3: Execution - Validated Policy Deployment
 
 **Purpose**: To provide a secure service for the agent to validate and deploy its proposed policy without compromising system stability.
 
@@ -275,16 +281,17 @@ The `Execution Gauntlet` is not a passive pipeline but a service the agent expli
 1. **Static Pre-Flight Checks**:
    - **BPF Verifier Simulation**: Simulates the kernel's verifier to catch safety violations (e.g., unbounded loops, invalid memory access) early.
    - **Complexity Analysis**: Statically analyzes instruction counts and code paths to estimate the scheduler's overhead, rejecting overly complex proposals.
+   - **Additional Validation**: The agent can also call additional static analysis tools to validate the code to make sure it matches the scheduler's intended behavior, e.g. no soft-lockups, starvation, etc.
 
 2. **Dynamic Sandbox Validation**:
-   - **Automated Testing**: The proposed scheduler is compiled and run in a secure sandbox against a suite of unit, integration, and stress tests.
-   - **Performance Benchmarking**: Its performance is measured in the sandbox to ensure it meets expectations before production deployment.
+   - **Automated Testing**: The proposed scheduler is compiled and run in a secure sandbox against a suite of unit, integration, and stress tests to validate its logical correctness.
+   - **Performance Benchmarking**: Its performance is measured in the sandbox to ensure it meets the goals outlined in the Workload Profile before production deployment.
 
 3. **Monitored Production Rollout**:
    - **Controlled Actuation**: If the gauntlet is passed, it returns a "deployment token" to the agent. The agent then makes a separate, explicit call to deploy the policy using this token.
    - **Runtime Circuit Breaker**: The `Performance Monitor Daemon` continuously observes the new scheduler. If key performance indicators degrade beyond a set threshold, the circuit breaker is triggered, and the system **automatically and immediately reverts** to the last known-good scheduler.
 
-#### Stage 4: Feedback Integration - Closing the Loop for Continuous Improvement
+#### Stage 4: Learning - Performance Analysis and Knowledge Update
 
 **Purpose**: To translate the outcome of an action into durable, reusable knowledge, enabling the agent and the system to improve over time.
 
@@ -301,7 +308,6 @@ The performance metrics gathered after actuation constitute the "reward" signal.
 2. **Long-Term System Evolution**:
    - The structured performance data is used to update the **Scheduler Knowledge Base**, refining the historical metrics for the scheduler that was used.
    - Highly successful, novel schedulers generated by the agent can be contributed back to the library by the agent, enriching the system's collective intelligence.
-   - Specific RL algorithms like **Bayesian Optimization** and **Multi-Armed Bandits** are used under the hood to help the agent optimize its own meta-strategies for parameter tuning and scheduler selection over time.
 
 ### C. Architecture Overview
 
@@ -341,7 +347,7 @@ The performance metrics gathered after actuation constitute the "reward" signal.
 │  ┌────────────────────────────────────────────────────────────────┐  │
 │  │               Execution Gauntlet (Validation Service)            │  │
 │  │ ┌──────────────────┬───────────────────┬──────────────────────┐ │  │
-│  │ │ Static Pre-Check │ Dynamic Sandbox │ Monitored Rollout    │ │  │
+│  │ │ Static Pre-Check │ Monitored Rollout                       │ │  │
 │  │ └──────────────────┴───────────────────┴──────────────────────┘ │  │
 │  └────────────────────────────────────────────────────────────────┘  │
 │                                                                         │
@@ -351,10 +357,10 @@ The performance metrics gathered after actuation constitute the "reward" signal.
 **Example Agent Workflow:**
 An agent's interaction is not a fixed sequence but a dynamic plan. For a kernel compilation task, its plan might be:
 
-1. **State Abstraction**: The agent calls `get_workload_characteristics()` and `get_cpu_count()` to understand the environment.
-2. **Policy Generation**: It queries the `Knowledge Base` with keywords like "throughput" and "compilation," retrieving `scx_rusty`. It decides this is a good starting point but wants to improve it. It generates a patch to make it dependency-aware.
-3. **Safe Actuation**: It submits the patched code to the `Execution Gauntlet`. Upon receiving a "pass" status and a deployment token, it calls the `deploy_policy()` tool.
-4. **Feedback Integration**: After a set time, it calls `get_feedback()` and receives a positive reward signal. It then decides to contribute its improved scheduler back to the `Knowledge Base` for future use.
+1. **Observation**: The agent reads source files, executes `make -j` to understand build dependencies, runs `perf stat` to profile the workload, and generates a Workload Profile stating "This is a CPU-intensive parallel compilation task that benefits from work-stealing and NUMA-aware scheduling."
+2. **Planning**: It queries the `Knowledge Base` with keywords like "throughput" and "compilation," retrieving `scx_rusty`. It decides this is a good starting point but wants to improve it. It generates a patch to make it dependency-aware.
+3. **Execution**: It submits the patched code to the `Execution Gauntlet`. Upon receiving a "pass" status and a deployment token, it calls the `deploy_policy()` tool.
+4. **Learning**: After a set time, it calls `get_feedback()` and receives a positive reward signal. It then decides to contribute its improved scheduler back to the `Knowledge Base` for future use.
 
 ## V. Implementation
 
