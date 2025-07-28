@@ -502,15 +502,6 @@ We investigate five key research questions to validate the effectiveness and eff
 - Memory-intensive: 82% accuracy
 - Classification cost: $0.15 per analysis
 
-### G. Summary of Findings
-
-Our evaluation demonstrates:
-- **Effectiveness**: 30-80% performance improvements across diverse workloads
-- **Efficiency**: 85-88% cost reduction making production deployment viable
-- **Intelligence**: 89.6% workload classification accuracy
-- **Continuous Improvement**: RL adds 10-12% gains beyond initial generation
-- **Generality**: Framework works with multiple LLM providers
-
 ## VII. Related Work
 
 **Positioning Strategy:**
