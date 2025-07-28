@@ -22,7 +22,7 @@ We make the following contributions:
 • Evaluation demonstrating 30-80% performance improvements across diverse workloads
 • Discussion on the challenges and future directions of AI-driven system optimizations.
 
-The remainder of this paper is organized as follows. Section II provides background on scheduler evolution and LLM capabilities. Section III details our motivation through concrete experiments. Section IV presents our system design. Section V evaluates performance across multiple workloads. Section VI discusses related work, and Section VII concludes.
+The remainder of this paper is organized as follows. Section II provides background on scheduler evolution and LLM capabilities. Section III details our motivation through concrete experiments. Section IV presents our system design. Section V details implementation. Section VI evaluates performance across multiple workloads. Section VII discusses related work, Section VIII presents future work and impact, and Section IX concludes.
 
 ## II. Background
 
@@ -149,7 +149,7 @@ The remainder of this paper is organized as follows. Section II provides backgro
    - How to ensure reasonable generation time?
    - How to minimize cost for production deployment?
 
-## III. System Design
+## IV. System Design
 
 ### A. Design Philosophy and Constraints
 
@@ -314,7 +314,7 @@ Our framework provides a modular extension system that can be used by any AI age
 - Add sequence diagram showing agent workflow:
   1. Workload analysis
   2. Library search
-  3. Decision (configure/modify/create)
+  3. Decision (configure/modify/create)  
   4. Validation
   5. Deployment
   6. Feedback collection
@@ -371,34 +371,57 @@ Our framework provides a modular extension system that can be used by any AI age
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## IV. Key Technical Challenges and Solutions
+## V. Implementation
 
-### A. Code Generation Efficiency
+### A. MCP Server Implementation
 
-**Challenge**: How can LLM estimate program execution time from code?
-**Solution**: 
-- Profile-guided optimization
-- Historical data correlation
-- Lightweight static analysis for early feedback
+**Architecture**:
+- RESTful API endpoints for agent communication
+- WebSocket support for real-time monitoring
+- Authentication and rate limiting for safety
 
-### B. Token Consumption Management
+### B. Scheduler Library Management
 
-**Challenge**: Large code projects require excessive LLM tokens
-**Solution**:
-- Hierarchical code understanding
-- Focus on critical paths
-- Incremental refinement
+**Storage Format**:
+- JSON metadata for descriptions and parameters
+- Git-based version control for source code
+- SQLite database for performance history
+- Semantic embeddings for similarity search
 
-### C. Safety Guarantees
-**Challenge**: Prevent system crashes and performance degradation
-**Solution**:
-- Static analysis of generated eBPF code
-- BPF verifier compliance checking
-- Sandboxed testing environment
-- Gradual rollout with monitoring
-- Automatic rollback mechanisms
+**Library Operations**:
+- Automatic indexing of new schedulers
+- Performance regression detection
+- Pattern extraction from successful implementations
 
-## V. Evaluation Plan
+### C. Code Generation Pipeline
+
+**Generation Process**:
+1. Template selection based on workload type
+2. Parameter injection and customization
+3. Static validation before compilation
+4. Incremental testing in sandbox
+
+**Optimization Techniques**:
+- Caching of common code patterns
+- Reuse of verified code snippets
+- Profile-guided refinement
+
+### D. Safety Implementation
+
+**Validation Layers**:
+- Syntax checking with clang-format
+- BPF verifier pre-check
+- Resource usage estimation
+- Deadlock and starvation detection
+
+**Runtime Protection**:
+- Automatic fallback to default scheduler
+- Performance anomaly detection
+- Resource quota enforcement
+- Audit logging of all operations
+
+
+## VI. Evaluation
 
 ### A. Experimental Setup
 
@@ -466,7 +489,7 @@ Our framework provides a modular extension system that can be used by any AI age
 - RL refinement: Additional 10-20% improvement through feedback loop
 - Cost reduction through scheduler library reuse and early feedback
 
-## VI. Related Work
+## VII. Related Work
 
 **Positioning Strategy:**
 - Highlight unique aspects: code generation, self-evolution, production readiness
@@ -487,33 +510,20 @@ Our framework provides a modular extension system that can be used by any AI age
 - Production-ready infrastructure
 - Perfect platform for AI-generated schedulers
 
-## VII. Future Work and Impact
+## VIII. Future Work and Impact
 
 ### A. Extended Scope
 - Beyond schedulers: cache policies, DVFS, network, sysctl
 - Unified framework for OS optimization
 - Cross-component optimization
 
-### B. Industry Adoption Path
-- Include quotes from industry partners if available
-- Show clear deployment roadmap
-- Address concerns about AI in production systems
-- Highlight cost savings and efficiency gains
-
-- This is just the beginning of AI-powered OS optimization
-- The framework extends beyond schedulers to all OS policies
-- We're entering an era where systems can truly understand and adapt to their workloads
-
-
-### C. Broader Impact
+### B. Broader Impact
 - Democratize OS optimization
 - Enable application-specific kernel policies
 - Bridge the gap between application needs and kernel capabilities
 
-**Vision Statement to Include:**
-"We envision a future where every application runs on an OS perfectly tuned for its needs, where system optimization is no longer the domain of a few experts but accessible to all through AI assistance."
 
-## VIII. Conclusion
+## IX. Conclusion
 
 We present the first framework for using fully automatic LLM agents to dynamically optimize Linux schedulers. By maintaining a self-evolving library of schedulers and leveraging reinforcement learning for continuous improvement, our system achieves significant performance gains while reducing the expertise required for OS optimization. This work opens new possibilities for adaptive, application-aware operating systems that can automatically optimize themselves for changing workloads.
 
