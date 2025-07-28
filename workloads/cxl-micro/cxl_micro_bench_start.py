@@ -18,7 +18,7 @@ import argparse
 import re
 
 # Add the scheduler module to the path
-sys.path.insert(0, '/yunwei37/ai-os')
+sys.path.insert(0, '/root/yunwei37/ai-os/')
 
 from scheduler import SchedulerRunner, SchedulerBenchmark
 
@@ -476,7 +476,7 @@ def main():
     """Main function for CXL-micro scheduler testing"""
     parser = argparse.ArgumentParser(description="Test schedulers with CXL-micro double_bandwidth")
     parser.add_argument("--double-bandwidth-path", 
-                       default="/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth",
+                       default="/root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth",
                        help="Path to double_bandwidth binary")
     parser.add_argument("--results-dir", default="results", 
                        help="Directory to store results")
