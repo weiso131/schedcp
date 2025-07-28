@@ -8,14 +8,14 @@ Recent advances in reinforcement learning have attempted to address scheduler op
 
 The rapid advancement of Large Language Model (LLM) agents in 2024-2025 presents an unprecedented opportunity. Modern LLM agents can understand complex system behaviors, generate code, and reason about optimization strategies. However, our motivation experiments reveal significant challenges: automatically generating a basic FIFO scheduler from scratch required 33 minutes, 221 API calls with Claude Code through many trial-and-error iterations, costing ~$6, and sometimes the generated code degraded system performance. This highlights the need for carefully designed interfaces that balance AI capabilities with practical constraints. We propose treating these AI agents as expert system administrators—but with appropriate safety constraints and interfaces designed for their unique capabilities and limitations.
 
-This paper presents the first framework for using fully automatic LLM agents to dynamically optimize Linux schedulers. Our framework can be leveraged by any AI agent, from open-source Gemini CLI to proprietary Agents like Claude Code. A key insight is that LLM agents operate on the control plane, not the data plane—while scheduling decisions occur at microsecond timescales in the kernel, workload patterns change at minute-to-hour timescales, well-suited for LLM optimization. Our system enables AI agents to select, configure, modify, or generate entirely new scheduling algorithms tailored to specific workloads. Built on the production-ready sched_ext infrastructure, our framework maintains a self-evolving library of schedulers that grows and improves through experience.
+This paper presents SchedCP (Scheduler Control Plane), the first framework for using fully automatic LLM agents to dynamically optimize Linux schedulers. Our framework can be leveraged by any AI agent, from open-source Gemini CLI to proprietary Agents like Claude Code. A key insight is that LLM agents operate on the control plane, not the data plane—while scheduling decisions occur at microsecond timescales in the kernel, workload patterns change at minute-to-hour timescales, well-suited for LLM optimization. SchedCP enables AI agents to select, configure, modify, or generate entirely new scheduling algorithms tailored to specific workloads. Built on the production-ready sched_ext infrastructure, our framework maintains a self-evolving library of schedulers that grows and improves through experience.
 
 To achieve this vision while addressing the challenges revealed in our experiments, our design is guided by four key principles derived from treating AI agents as context engineering systems and similar to human experts: (1) **Decoupling** the "what to optimize" (AI's domain) from "how to observe and act" (system's domain); (2) **Context Balance** to provide sufficient information for decisions while controlling costs, and give feedback earlier; (3) **Composable Tools** that leverage LLM Agent's dynamic planning, code generation and tool usage capabilities; and (4) **Safety-First Design** that treats AI as potentially non-cautious actors requiring defensive interfaces. These principles ensure our system remains effective as AI models evolve while preventing catastrophic failures. We think these principles also are generalizable to other domains and systems.
 
-Following these principles, we implement a framework with five core components: (1) static analysis and testing for safe code deployment, (2) scheduler libraries with reusable optimization patterns, (3) reinforcement learning for continuous improvement, (4) profiling tools for workload characterization, and (5) a unified interface enabling any LLM to optimize schedulers. This modular design evolves with AI capabilities without system redesign. Once generated, schedulers execute as native eBPF code with no LLM overhead in the critical path, achieving up to 80% speedup for Linux kernel builds and 50% latency reduction for scheduler benchmarks.
+Following these principles, we implement SchedCP with five core components: (1) static analysis and testing for safe code deployment, (2) scheduler libraries with reusable optimization patterns, (3) reinforcement learning for continuous improvement, (4) profiling tools for workload characterization, and (5) a unified interface enabling any LLM to optimize schedulers. This modular design evolves with AI capabilities without system redesign. Once generated, schedulers execute as native eBPF code with no LLM overhead in the critical path, achieving up to 80% speedup for Linux kernel builds and 50% latency reduction for scheduler benchmarks.
 
 We make the following contributions:
-• Design and implementation of the first comprehensive LLM agent framework for OS scheduler optimization
+• Design and implementation of SchedCP, the first comprehensive LLM agent framework for OS scheduler optimization
 • A modular extension system that can be leveraged by any AI agent, from open-source to proprietary models
 • A set of design principles for AI-system interfaces that balance capability, cost, and safety
 • A self-evolving scheduler library that grows through experience and improves with model capabilities
@@ -219,114 +219,99 @@ Keep in mind that we are building a system interface that can be used by AI. As 
 
 ### B. System Architecture
 
-Our framework provides a modular extension system that can be used by any AI agent—from open-source models like Llama to proprietary systems like GPT-4 or Claude. As AI capabilities grow, the framework evolves to leverage these improvements without requiring system redesign.
+Our core insight is that safely and efficiently harnessing a powerful LLM agent for OS optimization requires a new architectural pattern. We are not building a better AI; we are building a better **interface for AI**. To that end, we present **schedCP**, a novel control plane designed to intelligently manage the Linux scheduler (the **data plane**).
 
-#### 1. Multi-Layer RL LLM Agent
+In this architecture, the data plane is the Linux kernel itself, where a `sched_ext` eBPF scheduler executes at microsecond speeds. The control plane is our framework, operating at a slower timescale to observe, analyze, and safely update the policy running in the data plane. The LLM agent acts as a pluggable, autonomous **policy agent** within this control plane.
 
-**Key Innovation**: Multi-layer reinforcement learning LLM agent for intelligent scheduler management
+The core here is a framework that enables a Large Language Model to perform a highly sophisticated form of Reinforcement Learning. If we consider the black-box agent (Claude Code) as the "core agent" in an RL paradigm, then the other components of our framework are the essential scaffolding that makes it possible for this agent to operate effectively and safely in the real world.
+The core agent is the "policy agent" in our framework.
 
-**Agent Layers**:
+While the agent operates with full autonomy—choosing which tools to use and when—its workflow is guided by a principled, four-stage control loop: **State Abstraction**, **Policy Generation**, **Safe Actuation**, and **Feedback Integration**. This structure provides a scaffold for the agent's reasoning, ensuring its actions are safe, efficient, and effective.
 
-- **Decision Layer**: High-level strategy selection (configure, modify, or create)
-- **Implementation Layer**: Code generation and modification
-- **Learning Layer**: Reinforcement learning from performance feedback
+#### Stage 1: State Abstraction - A Principled View of the Environment
 
-**Capabilities**:
-- **Selection**: Choose existing scheduler based on workload description and historical performance
-- **Configuration**: Automatically tune parameters for new scenarios  
-- **Modification**: Adapt existing schedulers for slightly different workloads
-- **Creation**: Write new scheduler code when no suitable scheduler exists
+**Purpose**: To provide the policy agent with a clean, structured, and cost-effective representation of the environment's state. This stage is the "senses" of our system.
 
-#### 2. AI-Managed Scheduler Library
+**Principles Embodied**:
+- **Context Balance**: Prevents overwhelming the agent with raw data, managing the cost-vs-information trade-off.
+- **Composable Tools**: Provides a flexible toolbox for observation that the agent can dynamically compose.
 
-**Library Entry Components**:
-- **Description**: Textual summary of purpose, characteristics, use-cases
-- **Configuration Parameters**: Clearly defined adjustable parameters
-- **Source Code**: Executable eBPF C code and Rust userspace components
-- **Historical Performance Data**: Metrics from previous uses (makespan, throughput, latency, fairness)
-- **Test Results**: Static analysis and runtime test outcomes
+**Implementation Details**:
+`schedCP` exposes a rich **State Interface** that the agent uses to probe the environment. This is not a static data dump but a library of tools for dynamic exploration.
 
-#### 3. Static Analysis & Testing Framework
+- **Low-Overhead Sensing**: The tools are powered by eBPF probes, hardware performance monitoring units (PMUs), and kernel tracepoints to gather data with minimal impact on the production workload.
+- **Atomic Observation Tools**: The agent has access to a rich set of fine-grained, low-cost API calls like `get_cpu_utilization(core=5)` or `get_task_queue_depth(task_type='interactive')`.
+- **Agent-Driven Dynamic Profiling**: The agent decides which tools to call and in what order. For a complex task, it can generate and execute its own small analysis scripts (within a secure sandbox) that compose atomic tools to perform custom, targeted analysis, thereby adapting its observation strategy to the specific problem.
 
-**Purpose**: Ensure AI-generated schedulers are safe and correct before deployment
+#### Stage 2: Policy Generation - An LLM-Powered Reasoning Engine
 
-**Key Features**:
-- **BPF Safety Verification**: Pre-validate code against kernel verifier rules
-- **Performance Estimation**: Predict scheduler overhead before deployment
-- **Automated Testing Pipeline**: Unit tests, integration tests, and benchmarks
-- **Sandbox Environment**: Safe testing without affecting production
-- **Early Feedback Loop**: Rapid iteration based on test results
+**Purpose**: To translate the abstracted state into a concrete optimization plan (a new scheduling policy). This is the "brains" of the control plane, where the agent's reasoning takes center stage.
 
-#### 4. Scheduler Optimization Libraries
+**Principles Embodied**:
+- **Decoupling & Role Separation**: The LLM is treated as a pluggable, autonomous agent. Its job is to reason about "what" to do, not the low-level details of "how" to do it.
 
-**Purpose**: Pre-built scheduler templates and patterns for AI retrieval and adaptation
+**Implementation Details**:
 
-**Key Components**:
-- **Production Scheduler Collection**: Battle-tested schedulers (scx_rusty, scx_layered, etc.)
-- **Algorithm Primitives**: FIFO, SJF, CFS-style, work-stealing patterns
-- **Optimization Patterns**: Workload-specific optimizations (batch, interactive, ML)
-- **Smart Retrieval**: Semantic search with performance-based ranking
-- **Self-Evolution**: Automatically extract patterns from successful AI-generated schedulers
+- **Pluggable Policy Agent**: `schedCP` can work with any capable agent (Claude, GPT-4, etc.). The agent's internal **Decision Layer** analyzes the state gathered in the previous stage.
+- **The Scheduler Knowledge Base**: To act efficiently, the agent's first step is typically to query this strategic resource. It serves as a long-term memory or cache of successful policies, containing:
+  - **A Curated Collection of Production Schedulers**: Battle-tested schedulers like `scx_rusty`.
+  - **A Library of Algorithm Primitives**: Reusable code blocks for patterns like FIFO, work-stealing, etc.
+  - **Rich Metadata and Performance History**: Each entry is annotated with its intended use case and empirical performance data.
+- **The Agent's Decision Workflow**: Based on its observations and knowledge base queries, the agent autonomously chooses one of three pathways:
+  1. **Reconfigure**: An existing scheduler is a perfect fit. The agent's plan is to provide new configuration parameters.
+  2. **Revise**: A close match is found. The agent retrieves the source code and its **Implementation Layer** generates a patch to adapt it.
+  3. **Generate**: No suitable scheduler exists. The agent's plan is to generate a new one from scratch, often using the algorithm primitives as building blocks.
 
-#### 5. Profiling & Monitoring Toolkit
+#### Stage 3: Safe Actuation - The Execution Gauntlet
 
-**Purpose**: Comprehensive workload analysis and system observability
+**Purpose**: To provide a secure service for the agent to validate and deploy its proposed policy without compromising system stability.
 
-**Core Tools**:
-- **Workload Profiling**: CPU patterns, memory access, I/O behavior analysis
-- **Real-time Monitoring**: Scheduler metrics, latencies, throughput tracking
-- **Historical Analysis**: Pattern mining and predictive analytics
-- **Low-overhead Integration**: eBPF probes, PMU counters, tracing frameworks
-- **Anomaly Detection**: Automatic alerts for performance degradation
+**Principles Embodied**:
+- **Safety-First Design**: This entire stage is the direct embodiment of treating the AI as a potentially non-cautious actor. It is a non-negotiable validation service for all agent-generated code.
 
-#### 6. Unified Agent Extension Framework
+**Implementation Details**:
+The `Execution Gauntlet` is not a passive pipeline but a service the agent explicitly calls. When the agent has a code artifact, it submits it to the gauntlet. The service then runs the code through three layers of validation:
 
-**Purpose**: Enable any AI agent to optimize schedulers through standardized interfaces
+1. **Static Pre-Flight Checks**:
+   - **BPF Verifier Simulation**: Simulates the kernel's verifier to catch safety violations (e.g., unbounded loops, invalid memory access) early.
+   - **Complexity Analysis**: Statically analyzes instruction counts and code paths to estimate the scheduler's overhead, rejecting overly complex proposals.
 
-**Key Features**:
-- **Model-Agnostic Interface**: Works with GPT, Claude, Llama, and future models
-- **MCP Server**: Standardized API following Model Context Protocol
-- **Tool Library**: Atomic operations and composite workflows
-- **Safety Governance**: Permission system, audit logging, resource quotas
-- **Plugin Architecture**: Extensible without core system changes
+2. **Dynamic Sandbox Validation**:
+   - **Automated Testing**: The proposed scheduler is compiled and run in a secure sandbox against a suite of unit, integration, and stress tests.
+   - **Performance Benchmarking**: Its performance is measured in the sandbox to ensure it meets expectations before production deployment.
 
-### C. Reinforcement Learning Integration
+3. **Monitored Production Rollout**:
+   - **Controlled Actuation**: If the gauntlet is passed, it returns a "deployment token" to the agent. The agent then makes a separate, explicit call to deploy the policy using this token.
+   - **Runtime Circuit Breaker**: The `Performance Monitor Daemon` continuously observes the new scheduler. If key performance indicators degrade beyond a set threshold, the circuit breaker is triggered, and the system **automatically and immediately reverts** to the last known-good scheduler.
 
-**Purpose**: Enable continuous improvement through reinforcement learning
+#### Stage 4: Feedback Integration - Closing the Loop for Continuous Improvement
 
-**Key Algorithms**:
-- **In-Context Learning**: Memory-based adaptation using performance feedback
-- **Bayesian Optimization**: Efficient parameter tuning with uncertainty modeling
-- **Multi-Armed Bandits**: Balance exploration and exploitation for scheduler selection
-- **Workload Pattern Learning**: Detect and adapt to changing workload phases
-- **Meta-Learning**: Transfer knowledge across similar workloads for rapid adaptation
+**Purpose**: To translate the outcome of an action into durable, reusable knowledge, enabling the agent and the system to improve over time.
 
-### D. Continuous Learning and Evolution
+**Principles Embodied**:
+- **Feedback Balance**: Ensures the loop is closed and that the cost of optimization decreases as the system gains experience.
 
-1. **Continuous Learning**: Each workload execution enriches the library
-2. **Feedback Integration**: Performance data guides future decisions
-3. **Adaptive Strategies**: Agent learns which schedulers work for which workloads
-4. **Library Growth**: New schedulers added as needed for novel workloads
+**Implementation Details**:
+The performance metrics gathered after actuation constitute the "reward" signal. The agent accesses this via the **Feedback Channel**, which processes the signal in two ways:
 
-### E. Architecture Overview
+1. **Short-Term, In-Context Learning for the Agent**:
+   - The agent can call a `get_feedback` tool, which returns a concise summary of the outcome (e.g., "Action 'Revise scx_rusty' resulted in a 45% reduction in makespan").
+   - The agent uses this feedback to inform its next decision, effectively performing **In-Context Reinforcement Learning**.
 
-**Additional Diagrams to Include:** State diagram for scheduler lifecycle (development → testing → deployment → monitoring)
-- Add sequence diagram showing agent workflow:
-  1. Workload analysis
-  2. Library search
-  3. Decision (configure/modify/create)  
-  4. Validation
-  5. Deployment
-  6. Feedback collection
+2. **Long-Term System Evolution**:
+   - The structured performance data is used to update the **Scheduler Knowledge Base**, refining the historical metrics for the scheduler that was used.
+   - Highly successful, novel schedulers generated by the agent can be contributed back to the library by the agent, enriching the system's collective intelligence.
+   - Specific RL algorithms like **Bayesian Optimization** and **Multi-Armed Bandits** are used under the hood to help the agent optimize its own meta-strategies for parameter tuning and scheduler selection over time.
 
+### C. Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                          Production System                               │
+│                          Production System (Data Plane)                  │
 │                                                                         │
 │  ┌─────────────────┐                    ┌─────────────────────────┐   │
 │  │   Application   │                    │  Performance Monitor    │   │
-│  │   Workloads     │◄──────────────────►│  Daemon                │   │
+│  │   Workloads     │◄──────────────────►│  Daemon (Observe)      │   │
 │  └────────┬────────┘                    └───────────┬─────────────┘   │
 │           │                                          │                  │
 │           ▼                                          │ Metrics         │
@@ -334,42 +319,42 @@ Our framework provides a modular extension system that can be used by any AI age
 │  │  Linux Kernel   │                                │                  │
 │  │  ┌────────────┐ │                                ▼                  │
 │  │  │ sched_ext  │ │                    ┌─────────────────────────┐   │
-│  │  │   (BPF)    │◄├────────────────────┤   MCP Server          │   │
-│  │  └────────────┘ │     Deploy         │  (Tool Interface)      │   │
+│  │  │   (BPF)    │◄├────────────────────┤  schedCP Server       │   │
+│  │  └────────────┘ │     Actuate        │  (Control API)         │   │
 │  └─────────────────┘                    └───────────┬─────────────┘   │
 │                                                      │                  │
 └──────────────────────────────────────────────────────┼──────────────────┘
                                                        │
-                                              Workload Analysis
-                                              Performance Data
+                                            State & Feedback (Context)
                                                        │
 ┌──────────────────────────────────────────────────────▼──────────────────┐
-│                        AI Agent System                                   │
+│                        schedCP Control Plane                           │
 │                                                                         │
 │  ┌─────────────────────┐        ┌──────────────────────────────────┐  │
-│  │  Multi-Layer RL     │        │   Scheduler Library              │  │
-│  │  LLM Agent          │        │                                  │  │
-│  │                     │        │  ┌──────────────┐ ┌────────────┐│  │
-│  │ ┌─────────────────┐ │◄──────►│  │ Description  │ │HistoricalP││  │
-│  │ │ Decision Layer  │ │Retrieve│  │ Config Params│ │erformance ││  │
-│  │ ├─────────────────┤ │        │  │ Source Code  │ │   Data    ││  │
-│  │ │Implementation   │ │        │  │ Test Results │ └────────────┘│  │
-│  │ │     Layer       │ │        │  └──────────────┘                │  │
-│  │ ├─────────────────┤ │        └──────────────────────────────────┘  │
-│  │ │ Learning Layer  │ │                                               │
-│  │ │ (In-Context RL) │ │        ┌──────────────────────────────────┐  │
-│  │ └─────────────────┘ │        │  Safety & Validation Pipeline    │  │
-│  └──────────┬──────────┘        │                                  │  │
-│             │                   │  ┌──────────┐ ┌───────────────┐  │  │
-│             ▼                   │  │ Static   │ │   Sandbox     │  │  │
-│  ┌──────────────────┐           │  │ Analysis │ │   Testing     │  │  │
-│  │ Code Generation  │───────────►  │          │ │               │  │  │
-│  │ - eBPF C Code   │  Generate  │  └──────────┘ └───────────────┘  │  │
-│  │ - Rust Userspace│           └──────────────────────────────────┘  │
-│  └──────────────────┘                                                 │
+│  │ Pluggable Policy    │        │   Scheduler Knowledge Base       │  │
+│  │ Agent (LLM)         │        │   (Long-Term Memory)             │  │
+│  │                     │◄───────┤                                  │  │
+│  └──────────┬──────────┘ Query  └──────────────────────────────────┘  │
+│             │                                                         │
+│             │ Policy Plan (Code, Patch, Config)                       │
+│             ▼                                                         │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │               Execution Gauntlet (Validation Service)            │  │
+│  │ ┌──────────────────┬───────────────────┬──────────────────────┐ │  │
+│  │ │ Static Pre-Check │ Dynamic Sandbox │ Monitored Rollout    │ │  │
+│  │ └──────────────────┴───────────────────┴──────────────────────┘ │  │
+│  └────────────────────────────────────────────────────────────────┘  │
 │                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+**Example Agent Workflow:**
+An agent's interaction is not a fixed sequence but a dynamic plan. For a kernel compilation task, its plan might be:
+
+1. **State Abstraction**: The agent calls `get_workload_characteristics()` and `get_cpu_count()` to understand the environment.
+2. **Policy Generation**: It queries the `Knowledge Base` with keywords like "throughput" and "compilation," retrieving `scx_rusty`. It decides this is a good starting point but wants to improve it. It generates a patch to make it dependency-aware.
+3. **Safe Actuation**: It submits the patched code to the `Execution Gauntlet`. Upon receiving a "pass" status and a deployment token, it calls the `deploy_policy()` tool.
+4. **Feedback Integration**: After a set time, it calls `get_feedback()` and receives a positive reward signal. It then decides to contribute its improved scheduler back to the `Knowledge Base` for future use.
 
 ## V. Implementation
 
@@ -538,4 +523,4 @@ We investigate five key research questions to validate the effectiveness and eff
 
 ## IX. Conclusion (one paragraph)
 
-We present the first framework for using fully automatic LLM agents to dynamically optimize Linux schedulers. By maintaining a self-evolving library of schedulers and leveraging reinforcement learning for continuous improvement, our system achieves significant performance gains while reducing the expertise required for OS optimization. This work opens new possibilities for adaptive, application-aware operating systems that can automatically optimize themselves for changing workloads. This work has implications beyond schedulers. As AI agents become more powerful, the interfaces we design today will shape how AI interacts with systems software tomorrow. Our framework demonstrates that with proper design, AI can democratize system optimization—making expert-level performance accessible to users from cloud operators to gamers, while paving the way for truly self-optimizing operating systems.
+We present SchedCP, the first framework for using fully automatic LLM agents to dynamically optimize Linux schedulers. By maintaining a self-evolving library of schedulers and leveraging reinforcement learning for continuous improvement, our system achieves significant performance gains while reducing the expertise required for OS optimization. This work opens new possibilities for adaptive, application-aware operating systems that can automatically optimize themselves for changing workloads. This work has implications beyond schedulers. As AI agents become more powerful, the interfaces we design today will shape how AI interacts with systems software tomorrow. SchedCP demonstrates that with proper design, AI can democratize system optimization—making expert-level performance accessible to users from cloud operators to gamers, while paving the way for truly self-optimizing operating systems.
