@@ -186,30 +186,6 @@
       "dependencies": ["python3"]
     },
     {
-      "id": "log_processing",
-      "name": "Log Processing with Skewed Chunks",
-      "description": "Processing log files with different sizes and compression",
-      "category": "data_processing",
-      "small_setup": [
-        "mkdir -p log_chunks",
-        "seq 1 500000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[INFO]\", \"Request from\", \"192.168.1.\"int(rand()*255), \"processed in\", int(rand()*100), \"ms\"}' > log_chunks/small.log"
-      ],
-      "large_setup": [
-        "mkdir -p log_chunks",
-        "seq 1 7000000 | awk '{print strftime(\"%Y-%m-%d %H:%M:%S\"), \"[INFO]\", \"Request from\", \"192.168.1.\"int(rand()*255), \"processed in\", int(rand()*100), \"ms\"}' > log_chunks/large.log"
-      ],
-      "small_commands": [
-        "gzip -c log_chunks/small.log | zcat | grep -E '\\[INFO\\]' | awk '{print $4}' | sort | uniq -c | sort -nr > log_chunks/small_ips.txt"
-      ],
-      "large_commands": [
-        "gzip -c log_chunks/large.log | zcat | grep -E '\\[INFO\\]' | awk '{print $4}' | sort | uniq -c | sort -nr > log_chunks/large_ips.txt"
-      ],
-      "cleanup_commands": [
-        "rm -rf log_chunks/"
-      ],
-      "dependencies": ["gzip", "grep", "awk", "sort", "uniq"]
-    },
-    {
       "id": "ddos_log_analysis",
       "name": "DDoS Log Analysis",
       "description": "Security log analysis with temporal spike pattern (DDoS simulation)",
