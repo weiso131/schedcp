@@ -345,7 +345,7 @@ def main():
                         help='Skip tests with default scheduler')
     parser.add_argument('--no-custom', action='store_true',
                         help='Skip tests with custom schedulers')
-    parser.add_argument('--runs', type=int, default=2,
+    parser.add_argument('--runs', type=int, default=3,
                         help='Number of runs per scheduler (default: 2)')
     
     args = parser.parse_args()
