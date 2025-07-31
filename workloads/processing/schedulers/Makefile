@@ -2,7 +2,7 @@
 # To add new scheduler: just add name to SCHEDULERS variable
 
 # Configuration - Add new schedulers here
-SCHEDULERS = vruntime fifo ctest
+SCHEDULERS = vruntime fifo example
 
 # Build targets
 LOADER = loader
