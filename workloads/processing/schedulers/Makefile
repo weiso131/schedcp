@@ -2,7 +2,7 @@
 # To add new scheduler: just add name to SCHEDULERS variable
 
 # Configuration - Add new schedulers here
-SCHEDULERS = vruntime fifo example compression ctest_suite
+SCHEDULERS = vruntime fifo example compression ctest_suite ddos_log_analysis
 
 # Build targets
 LOADER = loader
