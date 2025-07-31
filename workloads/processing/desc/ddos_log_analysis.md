@@ -6,6 +6,38 @@
 
 **Description:** Security log analysis with temporal spike pattern (DDoS simulation)
 
+## Workload Purpose & Characteristics
+
+This workload simulates security log analysis during a DDoS attack, where log volumes spike dramatically. The scenario includes 39 processes analyzing normal traffic logs (30K normal + 8K error logs) and 1 process handling the DDoS spike (1M normal + 500K error logs). This 50:1 volume ratio represents real-world security monitoring where attack detection must process massive log surges.
+
+## Key Performance Characteristics
+
+- **I/O and CPU mixed workload**: Decompression, parsing, and pattern analysis
+- **Memory-intensive processing**: Large log volumes require substantial memory
+- **Compressed data handling**: Works with gzipped log files
+- **Complex analytics**: Pattern detection, aggregation, and statistical analysis
+- **Temporal data processing**: Time-series analysis of security events
+
+## Optimization Goals
+
+1. **Minimize attack detection latency**: Ensure DDoS spike analysis completes quickly
+2. **Maintain baseline monitoring**: Keep normal log analysis responsive
+3. **Optimize memory usage**: Efficient handling of large compressed datasets
+4. **Maximize throughput**: Process maximum log volume per unit time
+5. **Prevent resource starvation**: Balance resources between normal and spike analysis
+
+## Scheduling Algorithm
+
+The optimal scheduler for DDoS log analysis should implement:
+
+1. **Process detection**: Identify "small_pandas_etl_test.py" (normal) and "large_pandas_etl_test.py" (spike) processes
+2. **Priority assignment**: Highest priority to large_pandas_etl_test.py for critical attack analysis
+3. **Resource allocation**:
+   - Large process: 20ms time slices for sustained analysis
+   - Small processes: 5ms time slices for responsive monitoring
+4. **Memory-aware scheduling**: Consider memory pressure when dispatching tasks
+5. **I/O optimization**: Group processes to minimize disk contention during log reading
+
 ## Dependencies
 
 - python3
