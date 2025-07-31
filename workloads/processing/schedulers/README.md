@@ -70,7 +70,7 @@ sudo ./loader myscheduler.bpf.o
 
 ## Advanced Features
 
-Deteck file name
+Deteck file name (for python program)
 
 ```c
 #include "pid_filename_header.h"
@@ -99,7 +99,7 @@ static bool is_long_task(struct task_struct *p)
 }
 ```
 
-Detect comm name
+Detect comm name (for C program)
 
 ```c
 static bool is_long_task(struct task_struct *p)

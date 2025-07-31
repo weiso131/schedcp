@@ -26,13 +26,14 @@ static bool is_long_task(struct task_struct *p)
 		return false;
 	
 	/* Check for start with "large" */
+	// for C program, you should use the comm name to check the application, not the filename.
 	int is_comm_large = (comm[0] == 'l' && comm[1] == 'a' && comm[2] == 'r' && 
 	        comm[3] == 'g' && comm[4] == 'e');
 	if (is_comm_large) {
 		// bpf_printk("large task: %s\n", comm);
 		return true;
 	}
-
+	// for C program, you should use the comm name to check the application, not the filename.
 	int is_comm_long = (comm[0] == 'l' && comm[1] == 'o' && comm[2] == 'n' && 
 	        comm[3] == 'g');
 	if (is_comm_long) {
@@ -44,7 +45,7 @@ static bool is_long_task(struct task_struct *p)
 	info = bpf_map_lookup_elem(&pid_to_filename, &pid);
 	if (!info)
 		return false;
-	
+	// for python program, you should use the filename to check the application, not the comm name.
 	int is_large = (info->filename[0] == '.' && info->filename[1] == '/' 
 		&& info->filename[2] == 'l' && info->filename[3] == 'a' 
 		&& info->filename[4] == 'r' && info->filename[5] == 'g' 
