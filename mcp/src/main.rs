@@ -37,6 +37,7 @@ struct SchedulerExecution {
     start_time: u64,
     end_time: Arc<Mutex<Option<u64>>>,
     exit_code: Arc<Mutex<Option<i32>>>,
+    output_buffer: Arc<Mutex<Vec<String>>>,
 }
 
 impl SchedulerExecution {
@@ -52,6 +53,7 @@ impl SchedulerExecution {
                 .as_secs(),
             end_time: Arc::new(Mutex::new(None)),
             exit_code: Arc::new(Mutex::new(None)),
+            output_buffer: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
