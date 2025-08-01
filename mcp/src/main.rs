@@ -10,8 +10,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
     collections::HashMap,
+    future::Future,
     sync::Arc,
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    time::Duration,
 };
 use tokio::{
     sync::Mutex,
@@ -20,14 +21,13 @@ use tokio::{
 use tracing::info;
 
 mod scheduler_manager;
-use scheduler_manager::{SchedulerManager, ParameterInfo, SchedulerExecution};
+use scheduler_manager::{SchedulerManager, ParameterInfo};
 
 type McpError = rmcp::model::ErrorData;
 
 #[derive(Clone)]
 struct SchedMcpServer {
     tool_router: ToolRouter<Self>,
-    sudo_password: Arc<String>,
     scheduler_manager: Arc<Mutex<SchedulerManager>>,
 }
 
@@ -113,16 +113,17 @@ impl SchedMcpServer {
     async fn new(sudo_password: String) -> Result<Self> {
         let mut scheduler_manager = SchedulerManager::new()?;
         
-        // Extract schedulers on startup
-        scheduler_manager.extract_schedulers().await?;
+        // Set sudo password if provided
+        if !sudo_password.is_empty() {
+            scheduler_manager.set_sudo_password(sudo_password);
+        }
         
         let server = Self {
             tool_router: Self::tool_router(),
-            sudo_password: Arc::new(sudo_password),
             scheduler_manager: Arc::new(Mutex::new(scheduler_manager)),
         };
 
-        // Start cleanup task for the scheduler manager's executions
+        // Start cleanup task
         let scheduler_manager_clone = server.scheduler_manager.clone();
         tokio::spawn(async move {
             let cleanup_interval = Duration::from_secs(300); // 5 minutes
@@ -130,27 +131,9 @@ impl SchedMcpServer {
 
             loop {
                 sleep(cleanup_interval).await;
-                let current_time = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs();
-
+                
                 let manager = scheduler_manager_clone.lock().await;
-                let mut to_remove = Vec::new();
-                for entry in manager.executions.iter() {
-                    let is_completed = {
-                        let status = entry.value().status.lock().await;
-                        status.contains("completed") || status.contains("failed")
-                    };
-                    
-                    if is_completed && current_time - entry.value().start_time > max_age {
-                        to_remove.push(entry.key().clone());
-                    }
-                }
-
-                for key in to_remove {
-                    manager.executions.remove(&key);
-                }
+                manager.cleanup_old_executions(max_age).await;
             }
         });
 
@@ -192,40 +175,26 @@ impl SchedMcpServer {
         )]))
     }
 
-
     #[tool(description = "Run a sched-ext scheduler")]
     async fn run_scheduler(
         &self,
         Parameters(RunSchedulerRequest { name, args }): Parameters<RunSchedulerRequest>,
     ) -> Result<CallToolResult, McpError> {
-        let mut manager = self.scheduler_manager.lock().await;
+        let manager = self.scheduler_manager.lock().await;
         
         // Stop any running schedulers first
-        let stopped_schedulers = manager.stop_running_schedulers(&self.sudo_password).await;
+        let stopped_schedulers = manager.stop_running_schedulers().await;
 
-        // Create execution
-        let execution_id = match manager.create_execution(&name) {
+        // Create and start execution
+        let execution_id = match manager.create_execution(&name, args).await {
             Ok(id) => id,
             Err(e) => {
                 return Err(McpError::invalid_params(
-                    &format!("Failed to create execution: {}", e),
-                    Some(json!({"scheduler": name})),
+                    "Failed to start scheduler",
+                    Some(json!({"scheduler": name, "error": e.to_string()})),
                 ));
             }
         };
-
-        // Start scheduler in background
-        let manager_clone = self.scheduler_manager.clone();
-        let sudo_password = self.sudo_password.to_string();
-        let exec_id_clone = execution_id.clone();
-        tokio::spawn(async move {
-            let manager = manager_clone.lock().await;
-            let _ = manager.run_scheduler_background(
-                exec_id_clone,
-                args,
-                sudo_password,
-            ).await;
-        });
 
         // Give it a moment to start
         sleep(Duration::from_millis(500)).await;
@@ -252,36 +221,10 @@ impl SchedMcpServer {
         &self,
         Parameters(StopSchedulerRequest { execution_id }): Parameters<StopSchedulerRequest>,
     ) -> Result<CallToolResult, McpError> {
-        if let Some(execution) = self.executions.get(&execution_id) {
-            let pid = execution.pid.lock().await;
-            
-            if let Some(pid) = *pid {
-                // Kill the process using sudo
-                let mut cmd = Command::new("sudo");
-                cmd.arg("-S")
-                    .arg("kill")
-                    .arg("-TERM")
-                    .arg(pid.to_string())
-                    .stdin(std::process::Stdio::piped());
-
-                let mut child = match cmd.spawn() {
-                    Ok(child) => child,
-                    Err(e) => {
-                        return Err(McpError::internal_error(
-                            "Failed to stop scheduler",
-                            Some(json!({"error": e.to_string()})),
-                        ));
-                    }
-                };
-
-                // Send sudo password
-                if let Some(mut stdin) = child.stdin.take() {
-                    use tokio::io::AsyncWriteExt;
-                    let _ = stdin.write_all(format!("{}\n", self.sudo_password).as_bytes()).await;
-                }
-
-                let _ = child.wait().await;
-
+        let manager = self.scheduler_manager.lock().await;
+        
+        match manager.stop_scheduler(&execution_id).await {
+            Ok(_) => {
                 Ok(CallToolResult::success(vec![Content::text(
                     json!({
                         "execution_id": execution_id,
@@ -289,17 +232,13 @@ impl SchedMcpServer {
                         "message": "Scheduler stop signal sent"
                     }).to_string()
                 )]))
-            } else {
+            }
+            Err(e) => {
                 Err(McpError::invalid_params(
-                    "Scheduler process ID not available",
-                    None,
+                    "Failed to stop scheduler",
+                    Some(json!({"execution_id": execution_id, "error": e.to_string()})),
                 ))
             }
-        } else {
-            Err(McpError::invalid_params(
-                "Execution ID not found",
-                None,
-            ))
         }
     }
 
@@ -308,32 +247,28 @@ impl SchedMcpServer {
         &self,
         Parameters(GetExecutionStatusRequest { execution_id }): Parameters<GetExecutionStatusRequest>,
     ) -> Result<CallToolResult, McpError> {
-        if let Some(execution) = self.executions.get(&execution_id) {
-            let status = execution.status.lock().await.clone();
-            let pid = *execution.pid.lock().await;
-            let end_time = *execution.end_time.lock().await;
-            let exit_code = *execution.exit_code.lock().await;
-            let output = execution.output_buffer.lock().await.clone();
+        let manager = self.scheduler_manager.lock().await;
+        
+        if let Some(exec_status) = manager.get_execution(&execution_id).await {
+            let duration = exec_status.end_time.map(|end| end - exec_status.start_time);
             
-            let duration = end_time.map(|end| end - execution.start_time);
-
             Ok(CallToolResult::success(vec![Content::text(
                 json!({
                     "execution_id": execution_id,
-                    "scheduler_name": execution.scheduler_name,
-                    "status": status,
-                    "pid": pid,
-                    "start_time": execution.start_time,
-                    "end_time": end_time,
+                    "scheduler_name": exec_status.scheduler_name,
+                    "status": exec_status.status,
+                    "pid": exec_status.pid,
+                    "start_time": exec_status.start_time,
+                    "end_time": exec_status.end_time,
                     "duration": duration,
-                    "exit_code": exit_code,
-                    "output": output
+                    "exit_code": None::<i32>, // Not provided by process_manager
+                    "output": exec_status.output
                 }).to_string()
             )]))
         } else {
             Err(McpError::invalid_params(
                 "Execution ID not found",
-                None,
+                Some(json!({"execution_id": execution_id})),
             ))
         }
     }
@@ -384,7 +319,8 @@ async fn main() -> Result<()> {
         .with_env_filter(
             tracing_subscriber::EnvFilter::from_default_env()
                 .add_directive("schedcp=info".parse()?)
-                .add_directive("rmcp=info".parse()?),
+                .add_directive("rmcp=info".parse()?)
+                .add_directive("process_manager=info".parse()?),
         )
         .init();
 

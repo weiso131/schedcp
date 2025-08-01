@@ -1157,6 +1157,8 @@ dependencies = [
  "clap",
  "dashmap",
  "dotenv",
+ "futures",
+ "log",
  "process_manager",
  "rmcp",
  "rust-embed",

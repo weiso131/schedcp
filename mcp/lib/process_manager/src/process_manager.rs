@@ -40,6 +40,29 @@ impl ProcessManager {
         Ok(id)
     }
     
+    pub async fn start_process_with_sudo(&self, config: ProcessConfig, sudo_password: &str) -> Result<Uuid, ProcessError> {
+        // Get binary path
+        let binary_path = self.binary_extractor
+            .get_binary_path(&config.binary_name)
+            .ok_or_else(|| ProcessError::BinaryNotFound(config.binary_name.clone()))?;
+        
+        let process_name = config.name.clone();
+        
+        // Start the process with sudo
+        let runner = ProcessRunner::start_with_sudo(
+            binary_path.to_str().unwrap(),
+            config.name,
+            config.args,
+            sudo_password,
+        ).await?;
+        
+        let id = runner.id();
+        self.processes.insert(id, runner);
+        
+        log::info!("Started process {} with ID {} (using sudo)", process_name, id);
+        Ok(id)
+    }
+    
     pub async fn start_multiple_processes(&self, configs: Vec<ProcessConfig>) -> Vec<Result<Uuid, ProcessError>> {
         let mut results = Vec::new();
         

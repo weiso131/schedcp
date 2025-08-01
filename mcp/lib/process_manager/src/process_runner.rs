@@ -26,12 +26,120 @@ impl ProcessRunner {
         
         let mut cmd = TokioCommand::new(binary_path);
         cmd.args(&args)
+            .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .kill_on_drop(true);
         
         let mut child = cmd.spawn()
             .map_err(|e| ProcessError::StartFailed(format!("Failed to spawn process: {}", e)))?;
+        
+        let pid = child.id();
+        
+        // Set up output streaming
+        let (tx, rx) = mpsc::unbounded_channel();
+        
+        // Spawn task to read stdout
+        if let Some(stdout) = child.stdout.take() {
+            let tx_clone = tx.clone();
+            tokio::spawn(async move {
+                let mut reader = BufReader::new(stdout);
+                let mut line = String::new();
+                
+                loop {
+                    line.clear();
+                    match reader.read_line(&mut line).await {
+                        Ok(0) => break, // EOF
+                        Ok(_) => {
+                            if let Err(_) = tx_clone.send(line.trim().to_string()) {
+                                break; // Receiver dropped
+                            }
+                        }
+                        Err(e) => {
+                            log::warn!("Error reading stdout: {}", e);
+                            break;
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Spawn task to read stderr
+        if let Some(stderr) = child.stderr.take() {
+            let tx_clone = tx.clone();
+            tokio::spawn(async move {
+                let mut reader = BufReader::new(stderr);
+                let mut line = String::new();
+                
+                loop {
+                    line.clear();
+                    match reader.read_line(&mut line).await {
+                        Ok(0) => break, // EOF
+                        Ok(_) => {
+                            if let Err(_) = tx_clone.send(format!("[STDERR] {}", line.trim())) {
+                                break; // Receiver dropped
+                            }
+                        }
+                        Err(e) => {
+                            log::warn!("Error reading stderr: {}", e);
+                            break;
+                        }
+                    }
+                }
+            });
+        }
+        
+        let info = ProcessInfo {
+            id: Uuid::new_v4(),
+            name,
+            binary_name: std::path::Path::new(binary_path)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("unknown")
+                .to_string(),
+            pid,
+            status: ProcessStatus::Running,
+            args,
+            started_at: Some(chrono::Utc::now()),
+            stopped_at: None,
+        };
+        
+        Ok(Self {
+            child,
+            info,
+            output_rx: Some(rx),
+        })
+    }
+    
+    pub async fn start_with_sudo(
+        binary_path: &str,
+        name: String,
+        args: Vec<String>,
+        sudo_password: &str,
+    ) -> Result<Self, ProcessError> {
+        log::info!("Starting process with sudo: {} with args: {:?}", binary_path, args);
+        
+        let mut cmd = TokioCommand::new("sudo");
+        cmd.arg("-S")
+            .arg(binary_path)
+            .args(&args)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .kill_on_drop(true);
+        
+        let mut child = cmd.spawn()
+            .map_err(|e| ProcessError::StartFailed(format!("Failed to spawn process: {}", e)))?;
+        
+        // Send sudo password
+        if let Some(mut stdin) = child.stdin.take() {
+            use tokio::io::AsyncWriteExt;
+            stdin.write_all(format!("{}\n", sudo_password).as_bytes()).await
+                .map_err(|e| ProcessError::StartFailed(format!("Failed to send sudo password: {}", e)))?;
+            stdin.flush().await
+                .map_err(|e| ProcessError::StartFailed(format!("Failed to flush stdin: {}", e)))?;
+            // Don't put stdin back, sudo consumes it
+        }
         
         let pid = child.id();
         

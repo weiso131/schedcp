@@ -32,6 +32,8 @@ process_manager = { path = "lib/process_manager" }
 clap = { version = "4.5", features = ["derive"] }
 rust-embed = { version = "8.5", features = ["compression", "include-exclude"] }
 tempfile = "3.13"
+futures = "0.3"
+log = "0.4"
 
 [[bin]]
 name = "schedcp"
