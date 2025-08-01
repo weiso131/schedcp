@@ -1,6 +1,6 @@
 use crate::binary_extractor::BinaryExtractor;
 use crate::process_runner::{ProcessRunner, OutputStream};
-use crate::types::{ProcessConfig, ProcessError, ProcessInfo, ProcessStatus};
+use crate::types::{ProcessConfig, ProcessError, ProcessInfo};
 use dashmap::DashMap;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -24,8 +24,10 @@ impl ProcessManager {
             .get_binary_path(&config.binary_name)
             .ok_or_else(|| ProcessError::BinaryNotFound(config.binary_name.clone()))?;
         
+        let process_name = config.name.clone();
+        
         // Start the process
-        let mut runner = ProcessRunner::start(
+        let runner = ProcessRunner::start(
             binary_path.to_str().unwrap(),
             config.name,
             config.args,
@@ -34,7 +36,7 @@ impl ProcessManager {
         let id = runner.id();
         self.processes.insert(id, runner);
         
-        log::info!("Started process {} with ID {}", config.name, id);
+        log::info!("Started process {} with ID {}", process_name, id);
         Ok(id)
     }
     
@@ -48,7 +50,7 @@ impl ProcessManager {
         results
     }
     
-    pub async def stop_process(&self, id: Uuid) -> Result<(), ProcessError> {
+    pub async fn stop_process(&self, id: Uuid) -> Result<(), ProcessError> {
         match self.processes.get_mut(&id) {
             Some(mut runner) => {
                 runner.stop().await?;

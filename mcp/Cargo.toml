@@ -29,7 +29,14 @@ schemars = "1.0"
 dashmap = "6.1"
 dotenv = "0.15"
 process_manager = { path = "lib/process_manager" }
+clap = { version = "4.5", features = ["derive"] }
+rust-embed = { version = "8.5", features = ["compression", "include-exclude"] }
+tempfile = "3.13"
 
 [[bin]]
 name = "schedcp"
 path = "src/main.rs"
+
+[[bin]]
+name = "schedcp-cli"
+path = "src/cli.rs"
