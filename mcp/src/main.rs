@@ -311,8 +311,8 @@ impl SchedMcpServer {
             )]))
         } else {
             Err(McpError::invalid_params(
-                &format!("Scheduler '{}' not found", name),
-                None,
+                "Scheduler not found",
+                Some(json!({"scheduler": name})),
             ))
         }
     }
@@ -327,8 +327,8 @@ impl SchedMcpServer {
         // Check if scheduler exists
         if manager.get_scheduler(&name).is_none() {
             return Err(McpError::invalid_params(
-                &format!("Scheduler '{}' not found", name),
-                None,
+                "Scheduler not found",
+                Some(json!({"scheduler": name})),
             ));
         }
 
@@ -342,11 +342,12 @@ impl SchedMcpServer {
         // Start scheduler in background
         let manager_clone = self.scheduler_manager.clone();
         let sudo_password = self.sudo_password.to_string();
+        let scheduler_name = name.clone();
         tokio::spawn(async move {
             SchedMcpServer::run_scheduler_background(
                 execution,
                 manager_clone,
-                name,
+                scheduler_name,
                 args,
                 sudo_password,
             ).await;
@@ -386,8 +387,8 @@ impl SchedMcpServer {
                     Ok(child) => child,
                     Err(e) => {
                         return Err(McpError::internal_error(
-                            &format!("Failed to stop scheduler: {}", e),
-                            None,
+                            "Failed to stop scheduler",
+                            Some(json!({"error": e.to_string()})),
                         ));
                     }
                 };
