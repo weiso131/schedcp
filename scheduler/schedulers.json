@@ -482,7 +482,7 @@
         "complex_workloads"
       ],
       "algorithm": "layer_based",
-      "characteristics": "task classification, multiple scheduling policies, cpu utilization guarantees, topology awareness, performance control, numa node affinity, llc affinity, dynamic layer sizing",
+      "characteristics": "task classification, multiple scheduling policies, cpu utilization guarantees, topology awareness, performance control, numa node affinity, llc affinity, dynamic layer sizing. Use --run-example if you don't have a config file.",
       "tuning_parameters": {
         "config_file": {
           "type": "string",

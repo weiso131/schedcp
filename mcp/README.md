@@ -1,94 +1,154 @@
-# bpftrace MCP Server
+# SchedCP - Sched-ext Scheduler Management Tools
 
-A Model Context Protocol (MCP) server that provides AI assistants with access to bpftrace kernel tracing capabilities. This is part of the [ai-os](https://github.com/yunwei37/ai-os) project.
+A Model Context Protocol (MCP) server and CLI tool for managing Linux sched-ext schedulers. This is part of the [ai-os](https://github.com/yunwei37/ai-os) project.
 
 ## Overview
 
-This MCP server acts as a secure bridge between AI assistants and the bpftrace tool, enabling kernel-level system observation and debugging through natural language interactions.
+SchedCP provides two interfaces for managing Linux kernel schedulers:
+- **schedcp-cli** - Command-line tool for direct scheduler management
+- **schedcp** - MCP server enabling AI assistants to manage schedulers
+
+All scheduler binaries and configuration are embedded in the executables, making deployment simple and self-contained.
 
 ## Features
 
-- **AI-Powered Kernel Debugging**: Enable AI assistants to help debug complex Linux kernel issues through natural language
-- **Discover System Trace Points**: Browse and search through kernel probes to monitor system behavior
-- **Rich Context and Examples**: Access production-ready bpftrace scripts for common debugging scenarios
-- **Secure Execution Model**: Run kernel traces safely without giving AI direct root access
-- **Asynchronous Operation**: Start long-running traces and retrieve results later
-- **System Capability Detection**: Automatically discover kernel tracing features and capabilities
+- **Embedded Schedulers**: All sched-ext schedulers and configuration embedded in binaries
+- **Rich Information**: Detailed scheduler information including algorithms, use cases, and tuning parameters
+- **Smart Filtering**: Filter schedulers by name or production readiness
+- **AI Integration**: MCP server enables AI assistants to help with scheduler selection and tuning
+- **Production Ready**: Clear indication of which schedulers are ready for production use
 
 ## Quick Start
 
 ### Prerequisites
 
-1. Install Rust:
+1. Linux kernel 6.12+ with sched-ext support
+2. Rust toolchain:
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-2. Install bpftrace:
-```bash
-sudo apt-get install bpftrace  # Ubuntu/Debian
-# or
-sudo dnf install bpftrace      # Fedora
-```
+### Build
 
-3. Build the server:
 ```bash
 cargo build --release
 ```
 
-### Setup
+## schedcp-cli Usage
 
-Use the automated setup scripts:
-
-- **Claude Desktop**: `./setup_claude.sh`
-- **Claude Code**: `./setup_claude_code.sh`
-
-### Running
+### List Schedulers
 
 ```bash
-# Direct execution
-./target/release/bpftrace-mcp-server
+# List all schedulers with full details
+./target/release/schedcp-cli list
 
-# Through cargo
-cargo run --release
+# Filter by name (partial match)
+./target/release/schedcp-cli list --name rusty
+
+# List only production-ready schedulers
+./target/release/schedcp-cli list --production
+
+# Combine filters
+./target/release/schedcp-cli list --production --name simple
 ```
 
-## Available Tools
+### Run a Scheduler
 
-1. **list_probes** - Lists available bpftrace probes with optional filtering
-2. **bpf_info** - Shows bpftrace system information and capabilities
-3. **exec_program** - Executes bpftrace programs asynchronously
-4. **get_result** - Retrieves execution results
+```bash
+# Set sudo password in environment variable
+export SCHEDCP_SUDO_PASSWORD="your_password"
+
+# Run with default parameters
+./target/release/schedcp-cli run scx_rusty --sudo
+
+# Run with custom parameters
+./target/release/schedcp-cli run scx_rusty --sudo -- --slice-us-underutil 30000 --fifo-sched
+```
+
+## schedcp MCP Server Usage
+
+### Available Tools
+
+- **list_schedulers** - List schedulers with detailed information
+  - Parameters: `name` (optional), `production_ready` (optional)
+- **run_scheduler** - Start a scheduler with specified parameters
+  - Parameters: `name` (required), `args` (optional array)
+- **stop_scheduler** - Stop a running scheduler
+  - Parameters: `execution_id` (required)
+- **get_execution_status** - Get status of a scheduler execution
+  - Parameters: `execution_id` (required)
+
+### Running the Server
+
+```bash
+# Set sudo password in environment variable
+export SCHEDCP_SUDO_PASSWORD="your_password"
+
+# Run the MCP server
+./target/release/schedcp
+```
+
+### Claude Desktop Configuration
+
+Add to your Claude Desktop configuration:
+
+```json
+{
+  "mcpServers": {
+    "schedcp": {
+      "command": "/path/to/schedcp",
+      "env": {
+        "SCHEDCP_SUDO_PASSWORD": "your_password"
+      }
+    }
+  }
+}
+```
+
+## Available Schedulers
+
+### Production-Ready Schedulers
+- **scx_rusty** - Multi-domain scheduler with intelligent load balancing
+- **scx_simple** - Simple scheduler for single-socket systems
+- **scx_lavd** - Latency-aware scheduler for gaming and interactive workloads
+- **scx_bpfland** - Interactive workload prioritization
+- **scx_layered** - Highly configurable multi-layer scheduler
+- **scx_flatcg** - High-performance cgroup-aware scheduler
+- **scx_nest** - Frequency-optimized scheduler for low CPU utilization
+- **scx_flash** - EDF scheduler for predictable latency
+- **scx_p2dq** - Versatile scheduler with pick-two load balancing
+
+### Experimental Schedulers
+- Various experimental and educational schedulers for testing and development
 
 ## Security Configuration
 
-The server requires sudo access for bpftrace. Two options:
+The tools require sudo access to load kernel schedulers. Two options:
 
-1. **Password File** (development):
+1. **Environment Variable** (development):
    ```bash
-   echo "BPFTRACE_PASSWD=your_sudo_password" > .env
+   export SCHEDCP_SUDO_PASSWORD="your_password"
    ```
 
-2. **Passwordless sudo** (recommended):
+2. **Passwordless sudo** (recommended for production):
    ```bash
    sudo visudo
-   # Add: your_username ALL=(ALL) NOPASSWD: /usr/bin/bpftrace
+   # Add: your_username ALL=(ALL) NOPASSWD: /path/to/scheduler/binaries
    ```
 
 ## Architecture
 
-Built with:
-- Rust and the `rmcp` crate for MCP protocol implementation
-- Tokio async runtime for concurrent operations
-- Thread-safe in-memory execution buffering
-- Automatic cleanup of old execution buffers
+- **Rust** with embedded resources using `rust-embed`
+- **Async runtime** using Tokio for concurrent operations
+- **MCP protocol** implementation using `rmcp` crate
+- **Self-contained** with all schedulers and configuration embedded
 
 ## Development
 
-For development guidance and implementation details, see:
+For more information:
 - [ai-os Documentation](https://github.com/yunwei37/ai-os)
-- Source code in `src/main.rs`
-- Example bpftrace scripts in `src/tools/`
+- [sched-ext Documentation](https://github.com/sched-ext/scx)
+- Source code in `src/`
 
 ## License
 

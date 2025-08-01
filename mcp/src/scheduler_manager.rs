@@ -124,10 +124,7 @@ impl SchedulerManager {
             return Err(anyhow!("Scheduler binary '{}' not found", name));
         }
 
-        println!("Running scheduler: {}", scheduler.name);
-        println!("Description: {}", scheduler.description);
-        println!("Production ready: {}", scheduler.production_ready);
-        println!();
+        // Don't print to stdout as it interferes with MCP protocol
 
         let mut cmd = if sudo_password.is_some() {
             let mut cmd = Command::new("sudo");
@@ -167,14 +164,14 @@ impl SchedulerManager {
         tokio::select! {
             _ = async {
                 while let Ok(Some(line)) = stdout_reader.next_line().await {
-                    println!("{}", line);
+                    // Don't print to stdout as it interferes with MCP protocol
+                    // Line is consumed but not printed
                 }
             } => {},
             _ = async {
                 while let Ok(Some(line)) = stderr_reader.next_line().await {
-                    if !line.starts_with("[sudo] password") {
-                        eprintln!("{}", line);
-                    }
+                    // Don't print to stderr as it interferes with MCP protocol
+                    // Line is consumed but not printed
                 }
             } => {},
             status = child.wait() => {

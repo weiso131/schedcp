@@ -503,7 +503,8 @@ async fn main() -> Result<()> {
             password
         },
         Err(_) => {
-            std::process::exit(1);
+            info!("No sudo password provided, running without sudo");
+            "".to_string()
         }
     };
     
