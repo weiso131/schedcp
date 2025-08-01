@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Scheduler Runner Module - Reusable scheduler management and testing utilities
-Provides a unified interface for running and managing different schedulers in the SchedCP project.
+Provides a unified interface for running and managing different schedulers in the schedcp project.
 """
 
 import os

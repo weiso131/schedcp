@@ -1,6 +1,6 @@
 # Scheduler Test - schbench Performance Testing
 
-This directory contains the schbench-based performance testing framework for SchedCP schedulers.
+This directory contains the schbench-based performance testing framework for schedcp schedulers.
 
 ## Overview
 

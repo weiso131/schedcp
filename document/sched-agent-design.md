@@ -2,7 +2,7 @@
 
 ## Overview
 
-Sched-Agent is a multi-agent AI framework built on top of SchedCP, where specialized agents collaborate to perform end-to-end scheduler optimization. The framework decomposes the complex reasoning process into manageable roles, mirroring an expert human team. Each agent corresponds to one of the four stages in the optimization loop: observation, planning, execution, and learning.
+Sched-Agent is a multi-agent AI framework built on top of schedcp, where specialized agents collaborate to perform end-to-end scheduler optimization. The framework decomposes the complex reasoning process into manageable roles, mirroring an expert human team. Each agent corresponds to one of the four stages in the optimization loop: observation, planning, execution, and learning.
 
 ## Architecture
 
@@ -38,7 +38,7 @@ The framework uses Claude Code's subagent architecture, enabling:
   - Explicit optimization goals
 
 - **Proactive Monitoring**:
-  - Registers callback URLs with SchedCP
+  - Registers callback URLs with schedcp
   - Receives notifications for performance drops
   - Triggers new analysis cycles on workload changes
 
@@ -170,7 +170,7 @@ Learning Agent:
 - Structured data formats between agents
 - Asynchronous message passing
 - Event-driven triggers
-- Shared access to SchedCP services
+- Shared access to schedcp services
 
 ## Implementation Details
 

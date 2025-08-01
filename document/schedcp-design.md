@@ -1,8 +1,8 @@
-# SchedCP: System Control Plane for OS Optimization
+# schedcp: System Control Plane for OS Optimization
 
 ## Overview
 
-SchedCP is a modular control plane that provides a stable and secure "API for OS optimization." It acts as the systems framework that enables AI agents to interact with the Linux kernel's scheduler without compromising stability. The framework exposes its services via the Model Context Protocol (MCP), cleanly separating high-level policy orchestration from low-level observation and execution.
+schedcp is a modular control plane that provides a stable and secure "API for OS optimization." It acts as the systems framework that enables AI agents to interact with the Linux kernel's scheduler without compromising stability. The framework exposes its services via the Model Context Protocol (MCP), cleanly separating high-level policy orchestration from low-level observation and execution.
 
 ## Design Principles
 
@@ -129,7 +129,7 @@ SchedCP is a modular control plane that provides a stable and secure "API for OS
 ## Usage Example
 
 ```python
-# Agent workflow using SchedCP
+# Agent workflow using schedcp
 # 1. Analyze workload
 profile = workload_analysis_engine.analyze(
     workload_id="kernel_compile",

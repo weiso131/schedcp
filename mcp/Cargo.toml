@@ -1,5 +1,18 @@
+[workspace]
+members = [
+    ".",
+    "lib/process_manager",
+]
+resolver = "2"
+
+[workspace.dependencies]
+tokio = { version = "1.40", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+log = "0.4"
+
 [package]
-name = "bpftrace-mcp-server"
+name = "schedcp"
 version = "0.1.0"
 edition = "2021"
 
@@ -15,7 +28,8 @@ uuid = { version = "1.10", features = ["v4"] }
 schemars = "1.0"
 dashmap = "6.1"
 dotenv = "0.15"
+process_manager = { path = "lib/process_manager" }
 
 [[bin]]
-name = "bpftrace-mcp-server"
+name = "schedcp"
 path = "src/main.rs"

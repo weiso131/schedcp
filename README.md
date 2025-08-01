@@ -1,6 +1,6 @@
-# SchedCP
+# schedcp
 
-SchedCP is an AI-driven control-plane for the Linux kernel: a lightweight management daemon plus an eBPF-/MCP-based server that watches live workload signals (perf, DAMON, energy, sched_ext events) and allow your AI Agents like claude-code to learns how to tweak schedulers, sysctls and other kernel knobs in real time.
+schedcp is an AI-driven control-plane for the Linux kernel: a lightweight management daemon plus an eBPF-/MCP-based server that watches live workload signals (perf, DAMON, energy, sched_ext events) and allow your AI Agents like claude-code to learns how to tweak schedulers, sysctls and other kernel knobs in real time.
 
 ## Quick Start
 
@@ -8,7 +8,7 @@ SchedCP is an AI-driven control-plane for the Linux kernel: a lightweight manage
 # Build all components
 make
 
-# Run a scheduler with SchedCP
+# Run a scheduler with schedcp
 ./scheduler/sche_bin/scx_rusty --slice-us 20000
 
 # Monitor performance
@@ -17,7 +17,7 @@ make
 
 ## Architecture
 
-SchedCP combines multiple technologies to create an intelligent kernel control system:
+schedcp combines multiple technologies to create an intelligent kernel control system:
 
 - **eBPF/sched_ext**: Runtime kernel programmability for schedulers and monitoring
 - **MCP (Model Context Protocol)**: AI-driven policy decisions based on system state
@@ -35,7 +35,7 @@ SchedCP combines multiple technologies to create an intelligent kernel control s
 ## Documentation
 
 - [Ecosystem & Modules](kerncp-docs/related-and-modules.md) - Related projects and expansion modules
-- [Developer Guide](scheduler/scx/DEVELOPER_GUIDE.md) - Contributing to SchedCP
+- [Developer Guide](scheduler/scx/DEVELOPER_GUIDE.md) - Contributing to schedcp
 - [Scheduler Guide](CLAUDE.md) - Working with sched_ext schedulers
 
 ## Requirements
@@ -47,4 +47,4 @@ SchedCP combines multiple technologies to create an intelligent kernel control s
 
 ## License
 
-SchedCP is open source software. See LICENSE for details.
+schedcp is open source software. See LICENSE for details.

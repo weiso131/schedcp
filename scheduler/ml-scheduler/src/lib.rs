@@ -24,8 +24,9 @@ impl TensorFlowModel {
         Ok(TensorFlowModel { graph, session })
     }
 
-    pub fn predict(&self, input_data: Vec<f64>) -> Result<bool> {
-        let input_tensor = Tensor::new(&[input_data.len() as u64]).with_values(&input_data)?;
+    pub fn predict(&self, input_data: Vec<f32>) -> Result<bool> {
+        // Model expects [batch_size, 10] shape, so we create a 2D tensor with batch size 1
+        let input_tensor = Tensor::new(&[1, input_data.len() as u64]).with_values(&input_data)?;
 
         let input_op = self.graph.operation_by_name_required("serving_default_input")?;
         let output_op = self.graph.operation_by_name_required("StatefulPartitionedCall")?;
@@ -36,9 +37,9 @@ impl TensorFlowModel {
 
         self.session.run(&mut args)?;
 
-        let output_tensor: Tensor<f64> = args.fetch(output_token)?;
+        let output_tensor: Tensor<f32> = args.fetch(output_token)?;
         let output_value = output_tensor[0];
-        Ok(output_value == 1.0)
+        Ok(output_value > 0.5)
     }
 }
 
@@ -72,12 +73,18 @@ impl MLScheduler {
     }
     
     fn migrate_inference(&self, cpu: &i32, cpu_idle: &i32, cpu_not_idle: &i32, src_dom_load: &f64, dst_dom_load: &f64) -> Result<bool> {
+        // Create input vector with 10 features (padding with zeros for unused features)
         let input_vec = vec![
-            *cpu as f64,
-            *cpu_idle as f64,
-            *cpu_not_idle as f64,
-            *src_dom_load,
-            *dst_dom_load,
+            *cpu as f32,
+            *cpu_idle as f32,
+            *cpu_not_idle as f32,
+            *src_dom_load as f32,
+            *dst_dom_load as f32,
+            0.0_f32,  // padding
+            0.0_f32,  // padding
+            0.0_f32,  // padding
+            0.0_f32,  // padding
+            0.0_f32,  // padding
         ];
         
         self.model.predict(input_vec)
