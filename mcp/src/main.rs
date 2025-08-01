@@ -18,7 +18,7 @@ use tokio::{
     sync::Mutex,
     time::sleep,
 };
-use tracing::info;
+use tracing::{info, debug, error, warn};
 
 mod scheduler_manager;
 use scheduler_manager::{SchedulerManager, ParameterInfo};
@@ -33,9 +33,9 @@ struct SchedMcpServer {
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct ListSchedulersRequest {
-    #[schemars(description = "Filter by scheduler name (partial match)")]
+    #[schemars(description = "Filter by scheduler name (partial match). Should leave empty by default.")]
     name: Option<String>,
-    #[schemars(description = "Filter by production readiness")]
+    #[schemars(description = "Filter by production readiness. Should leave empty by default.")]
     production_ready: Option<bool>,
 }
 
@@ -59,9 +59,9 @@ struct SchedulerSummary {
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct RunSchedulerRequest {
-    #[schemars(description = "Name of the scheduler to run")]
+    #[schemars(description = "Name of the scheduler to run, it should be one of the names returned by list_schedulers")]
     name: String,
-    #[schemars(description = "Arguments to pass to the scheduler")]
+    #[schemars(description = "Arguments to pass to the scheduler as a list of strings, as listed in the list_schedulers.")]
     #[serde(default)]
     args: Vec<String>,
 }
@@ -140,11 +140,13 @@ impl SchedMcpServer {
         Ok(server)
     }
 
-    #[tool(description = "List available sched-ext schedulers with detailed information")]
+    #[tool(description = "List available sched-ext schedulers with detailed information. Always use this tool to get the info of all schedulers first when you are writing or using a scheduler.")]
     async fn list_schedulers(
         &self,
         Parameters(ListSchedulersRequest { name, production_ready }): Parameters<ListSchedulersRequest>,
     ) -> Result<CallToolResult, McpError> {
+        info!("list_schedulers called with filters: name={:?}, production_ready={:?}", name, production_ready);
+        
         let manager = self.scheduler_manager.lock().await;
         let schedulers = manager.list_schedulers();
 
@@ -168,6 +170,8 @@ impl SchedMcpServer {
             })
             .collect();
 
+        info!("list_schedulers returning {} schedulers", filtered_schedulers.len());
+        
         Ok(CallToolResult::success(vec![Content::text(
             serde_json::to_string_pretty(&json!({
                 "schedulers": filtered_schedulers
@@ -175,20 +179,29 @@ impl SchedMcpServer {
         )]))
     }
 
-    #[tool(description = "Run a sched-ext scheduler")]
+    #[tool(description = "Run a sched-ext scheduler. After you list_schedulers, you can use this tool to run a scheduler from the list. Run a new scheduler will stop any running scheduler first.")]
     async fn run_scheduler(
         &self,
         Parameters(RunSchedulerRequest { name, args }): Parameters<RunSchedulerRequest>,
     ) -> Result<CallToolResult, McpError> {
+        info!("run_scheduler called for scheduler '{}' with args: {:?}", name, args);
+        
         let manager = self.scheduler_manager.lock().await;
         
         // Stop any running schedulers first
         let stopped_schedulers = manager.stop_running_schedulers().await;
+        if !stopped_schedulers.is_empty() {
+            info!("Stopped {} running schedulers: {:?}", stopped_schedulers.len(), stopped_schedulers);
+        }
 
         // Create and start execution
         let execution_id = match manager.create_execution(&name, args).await {
-            Ok(id) => id,
+            Ok(id) => {
+                info!("Successfully created execution {} for scheduler '{}'", id, name);
+                id
+            },
             Err(e) => {
+                error!("Failed to start scheduler '{}': {}", name, e);
                 return Err(McpError::invalid_params(
                     "Failed to start scheduler",
                     Some(json!({"scheduler": name, "error": e.to_string()})),
@@ -216,15 +229,18 @@ impl SchedMcpServer {
         )]))
     }
 
-    #[tool(description = "Stop a running scheduler")]
+    #[tool(description = "Stop a running scheduler. You can use this tool to stop a scheduler that is running.")]
     async fn stop_scheduler(
         &self,
         Parameters(StopSchedulerRequest { execution_id }): Parameters<StopSchedulerRequest>,
     ) -> Result<CallToolResult, McpError> {
+        info!("stop_scheduler called for execution_id: {}", execution_id);
+        
         let manager = self.scheduler_manager.lock().await;
         
         match manager.stop_scheduler(&execution_id).await {
             Ok(_) => {
+                info!("Successfully stopped scheduler with execution_id: {}", execution_id);
                 Ok(CallToolResult::success(vec![Content::text(
                     json!({
                         "execution_id": execution_id,
@@ -234,6 +250,7 @@ impl SchedMcpServer {
                 )]))
             }
             Err(e) => {
+                error!("Failed to stop scheduler with execution_id {}: {}", execution_id, e);
                 Err(McpError::invalid_params(
                     "Failed to stop scheduler",
                     Some(json!({"execution_id": execution_id, "error": e.to_string()})),
@@ -242,11 +259,13 @@ impl SchedMcpServer {
         }
     }
 
-    #[tool(description = "Get status of a scheduler execution")]
+    #[tool(description = "Get status of a scheduler execution, and the output of the scheduler.")]
     async fn get_execution_status(
         &self,
         Parameters(GetExecutionStatusRequest { execution_id }): Parameters<GetExecutionStatusRequest>,
     ) -> Result<CallToolResult, McpError> {
+        debug!("get_execution_status called for execution_id: {}", execution_id);
+        
         let manager = self.scheduler_manager.lock().await;
         
         if let Some(exec_status) = manager.get_execution(&execution_id).await {
@@ -266,6 +285,7 @@ impl SchedMcpServer {
                 }).to_string()
             )]))
         } else {
+            warn!("Execution ID not found: {}", execution_id);
             Err(McpError::invalid_params(
                 "Execution ID not found",
                 Some(json!({"execution_id": execution_id})),
@@ -315,7 +335,14 @@ fn verify_password(password: &str) -> Result<()> {
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     
+    // Set up file logging
+    let file_appender = tracing_appender::rolling::daily(".", "schedcp.log");
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+    
+    // Set up combined console and file logging
     tracing_subscriber::fmt()
+        .with_writer(non_blocking)
+        .with_ansi(false) // Disable ANSI colors in log file
         .with_env_filter(
             tracing_subscriber::EnvFilter::from_default_env()
                 .add_directive("schedcp=info".parse()?)
@@ -323,6 +350,8 @@ async fn main() -> Result<()> {
                 .add_directive("process_manager=info".parse()?),
         )
         .init();
+    
+    info!("SchedCP MCP server starting up");
 
     // Get password from environment variable
     let sudo_password = match std::env::var("SCHEDCP_SUDO_PASSWORD") {
@@ -341,10 +370,12 @@ async fn main() -> Result<()> {
     info!("Starting sched-ext MCP server on stdio");
     
     let service = server.serve(stdio()).await.inspect_err(|e| {
-        tracing::error!("serving error: {:?}", e);
+        error!("serving error: {:?}", e);
     })?;
 
+    info!("MCP server is now running and waiting for requests");
     service.waiting().await?;
     
+    info!("MCP server shutting down");
     Ok(())
 }
