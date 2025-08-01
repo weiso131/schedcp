@@ -15,16 +15,14 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// List all available schedulers
+    /// List schedulers with detailed information
     List {
+        /// Filter by scheduler name
+        #[arg(short, long)]
+        name: Option<String>,
         /// Show only production-ready schedulers
-        #[arg(short, long, default_value = "false")]
+        #[arg(short, long)]
         production: bool,
-    },
-    /// Show detailed information about a scheduler
-    Info {
-        /// Name of the scheduler
-        scheduler: String,
     },
     /// Run a scheduler
     Run {
@@ -45,35 +43,23 @@ async fn main() -> Result<()> {
     let mut manager = SchedulerManager::new()?;
 
     match cli.command {
-        Commands::List { production } => {
+        Commands::List { name, production } => {
             let schedulers = manager.list_schedulers();
             
-            println!("Available schedulers:");
-            println!("{:<20} {:<20} {}", "Name", "Production Ready", "Description");
-            println!("{}", "-".repeat(80));
-            
             for scheduler in schedulers {
+                // Apply filters
                 if production && !scheduler.production_ready {
                     continue;
                 }
+                if let Some(ref filter_name) = name {
+                    if !scheduler.name.contains(filter_name) {
+                        continue;
+                    }
+                }
                 
-                let desc_truncated = if scheduler.description.len() > 40 {
-                    format!("{}...", &scheduler.description[..37])
-                } else {
-                    scheduler.description.clone()
-                };
-                
-                println!(
-                    "{:<20} {:<20} {}",
-                    scheduler.name,
-                    if scheduler.production_ready { "Yes" } else { "No" },
-                    desc_truncated
-                );
+                // Print detailed information for each scheduler
+                manager.print_scheduler_info(scheduler);
             }
-        }
-        
-        Commands::Info { scheduler } => {
-            manager.print_scheduler_info(&scheduler)?;
         }
         
         Commands::Run { scheduler, args, sudo } => {

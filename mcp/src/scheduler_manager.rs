@@ -192,15 +192,15 @@ impl SchedulerManager {
         Ok(())
     }
 
-    pub fn print_scheduler_info(&self, name: &str) -> Result<()> {
-        let scheduler = self.get_scheduler(name)
-            .ok_or_else(|| anyhow!("Scheduler '{}' not found", name))?;
-
+    pub fn print_scheduler_info(&self, scheduler: &SchedulerInfo) {
+        println!("================================================================================");
         println!("Scheduler: {}", scheduler.name);
         println!("Production Ready: {}", scheduler.production_ready);
-        println!("Description: {}", scheduler.description);
-        println!("\nAlgorithm: {}", scheduler.algorithm);
-        println!("Characteristics: {}", scheduler.characteristics);
+        println!("Algorithm: {}", scheduler.algorithm);
+        println!("\nDescription:");
+        println!("{}", scheduler.description);
+        println!("\nCharacteristics:");
+        println!("{}", scheduler.characteristics);
         println!("\nUse Cases:");
         for use_case in &scheduler.use_cases {
             println!("  - {}", use_case);
@@ -216,10 +216,11 @@ impl SchedulerManager {
             }
             println!("    Type: {}", param_info.param_type);
         }
-        println!("\nLimitations: {}", scheduler.limitations);
+        if !scheduler.limitations.is_empty() {
+            println!("\nLimitations: {}", scheduler.limitations);
+        }
         println!("Performance Profile: {}", scheduler.performance_profile);
-
-        Ok(())
+        println!();
     }
 }
 

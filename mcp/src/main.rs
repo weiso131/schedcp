@@ -10,6 +10,7 @@ use rmcp::{
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
+    collections::HashMap,
     future::Future,
     sync::Arc,
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -23,7 +24,7 @@ use tracing::info;
 use uuid::Uuid;
 
 mod scheduler_manager;
-use scheduler_manager::SchedulerManager;
+use scheduler_manager::{SchedulerManager, ParameterInfo};
 
 type McpError = rmcp::model::ErrorData;
 
@@ -90,6 +91,8 @@ struct SchedMcpServer {
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct ListSchedulersRequest {
+    #[schemars(description = "Filter by scheduler name (partial match)")]
+    name: Option<String>,
     #[schemars(description = "Filter by production readiness")]
     production_ready: Option<bool>,
 }
@@ -106,12 +109,10 @@ struct SchedulerSummary {
     description: String,
     algorithm: String,
     use_cases: Vec<String>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
-struct GetSchedulerInfoRequest {
-    #[schemars(description = "Name of the scheduler")]
-    name: String,
+    characteristics: String,
+    tuning_parameters: HashMap<String, ParameterInfo>,
+    limitations: String,
+    performance_profile: String,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -271,51 +272,41 @@ impl SchedMcpServer {
         Ok(server)
     }
 
-    #[tool(description = "List available sched-ext schedulers")]
+    #[tool(description = "List available sched-ext schedulers with detailed information")]
     async fn list_schedulers(
         &self,
-        Parameters(ListSchedulersRequest { production_ready }): Parameters<ListSchedulersRequest>,
+        Parameters(ListSchedulersRequest { name, production_ready }): Parameters<ListSchedulersRequest>,
     ) -> Result<CallToolResult, McpError> {
         let manager = self.scheduler_manager.lock().await;
         let schedulers = manager.list_schedulers();
 
         let filtered_schedulers: Vec<SchedulerSummary> = schedulers
             .iter()
-            .filter(|s| production_ready.map_or(true, |pr| s.production_ready == pr))
+            .filter(|s| {
+                let name_match = name.as_ref().map_or(true, |n| s.name.contains(n));
+                let prod_match = production_ready.map_or(true, |pr| s.production_ready == pr);
+                name_match && prod_match
+            })
             .map(|s| SchedulerSummary {
                 name: s.name.clone(),
                 production_ready: s.production_ready,
                 description: s.description.clone(),
                 algorithm: s.algorithm.clone(),
                 use_cases: s.use_cases.clone(),
+                characteristics: s.characteristics.clone(),
+                tuning_parameters: s.tuning_parameters.clone(),
+                limitations: s.limitations.clone(),
+                performance_profile: s.performance_profile.clone(),
             })
             .collect();
 
         Ok(CallToolResult::success(vec![Content::text(
-            json!({
+            serde_json::to_string_pretty(&json!({
                 "schedulers": filtered_schedulers
-            }).to_string()
+            })).unwrap()
         )]))
     }
 
-    #[tool(description = "Get detailed information about a specific scheduler")]
-    async fn get_scheduler_info(
-        &self,
-        Parameters(GetSchedulerInfoRequest { name }): Parameters<GetSchedulerInfoRequest>,
-    ) -> Result<CallToolResult, McpError> {
-        let manager = self.scheduler_manager.lock().await;
-        
-        if let Some(scheduler) = manager.get_scheduler(&name) {
-            Ok(CallToolResult::success(vec![Content::text(
-                serde_json::to_string_pretty(scheduler).unwrap()
-            )]))
-        } else {
-            Err(McpError::invalid_params(
-                "Scheduler not found",
-                Some(json!({"scheduler": name})),
-            ))
-        }
-    }
 
     #[tool(description = "Run a sched-ext scheduler")]
     async fn run_scheduler(
