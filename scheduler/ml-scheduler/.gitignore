@@ -15,6 +15,7 @@ __pycache__/
 *.tflite
 model_path/
 model/
+*.tar.gz
 
 # IDE
 .vscode/

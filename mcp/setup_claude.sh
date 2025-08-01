@@ -1,62 +1,96 @@
 #!/bin/bash
 
-# Setup script for Claude Desktop integration
+# Setup script for adding bpftrace MCP server to Claude Desktop
 
-set -e
+echo "🚀 Setting up bpftrace MCP server for Claude Desktop"
+echo "=================================================="
 
-echo "Setting up SchedCP MCP server for Claude Desktop..."
+# Get the absolute path of the current directory
+SERVER_PATH="$(pwd)/../server.py"
 
-# Build the MCP server
-echo "Building MCP server..."
-cargo build --release
+# Detect OS and set config path
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    CONFIG_PATH="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    CONFIG_PATH="$HOME/.config/claude/claude_desktop_config.json"
+else
+    echo "❌ Unsupported OS. Please configure manually."
+    exit 1
+fi
 
-# Get the binary path
-BINARY_PATH="$(pwd)/target/release/schedcp-mcp"
+echo "📁 Server path: $SERVER_PATH"
+echo "📁 Config path: $CONFIG_PATH"
 
-# Create Claude Desktop config directory if it doesn't exist
-CONFIG_DIR="$HOME/Library/Application Support/Claude"
+# Check if server.py exists
+if [ ! -f "$SERVER_PATH" ]; then
+    echo "❌ Error: server.py not found in current directory"
+    exit 1
+fi
+
+# Create config directory if it doesn't exist
+CONFIG_DIR=$(dirname "$CONFIG_PATH")
 mkdir -p "$CONFIG_DIR"
 
-CONFIG_FILE="$CONFIG_DIR/claude_desktop_config.json"
-
 # Check if config file exists
-if [ -f "$CONFIG_FILE" ]; then
-    echo "Updating existing Claude Desktop configuration..."
-    # Backup existing config
-    cp "$CONFIG_FILE" "$CONFIG_FILE.bak"
+if [ -f "$CONFIG_PATH" ]; then
+    echo "📄 Found existing Claude Desktop config"
     
-    # Update config using a temporary file
-    cat "$CONFIG_FILE" | python3 -c "
-import sys
-import json
+    # Backup existing config
+    cp "$CONFIG_PATH" "$CONFIG_PATH.backup"
+    echo "✅ Created backup at: $CONFIG_PATH.backup"
+    
+    # Check if bpftrace server is already configured
+    if grep -q '"bpftrace"' "$CONFIG_PATH"; then
+        echo "⚠️  Warning: bpftrace server already configured in Claude Desktop"
+        echo "   Please check your config file manually"
+        exit 0
+    fi
+else
+    echo "📄 Creating new Claude Desktop config"
+    echo '{"mcpServers": {}}' > "$CONFIG_PATH"
+fi
 
-config = json.load(sys.stdin)
+# Create temporary Python script to update JSON
+cat > /tmp/update_claude_config.py << EOF
+import json
+import sys
+
+config_path = sys.argv[1]
+server_path = sys.argv[2]
+
+with open(config_path, 'r') as f:
+    config = json.load(f)
+
 if 'mcpServers' not in config:
     config['mcpServers'] = {}
 
-config['mcpServers']['schedcp'] = {
-    'command': '$BINARY_PATH'
+config['mcpServers']['bpftrace'] = {
+    "command": "python",
+    "args": [server_path],
+    "env": {}
 }
 
-print(json.dumps(config, indent=2))
-" > "$CONFIG_FILE.tmp"
-    
-    mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
-else
-    echo "Creating new Claude Desktop configuration..."
-    cat > "$CONFIG_FILE" << EOF
-{
-  "mcpServers": {
-    "schedcp": {
-      "command": "$BINARY_PATH"
-    }
-  }
-}
+with open(config_path, 'w') as f:
+    json.dump(config, f, indent=2)
 EOF
-fi
 
-echo "Claude Desktop configuration updated successfully!"
-echo "MCP server binary: $BINARY_PATH"
-echo "Configuration file: $CONFIG_FILE"
+# Update the config
+python /tmp/update_claude_config.py "$CONFIG_PATH" "$SERVER_PATH"
+rm /tmp/update_claude_config.py
+
+echo "✅ Successfully added bpftrace MCP server to Claude Desktop"
 echo ""
-echo "Please restart Claude Desktop to load the new MCP server."
+echo "📋 Next steps:"
+echo "1. Make sure you have bpftrace installed:"
+echo "   Ubuntu/Debian: sudo apt-get install bpftrace"
+echo "   Fedora: sudo dnf install bpftrace"
+echo ""
+echo "2. Install Python dependencies:"
+echo "   pip install fastmcp"
+echo ""
+echo "3. Restart Claude Desktop"
+echo ""
+echo "4. The bpftrace tools will be available in Claude!"
+echo ""
+echo "⚠️  Note: The server uses sudo with password '123456' by default."
+echo "   Update server.py line 169 for production use."

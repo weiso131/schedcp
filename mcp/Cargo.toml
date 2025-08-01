@@ -1,26 +1,21 @@
 [package]
-name = "schedcp-mcp"
+name = "bpftrace-mcp-server"
 version = "0.1.0"
 edition = "2021"
-authors = ["SchedCP Contributors"]
-description = "Model Context Protocol server for SchedCP scheduler management"
-license = "MIT"
 
 [dependencies]
-rmcp = "0.2"
-tokio = { version = "1", features = ["full"] }
-dashmap = "6"
-chrono = "0.4"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+rmcp = { version = "0.2.0", features = ["server", "transport-io"] }
+tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread", "io-std", "process", "time"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-anyhow = "1"
-clap = { version = "4", features = ["derive"] }
-
-[build-dependencies]
-vergen = { version = "8", features = ["git", "gitcl"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "std", "fmt"] }
+uuid = { version = "1.10", features = ["v4"] }
+schemars = "1.0"
+dashmap = "6.1"
+dotenv = "0.15"
 
 [[bin]]
-name = "schedcp-mcp"
+name = "bpftrace-mcp-server"
 path = "src/main.rs"

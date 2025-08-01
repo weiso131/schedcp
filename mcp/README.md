@@ -1,75 +1,95 @@
-# SchedCP MCP Server
+# bpftrace MCP Server
 
-A minimal Model Context Protocol (MCP) server implementation in Rust for SchedCP.
+A Model Context Protocol (MCP) server that provides AI assistants with access to bpftrace kernel tracing capabilities. This is part of the [ai-os](https://github.com/yunwei37/ai-os) project.
 
 ## Overview
 
-This is a simple demo MCP server that provides a counter service with basic operations:
-- Increment counter
-- Decrement counter
-- Get current value
-- Reset counter
+This MCP server acts as a secure bridge between AI assistants and the bpftrace tool, enabling kernel-level system observation and debugging through natural language interactions.
 
-## Building
+## Features
 
+- **AI-Powered Kernel Debugging**: Enable AI assistants to help debug complex Linux kernel issues through natural language
+- **Discover System Trace Points**: Browse and search through kernel probes to monitor system behavior
+- **Rich Context and Examples**: Access production-ready bpftrace scripts for common debugging scenarios
+- **Secure Execution Model**: Run kernel traces safely without giving AI direct root access
+- **Asynchronous Operation**: Start long-running traces and retrieve results later
+- **System Capability Detection**: Automatically discover kernel tracing features and capabilities
+
+## Quick Start
+
+### Prerequisites
+
+1. Install Rust:
 ```bash
-cd mcp
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+2. Install bpftrace:
+```bash
+sudo apt-get install bpftrace  # Ubuntu/Debian
+# or
+sudo dnf install bpftrace      # Fedora
+```
+
+3. Build the server:
+```bash
 cargo build --release
 ```
 
-The binary will be available at `target/release/schedcp-mcp`.
+### Setup
 
-## Running
+Use the automated setup scripts:
 
-The MCP server communicates via stdio:
+- **Claude Desktop**: `./setup_claude.sh`
+- **Claude Code**: `./setup_claude_code.sh`
+
+### Running
 
 ```bash
-./target/release/schedcp-mcp
+# Direct execution
+./target/release/bpftrace-mcp-server
+
+# Through cargo
+cargo run --release
 ```
 
 ## Available Tools
 
-1. **increment** - Increment the counter by a specified amount (default: 1)
-2. **decrement** - Decrement the counter by a specified amount (default: 1)
-3. **get_value** - Get the current counter value
-4. **reset** - Reset the counter to zero
+1. **list_probes** - Lists available bpftrace probes with optional filtering
+2. **bpf_info** - Shows bpftrace system information and capabilities
+3. **exec_program** - Executes bpftrace programs asynchronously
+4. **get_result** - Retrieves execution results
 
-## Integration with Claude
+## Security Configuration
 
-To use this MCP server with Claude Desktop or Claude Code, add it to your MCP configuration.
+The server requires sudo access for bpftrace. Two options:
 
-### Claude Desktop Configuration
+1. **Password File** (development):
+   ```bash
+   echo "BPFTRACE_PASSWD=your_sudo_password" > .env
+   ```
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+2. **Passwordless sudo** (recommended):
+   ```bash
+   sudo visudo
+   # Add: your_username ALL=(ALL) NOPASSWD: /usr/bin/bpftrace
+   ```
 
-```json
-{
-  "mcpServers": {
-    "schedcp": {
-      "command": "/root/yunwei37/ai-os/mcp/target/release/schedcp-mcp"
-    }
-  }
-}
-```
+## Architecture
 
-### Claude Code Configuration
-
-Add to `~/.claude_code/settings.json`:
-
-```json
-{
-  "mcpServers": {
-    "schedcp": {
-      "command": "/root/yunwei37/ai-os/mcp/target/release/schedcp-mcp"
-    }
-  }
-}
-```
+Built with:
+- Rust and the `rmcp` crate for MCP protocol implementation
+- Tokio async runtime for concurrent operations
+- Thread-safe in-memory execution buffering
+- Automatic cleanup of old execution buffers
 
 ## Development
 
-This is a minimal implementation for demonstration purposes. Future enhancements could include:
-- Integration with SchedCP scheduler management
-- Real-time scheduler monitoring
-- Benchmark execution tools
-- Performance metrics collection
+For development guidance and implementation details, see:
+- [ai-os Documentation](https://github.com/yunwei37/ai-os)
+- Source code in `src/main.rs`
+- Example bpftrace scripts in `src/tools/`
+
+## License
+
+Part of the ai-os project. See the main project repository for license information.
