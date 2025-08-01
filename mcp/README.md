@@ -17,6 +17,10 @@ All scheduler binaries and configuration are embedded in the executables, making
 - **Smart Filtering**: Filter schedulers by name or production readiness
 - **AI Integration**: MCP server enables AI assistants to help with scheduler selection and tuning
 - **Production Ready**: Clear indication of which schedulers are ready for production use
+- **Workload Profiles**: Create and manage workload profiles with natural language descriptions
+- **Execution History**: Track scheduler performance history for different workloads
+- **Persistent Storage**: All workload profiles and history are saved to disk automatically
+- **Enhanced Logging**: Comprehensive logging to file (schedcp.log) for debugging and monitoring
 
 ## Quick Start
 
@@ -69,14 +73,25 @@ export SCHEDCP_SUDO_PASSWORD="your_password"
 
 ### Available Tools
 
+#### Scheduler Management
 - **list_schedulers** - List schedulers with detailed information
   - Parameters: `name` (optional), `production_ready` (optional)
 - **run_scheduler** - Start a scheduler with specified parameters
   - Parameters: `name` (required), `args` (optional array)
 - **stop_scheduler** - Stop a running scheduler
   - Parameters: `execution_id` (required)
-- **get_execution_status** - Get status of a scheduler execution
+- **get_execution_status** - Get status of a scheduler execution (includes command and args)
   - Parameters: `execution_id` (required)
+
+#### Workload Profile Management
+- **create_workload_profile** - Create a new workload profile
+  - Parameters: `description` (required) - Natural language description of the workload
+- **add_execution_history** - Add execution history to a workload profile
+  - Parameters: `workload_id` (required), `execution_id` (required), `result_description` (required)
+- **list_workload_profiles** - List all workload profiles
+  - Parameters: none
+- **get_workload_history** - Get workload profile with its execution history
+  - Parameters: `workload_id` (required)
 
 ### Running the Server
 
@@ -135,6 +150,24 @@ The tools require sudo access to load kernel schedulers. Two options:
    sudo visudo
    # Add: your_username ALL=(ALL) NOPASSWD: /path/to/scheduler/binaries
    ```
+
+### Workload Profile Workflow Example
+
+```bash
+# 1. Create a workload profile
+# AI assistant creates a profile for a web server workload
+
+# 2. Run a scheduler
+# AI assistant runs scx_bpfland for the workload
+
+# 3. Add execution history
+# AI assistant adds the execution results to the workload profile
+
+# 4. View workload history
+# AI assistant can retrieve all past scheduler executions for the workload
+```
+
+The workload profiles and history are persisted in `schedcp_workloads.json` in the current directory.
 
 ## Architecture
 

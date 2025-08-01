@@ -52,6 +52,8 @@ pub struct SchedulerExecution {
     pub execution_id: String,
     pub process_id: Uuid,
     pub scheduler_name: String,
+    pub command: String,
+    pub args: Vec<String>,
     pub start_time: u64,
     pub output_buffer: Arc<Mutex<Vec<String>>>,
 }
@@ -148,7 +150,7 @@ impl SchedulerManager {
         let config = ProcessConfig {
             name: format!("{}_exec_{}", name, execution_id),
             binary_name: name.to_string(),
-            args,
+            args: args.clone(),
             env: HashMap::new(),
             working_dir: None,
         };
@@ -167,6 +169,8 @@ impl SchedulerManager {
             execution_id: execution_id.clone(),
             process_id,
             scheduler_name: name.to_string(),
+            command: name.to_string(),
+            args,
             start_time: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
@@ -210,6 +214,8 @@ impl SchedulerManager {
                 Some(SchedulerExecutionStatus {
                     execution_id: exec.execution_id.clone(),
                     scheduler_name: exec.scheduler_name.clone(),
+                    command: exec.command.clone(),
+                    args: exec.args.clone(),
                     status: match process_info.status {
                         ProcessStatus::Pending => "pending",
                         ProcessStatus::Running => "running",
@@ -339,6 +345,8 @@ impl SchedulerManager {
 pub struct SchedulerExecutionStatus {
     pub execution_id: String,
     pub scheduler_name: String,
+    pub command: String,
+    pub args: Vec<String>,
     pub status: String,
     pub pid: Option<u32>,
     pub start_time: u64,

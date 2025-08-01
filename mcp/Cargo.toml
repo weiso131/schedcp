@@ -23,7 +23,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 anyhow = "1.0"
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "std", "fmt"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "std", "fmt", "registry"] }
 tracing-appender = "0.2"
 uuid = { version = "1.10", features = ["v4"] }
 schemars = "1.0"
@@ -35,6 +35,9 @@ rust-embed = { version = "8.5", features = ["compression", "include-exclude"] }
 tempfile = "3.13"
 futures = "0.3"
 log = "0.4"
+
+[dev-dependencies]
+tempfile = "3.13"
 
 [[bin]]
 name = "schedcp"

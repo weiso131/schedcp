@@ -23,12 +23,20 @@ use tracing::{info, debug, error, warn};
 mod scheduler_manager;
 use scheduler_manager::{SchedulerManager, ParameterInfo};
 
+mod workload_profile;
+use workload_profile::{WorkloadProfile, ExecutionHistory, WorkloadStore};
+
+mod storage;
+use storage::PersistentStorage;
+
 type McpError = rmcp::model::ErrorData;
 
 #[derive(Clone)]
 struct SchedMcpServer {
     tool_router: ToolRouter<Self>,
     scheduler_manager: Arc<Mutex<SchedulerManager>>,
+    workload_store: Arc<Mutex<WorkloadStore>>,
+    storage: Arc<PersistentStorage>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -97,6 +105,8 @@ struct GetExecutionStatusRequest {
 struct GetExecutionStatusResponse {
     execution_id: String,
     scheduler_name: String,
+    command: String,
+    args: Vec<String>,
     status: String,
     pid: Option<u32>,
     start_time: u64,
@@ -104,6 +114,57 @@ struct GetExecutionStatusResponse {
     duration: Option<u64>,
     exit_code: Option<i32>,
     output: Vec<String>,
+}
+
+// Workload Profile structs
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+struct CreateWorkloadProfileRequest {
+    #[schemars(description = "Natural language description of the workload")]
+    description: String,
+}
+
+#[derive(Debug, Serialize)]
+struct CreateWorkloadProfileResponse {
+    workload_id: String,
+    message: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+struct AddExecutionHistoryRequest {
+    #[schemars(description = "Workload profile ID")]
+    workload_id: String,
+    #[schemars(description = "Execution ID from run_scheduler")]
+    execution_id: String,
+    #[schemars(description = "Natural language description of the result")]
+    result_description: String,
+}
+
+#[derive(Debug, Serialize)]
+struct AddExecutionHistoryResponse {
+    history_id: String,
+    message: String,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+struct ListWorkloadProfilesRequest {
+    // Empty for now, can add filters later
+}
+
+#[derive(Debug, Serialize)]
+struct ListWorkloadProfilesResponse {
+    profiles: Vec<WorkloadProfile>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+struct GetWorkloadHistoryRequest {
+    #[schemars(description = "Workload profile ID")]
+    workload_id: String,
+}
+
+#[derive(Debug, Serialize)]
+struct GetWorkloadHistoryResponse {
+    profile: WorkloadProfile,
+    history: Vec<ExecutionHistory>,
 }
 
 impl SchedMcpServer {}
@@ -118,9 +179,21 @@ impl SchedMcpServer {
             scheduler_manager.set_sudo_password(sudo_password);
         }
         
+        // Load workload store from persistent storage
+        let storage = Arc::new(PersistentStorage::new());
+        let workload_store = match storage.load() {
+            Ok(store) => store,
+            Err(e) => {
+                warn!("Failed to load workload store: {}, starting with empty store", e);
+                WorkloadStore::new()
+            }
+        };
+        
         let server = Self {
             tool_router: Self::tool_router(),
             scheduler_manager: Arc::new(Mutex::new(scheduler_manager)),
+            workload_store: Arc::new(Mutex::new(workload_store)),
+            storage: storage.clone(),
         };
 
         // Start cleanup task
@@ -134,6 +207,22 @@ impl SchedMcpServer {
                 
                 let manager = scheduler_manager_clone.lock().await;
                 manager.cleanup_old_executions(max_age).await;
+            }
+        });
+
+        // Start periodic save task for workload store
+        let workload_store_clone = server.workload_store.clone();
+        let storage_clone = storage;
+        tokio::spawn(async move {
+            let save_interval = Duration::from_secs(60); // Save every minute
+            
+            loop {
+                sleep(save_interval).await;
+                
+                let store = workload_store_clone.lock().await;
+                if let Err(e) = storage_clone.save(&*store) {
+                    error!("Failed to save workload store: {}", e);
+                }
             }
         });
 
@@ -275,6 +364,8 @@ impl SchedMcpServer {
                 json!({
                     "execution_id": execution_id,
                     "scheduler_name": exec_status.scheduler_name,
+                    "command": exec_status.command,
+                    "args": exec_status.args,
                     "status": exec_status.status,
                     "pid": exec_status.pid,
                     "start_time": exec_status.start_time,
@@ -291,6 +382,133 @@ impl SchedMcpServer {
                 Some(json!({"execution_id": execution_id})),
             ))
         }
+    }
+
+    #[tool(description = "Create a new workload profile with a natural language description. When you are asked to optimize scheduler for a specific workload, you should analyze the workload first and then use this tool to create a workload profile, like claude.md.")]
+    async fn create_workload_profile(
+        &self,
+        Parameters(CreateWorkloadProfileRequest { description }): Parameters<CreateWorkloadProfileRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        info!("create_workload_profile called with description: {}", description);
+        
+        let mut store = self.workload_store.lock().await;
+        let workload_id = store.create_profile(description.clone());
+        
+        // Save immediately
+        if let Err(e) = self.storage.save(&*store) {
+            error!("Failed to save workload store after creating profile: {}", e);
+        }
+        
+        info!("Created workload profile with ID: {}", workload_id);
+        
+        Ok(CallToolResult::success(vec![Content::text(
+            json!({
+                "workload_id": workload_id,
+                "message": format!("Workload profile created successfully"),
+            }).to_string()
+        )]))
+    }
+
+    #[tool(description = "Add execution history to a workload profile. After execute the profile and collect the meaningful metrics, you should use this tool to add the history and the metrics (like end to end completion time, latency, etc.) to the workload profile.")]
+    async fn add_execution_history(
+        &self,
+        Parameters(AddExecutionHistoryRequest { workload_id, execution_id, result_description }): Parameters<AddExecutionHistoryRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        info!("add_execution_history called for workload {} and execution {}", workload_id, execution_id);
+        
+        // Get execution details
+        let manager = self.scheduler_manager.lock().await;
+        let exec_status = manager.get_execution(&execution_id).await
+            .ok_or_else(|| McpError::invalid_params(
+                "Execution not found",
+                Some(json!({"execution_id": execution_id})),
+            ))?;
+        
+        // Add to history
+        let mut store = self.workload_store.lock().await;
+        
+        // Verify workload exists
+        if store.get_profile(&workload_id).is_none() {
+            return Err(McpError::invalid_params(
+                "Workload profile not found",
+                Some(json!({"workload_id": workload_id})),
+            ));
+        }
+        
+        let history_id = store.add_history(
+            workload_id.clone(),
+            execution_id.clone(),
+            exec_status.scheduler_name,
+            exec_status.args,
+            result_description,
+        );
+        
+        // Save immediately
+        if let Err(e) = self.storage.save(&*store) {
+            error!("Failed to save workload store after adding history: {}", e);
+        }
+        
+        info!("Added execution history with ID: {}", history_id);
+        
+        Ok(CallToolResult::success(vec![Content::text(
+            json!({
+                "history_id": history_id,
+                "message": "Execution history added successfully",
+            }).to_string()
+        )]))
+    }
+
+    #[tool(description = "List all workload profiles")]
+    async fn list_workload_profiles(
+        &self,
+        Parameters(ListWorkloadProfilesRequest {}): Parameters<ListWorkloadProfilesRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        info!("list_workload_profiles called");
+        
+        let store = self.workload_store.lock().await;
+        let profiles: Vec<WorkloadProfile> = store.list_profiles()
+            .into_iter()
+            .cloned()
+            .collect();
+        
+        info!("Returning {} workload profiles", profiles.len());
+        
+        Ok(CallToolResult::success(vec![Content::text(
+            json!({
+                "profiles": profiles,
+            }).to_string()
+        )]))
+    }
+
+    #[tool(description = "Get workload profile with its execution history. When you need to create or select a new scheduler, you should use this tool to get the history of the workload profile to understand your previous experiments.")]
+    async fn get_workload_history(
+        &self,
+        Parameters(GetWorkloadHistoryRequest { workload_id }): Parameters<GetWorkloadHistoryRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        info!("get_workload_history called for workload_id: {}", workload_id);
+        
+        let store = self.workload_store.lock().await;
+        
+        let profile = store.get_profile(&workload_id)
+            .cloned()
+            .ok_or_else(|| McpError::invalid_params(
+                "Workload profile not found",
+                Some(json!({"workload_id": workload_id})),
+            ))?;
+        
+        let history: Vec<ExecutionHistory> = store.get_history_by_workload(&workload_id)
+            .into_iter()
+            .cloned()
+            .collect();
+        
+        info!("Returning workload profile with {} history entries", history.len());
+        
+        Ok(CallToolResult::success(vec![Content::text(
+            json!({
+                "profile": profile,
+                "history": history,
+            }).to_string()
+        )]))
     }
 }
 
@@ -339,17 +557,29 @@ async fn main() -> Result<()> {
     let file_appender = tracing_appender::rolling::daily(".", "schedcp.log");
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
     
-    // Set up combined console and file logging
-    tracing_subscriber::fmt()
+    // Set up tracing to write to both file and stdout
+    use tracing_subscriber::{fmt, layer::SubscriberExt};
+    
+    let file_layer = fmt::layer()
         .with_writer(non_blocking)
-        .with_ansi(false) // Disable ANSI colors in log file
-        .with_env_filter(
+        .with_ansi(false)
+        .with_target(false);
+    
+    let stdout_layer = fmt::layer()
+        .with_writer(std::io::stdout)
+        .with_target(false);
+    
+    let subscriber = tracing_subscriber::registry()
+        .with(file_layer)
+        .with(stdout_layer)
+        .with(
             tracing_subscriber::EnvFilter::from_default_env()
                 .add_directive("schedcp=info".parse()?)
                 .add_directive("rmcp=info".parse()?)
-                .add_directive("process_manager=info".parse()?),
-        )
-        .init();
+                .add_directive("process_manager=info".parse()?)
+        );
+    
+    tracing::subscriber::set_global_default(subscriber)?;
     
     info!("SchedCP MCP server starting up");
 
