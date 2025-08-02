@@ -18,7 +18,7 @@ def parse_benchmark_data(filename):
         if 'default (baseline)' in line:
             if current_scheduler:
                 results[current_scheduler] = current_times
-            current_scheduler = 'default Linux CFS'
+            current_scheduler = 'default Linux EEVDF'
             current_times = []
         elif 'scx_rusty' in line:
             if current_scheduler:
@@ -29,6 +29,11 @@ def parse_benchmark_data(filename):
             if current_scheduler:
                 results[current_scheduler] = current_times
             current_scheduler = 'Iter 3 times (scx_layered)'
+            current_times = []
+        elif 'basic RL' in line:
+            if current_scheduler:
+                results[current_scheduler] = current_times
+            current_scheduler = 'basic RL scheduler'
             current_times = []
         # Parse real time values
         elif line.startswith('real'):
@@ -59,11 +64,11 @@ def create_bar_chart(averages):
     times = list(averages.values())
     
     # Create figure and axis with less height
-    fig, ax = plt.subplots(figsize=(14, 3))
+    fig, ax = plt.subplots(figsize=(14, 4))
     
     # Create horizontal bars
     y = np.arange(len(schedulers))
-    bars = ax.barh(y, times, color=['#1f77b4', '#ff7f0e', '#2ca02c'], height=0.5)
+    bars = ax.barh(y, times, color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'], height=0.5)
     
     # Customize the plot with even bigger text, no title
     ax.set_ylabel('Scheduler', fontsize=26, fontweight='bold')
@@ -82,9 +87,9 @@ def create_bar_chart(averages):
     ax.grid(False)
     
     # Add speedup relative to baseline with better positioning
-    baseline_time = averages['default Linux CFS']
+    baseline_time = averages['default Linux EEVDF']
     for i, (scheduler, time) in enumerate(averages.items()):
-        if scheduler != 'default Linux CFS':
+        if scheduler != 'default Linux EEVDF':
             speedup = baseline_time / time
             # Position text further right to avoid overlap
             ax.text(time + 3, i, f'{speedup:.2f}×', 
@@ -94,8 +99,8 @@ def create_bar_chart(averages):
     ax.set_xlim(0, max(times) + 4)
     
     plt.tight_layout()
-    plt.savefig('benchmark_results.pdf', format='pdf', dpi=300, bbox_inches='tight')
-    plt.savefig('benchmark_results.png', dpi=300, bbox_inches='tight')
+    plt.savefig('Linux_build_benchmark_results.pdf', format='pdf', dpi=300, bbox_inches='tight')
+    plt.savefig('Linux_build_benchmark_results.png', dpi=300, bbox_inches='tight')
     plt.show()
 
 # Main execution

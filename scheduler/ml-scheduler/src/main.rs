@@ -36,11 +36,11 @@ async fn main() -> Result<()> {
     
     // Example usage - in production this would be integrated with the BPF scheduler
     let features = MigrationFeatures {
-        cpu: 4,
-        cpu_idle: 2,
-        cpu_not_idle: 2,
-        src_dom_load: 0.75,
-        dst_dom_load: 0.25,
+        cpu: 172,
+        cpu_idle: 171,
+        cpu_not_idle: 1,
+        src_dom_load: 0.5,
+        dst_dom_load: 0.5,
     };
     
     let scheduler_guard = scheduler.lock().await;
