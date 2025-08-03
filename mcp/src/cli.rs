@@ -66,11 +66,14 @@ async fn main() -> Result<()> {
             // Extract schedulers to temporary directory
             manager.extract_schedulers().await?;
             
-            // Get sudo password from environment if needed
+            // Get sudo password from environment
+            // If --sudo flag is set or no flag (default), use sudo
+            // Empty string means passwordless sudo
             let sudo_password = if sudo {
                 env::var("SCHEDCP_SUDO_PASSWORD").ok()
             } else {
-                None
+                // Even without --sudo flag, still use passwordless sudo for schedulers
+                Some("".to_string())
             };
             
             // Run the scheduler

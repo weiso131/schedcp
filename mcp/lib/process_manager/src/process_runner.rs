@@ -120,25 +120,39 @@ impl ProcessRunner {
         log::info!("Starting process with sudo: {} with args: {:?}", binary_path, args);
         
         let mut cmd = TokioCommand::new("sudo");
-        cmd.arg("-S")
-            .arg(binary_path)
-            .args(&args)
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .kill_on_drop(true);
+        
+        // If sudo_password is empty, try passwordless sudo
+        if sudo_password.is_empty() {
+            cmd.arg(binary_path)
+                .args(&args)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .kill_on_drop(true);
+        } else {
+            // Use -S flag for password input
+            cmd.arg("-S")
+                .arg(binary_path)
+                .args(&args)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .kill_on_drop(true);
+        }
         
         let mut child = cmd.spawn()
             .map_err(|e| ProcessError::StartFailed(format!("Failed to spawn process: {}", e)))?;
         
-        // Send sudo password
-        if let Some(mut stdin) = child.stdin.take() {
-            use tokio::io::AsyncWriteExt;
-            stdin.write_all(format!("{}\n", sudo_password).as_bytes()).await
-                .map_err(|e| ProcessError::StartFailed(format!("Failed to send sudo password: {}", e)))?;
-            stdin.flush().await
-                .map_err(|e| ProcessError::StartFailed(format!("Failed to flush stdin: {}", e)))?;
-            // Don't put stdin back, sudo consumes it
+        // Send sudo password only if provided
+        if !sudo_password.is_empty() {
+            if let Some(mut stdin) = child.stdin.take() {
+                use tokio::io::AsyncWriteExt;
+                stdin.write_all(format!("{}\n", sudo_password).as_bytes()).await
+                    .map_err(|e| ProcessError::StartFailed(format!("Failed to send sudo password: {}", e)))?;
+                stdin.flush().await
+                    .map_err(|e| ProcessError::StartFailed(format!("Failed to flush stdin: {}", e)))?;
+                // Don't put stdin back, sudo consumes it
+            }
         }
         
         let pid = child.id();

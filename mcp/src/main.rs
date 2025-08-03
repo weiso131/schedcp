@@ -174,10 +174,8 @@ impl SchedMcpServer {
     async fn new(sudo_password: String) -> Result<Self> {
         let mut scheduler_manager = SchedulerManager::new()?;
         
-        // Set sudo password if provided
-        if !sudo_password.is_empty() {
-            scheduler_manager.set_sudo_password(sudo_password);
-        }
+        // Always set sudo password for schedulers (empty string means passwordless sudo)
+        scheduler_manager.set_sudo_password(sudo_password);
         
         // Load workload store from persistent storage
         let storage = Arc::new(PersistentStorage::new());
@@ -586,11 +584,16 @@ async fn main() -> Result<()> {
     // Get password from environment variable
     let sudo_password = match std::env::var("SCHEDCP_SUDO_PASSWORD") {
         Ok(password) => {
-            verify_password(&password)?;
+            if password.is_empty() {
+                info!("Empty sudo password provided, will attempt passwordless sudo");
+            } else {
+                verify_password(&password)?;
+                info!("Sudo password verified");
+            }
             password
         },
         Err(_) => {
-            info!("No sudo password provided, running without sudo");
+            info!("No sudo password provided, will attempt passwordless sudo for schedulers");
             "".to_string()
         }
     };

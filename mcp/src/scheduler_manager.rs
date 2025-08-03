@@ -155,14 +155,13 @@ impl SchedulerManager {
             working_dir: None,
         };
 
-        // Start the process with or without sudo
-        let process_id = if let Some(sudo_password) = &self.sudo_password {
-            self.process_manager.start_process_with_sudo(config, sudo_password).await
-                .map_err(|e| anyhow!("Failed to start scheduler with sudo: {}", e))?
-        } else {
-            self.process_manager.start_process(config).await
-                .map_err(|e| anyhow!("Failed to start scheduler: {}", e))?
-        };
+        // Always start schedulers with sudo (empty password means passwordless sudo)
+        let sudo_password = self.sudo_password.as_ref()
+            .map(|s| s.as_str())
+            .unwrap_or("");
+        
+        let process_id = self.process_manager.start_process_with_sudo(config, sudo_password).await
+            .map_err(|e| anyhow!("Failed to start scheduler with sudo: {}", e))?;
 
         // Create execution record
         let execution = SchedulerExecution {
