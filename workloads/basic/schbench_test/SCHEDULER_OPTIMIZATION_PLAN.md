@@ -34,7 +34,7 @@ This document provides a comprehensive plan for selecting and optimizing schedul
 scx_bpfland --slice-us 5000 --slice-us-min 500
 
 # Aggressive latency optimization
-scx_bpfland --slice-us 2000 --slice-us-min 200 --no-wake-sync
+sudo ./scx_bpfland --slice-us 2000 --slice-us-min 200 --no-wake-sync
 
 # Cache-optimized configuration
 scx_bpfland --slice-us 4000 --slice-us-min 400 --primary-domain performance
@@ -218,3 +218,24 @@ python workloads/basic/scheduler_test/schbench_bench_start.py
 ## Conclusion
 
 The schbench workload's mixed CPU/IO pattern with latency sensitivity makes it ideal for testing modern schedulers. The recommended approach focuses on schedulers that can identify and prioritize interactive behavior while maintaining high CPU utilization.
+
+
+  cd /home/yunwei37/ai-os/workloads/basic/schbench_test && ./schbench_simple_collect.py
+  scx_bpfland_aggressive.json scx_bpfland_aggressive
+
+  ### Test 2: scx_flash (Latency-focused with EDF)
+  ```bash
+  # Test 2 command:
+  cd /home/yunwei37/ai-os/workloads/basic/schbench_test && ./schbench_simple_collect.py
+  scx_flash_latency.json scx_flash_latency
+
+  Test 3: scx_rusty (Low latency configuration)
+
+  # Test 3 command:
+  cd /home/yunwei37/ai-os/workloads/basic/schbench_test && ./schbench_simple_collect.py
+  scx_rusty_lowlat.json scx_rusty_lowlat
+
+  To run the complete test sequence:
+  1. First run test 1 with scx_bpfland (already started above)
+  2. Stop scx_bpfland and start sudo ./scx_flash --slice-us 2048 --slice-us-min 128 --max-avg-nvcsw 256
+  3. Stop scx_flash and start sudo ./scx_rusty --slice-us-underutil 5000 --slice-us-overutil 500 --greedy-threshold 2
