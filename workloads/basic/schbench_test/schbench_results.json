@@ -1,0 +1,43 @@
+{
+  "timestamp": "2025-08-03T10:53:40.906112",
+  "num_runs": 3,
+  "runs": [
+    {
+      "run_number": 1,
+      "metrics": {
+        "throughput": 947.33,
+        "50th_percentile_us": 3660,
+        "95th_percentile_us": 19680,
+        "99th_percentile_us": 41152,
+        "99.9th_percentile_us": 60992
+      }
+    },
+    {
+      "run_number": 2,
+      "metrics": {
+        "throughput": 927.8,
+        "50th_percentile_us": 3724,
+        "95th_percentile_us": 19616,
+        "99th_percentile_us": 40896,
+        "99.9th_percentile_us": 60864
+      }
+    },
+    {
+      "run_number": 3,
+      "metrics": {
+        "throughput": 966.93,
+        "50th_percentile_us": 3572,
+        "95th_percentile_us": 19168,
+        "99th_percentile_us": 39872,
+        "99.9th_percentile_us": 60224
+      }
+    }
+  ],
+  "averages": {
+    "throughput": 947.3533333333334,
+    "50th_percentile_us": 3652.0,
+    "95th_percentile_us": 19488.0,
+    "99th_percentile_us": 40640.0,
+    "99.9th_percentile_us": 60693.333333333336
+  }
+}

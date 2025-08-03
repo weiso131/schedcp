@@ -1,0 +1,15 @@
+2025-08-03T02:46:09.031246Z  INFO SchedCP MCP server starting up
+2025-08-03T02:46:09.031295Z  INFO No sudo password provided, running without sudo
+2025-08-03T02:46:16.619742Z  INFO Storage file not found, creating new workload store
+2025-08-03T02:46:16.619844Z  INFO Starting sched-ext MCP server on stdio
+2025-08-03T02:46:16.621857Z  INFO client initialized
+2025-08-03T02:46:16.621876Z  INFO serve_inner: Service initialized as server peer_info=Some(InitializeRequestParam { protocol_version: ProtocolVersion("2025-06-18"), capabilities: ClientCapabilities { experimental: None, roots: Some(RootsCapabilities { list_changed: None }), sampling: None }, client_info: Implementation { name: "claude-code", version: "1.0.64" } })
+2025-08-03T02:46:16.621895Z  INFO MCP server is now running and waiting for requests
+2025-08-03T02:47:16.621844Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T02:48:16.623817Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T02:49:16.625797Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T02:50:16.627822Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T02:51:16.629484Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T02:52:16.630830Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T02:53:16.632866Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T02:54:16.635504Z  INFO Saved workload store to schedcp_workloads.json

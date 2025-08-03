@@ -1,5 +1,11 @@
 # schedcp
 
+add ./mcp/target/release/schedcp to mcp
+
+```
+claude mcp add /home/yunwei37/ai-os/mcp/target/release/schedcp
+```
+
 schedcp is an AI-driven control-plane for the Linux kernel: a lightweight management daemon plus an eBPF-/MCP-based server that watches live workload signals (perf, DAMON, energy, sched_ext events) and allow your AI Agents like claude-code to learns how to tweak schedulers, sysctls and other kernel knobs in real time.
 
 ## Quick Start
