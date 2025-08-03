@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Simple schbench runner that collects performance metrics
-Runs schbench 3 times and saves results to JSON
+Modified schbench runner that collects performance metrics with custom output file
 """
 
 import subprocess
 import json
 import re
 import os
+import sys
 from datetime import datetime
 
 def run_schbench(schbench_path="../schbench/schbench", runtime=30, message_threads=2, message_groups=4):
@@ -77,7 +77,15 @@ def main():
     # Configuration
     schbench_path = "../schbench/schbench"
     num_runs = 3
-    results_file = "schbench_results.json"
+    
+    # Get output filename from command line or use default
+    if len(sys.argv) > 1:
+        results_file = sys.argv[1]
+    else:
+        results_file = "schbench_results.json"
+    
+    # Get scheduler name from command line
+    scheduler_name = sys.argv[2] if len(sys.argv) > 2 else "unknown"
     
     # Check if schbench exists
     if not os.path.exists(schbench_path):
@@ -88,11 +96,12 @@ def main():
     # Collect results
     all_results = {
         "timestamp": datetime.now().isoformat(),
+        "scheduler": scheduler_name,
         "num_runs": num_runs,
         "runs": []
     }
     
-    print(f"Running schbench {num_runs} times...")
+    print(f"Running schbench {num_runs} times with scheduler: {scheduler_name}...")
     
     for i in range(num_runs):
         print(f"\nRun {i+1}/{num_runs}...")

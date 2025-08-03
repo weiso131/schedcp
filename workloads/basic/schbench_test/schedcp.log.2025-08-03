@@ -1,15 +1,53 @@
-2025-08-03T02:46:09.031246Z  INFO SchedCP MCP server starting up
-2025-08-03T02:46:09.031295Z  INFO No sudo password provided, running without sudo
-2025-08-03T02:46:16.619742Z  INFO Storage file not found, creating new workload store
-2025-08-03T02:46:16.619844Z  INFO Starting sched-ext MCP server on stdio
-2025-08-03T02:46:16.621857Z  INFO client initialized
-2025-08-03T02:46:16.621876Z  INFO serve_inner: Service initialized as server peer_info=Some(InitializeRequestParam { protocol_version: ProtocolVersion("2025-06-18"), capabilities: ClientCapabilities { experimental: None, roots: Some(RootsCapabilities { list_changed: None }), sampling: None }, client_info: Implementation { name: "claude-code", version: "1.0.64" } })
-2025-08-03T02:46:16.621895Z  INFO MCP server is now running and waiting for requests
-2025-08-03T02:47:16.621844Z  INFO Saved workload store to schedcp_workloads.json
-2025-08-03T02:48:16.623817Z  INFO Saved workload store to schedcp_workloads.json
-2025-08-03T02:49:16.625797Z  INFO Saved workload store to schedcp_workloads.json
-2025-08-03T02:50:16.627822Z  INFO Saved workload store to schedcp_workloads.json
-2025-08-03T02:51:16.629484Z  INFO Saved workload store to schedcp_workloads.json
-2025-08-03T02:52:16.630830Z  INFO Saved workload store to schedcp_workloads.json
-2025-08-03T02:53:16.632866Z  INFO Saved workload store to schedcp_workloads.json
-2025-08-03T02:54:16.635504Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T04:34:27.279338Z  INFO SchedCP MCP server starting up
+2025-08-03T04:34:27.279361Z  INFO No sudo password provided, will attempt passwordless sudo for schedulers
+2025-08-03T04:34:36.340497Z  INFO SchedCP MCP server starting up
+2025-08-03T04:34:36.340542Z  INFO No sudo password provided, will attempt passwordless sudo for schedulers
+2025-08-03T04:34:45.980041Z  INFO SchedCP MCP server starting up
+2025-08-03T04:34:45.980091Z  INFO No sudo password provided, will attempt passwordless sudo for schedulers
+2025-08-03T04:35:45.641154Z  INFO SchedCP MCP server starting up
+2025-08-03T04:35:45.641181Z  INFO No sudo password provided, will attempt passwordless sudo for schedulers
+2025-08-03T04:36:14.316193Z  INFO SchedCP MCP server starting up
+2025-08-03T04:36:14.316222Z  INFO No sudo password provided, will attempt passwordless sudo for schedulers
+2025-08-03T04:39:23.531509Z  INFO SchedCP MCP server starting up
+2025-08-03T04:39:23.531536Z  INFO No sudo password provided, will attempt passwordless sudo for schedulers
+2025-08-03T04:39:31.157346Z  INFO Storage file not found, creating new workload store
+2025-08-03T04:39:31.157481Z  INFO Starting sched-ext MCP server on stdio
+2025-08-03T04:39:31.160216Z  INFO client initialized
+2025-08-03T04:39:31.160245Z  INFO serve_inner: Service initialized as server peer_info=Some(InitializeRequestParam { protocol_version: ProtocolVersion("2025-06-18"), capabilities: ClientCapabilities { experimental: None, roots: Some(RootsCapabilities { list_changed: None }), sampling: None }, client_info: Implementation { name: "claude-code", version: "1.0.64" } })
+2025-08-03T04:39:31.160268Z  INFO MCP server is now running and waiting for requests
+2025-08-03T04:40:31.160662Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T04:40:49.576698Z  INFO create_workload_profile called with description: schbench - High-performance scheduler benchmark simulating web server workloads. This workload creates a producer-consumer pattern with message threads distributing work to worker threads. Key characteristics: (1) Mixed CPU-intensive and I/O simulation with alternating compute and sleep phases, (2) Each request involves 100μs sleep (simulating I/O), followed by 5 matrix multiplications (64x64 matrices, ~256KB cache footprint), then 10μs response sleep, (3) Uses per-CPU spinlocks to model preemption costs, (4) Default configuration runs 2 message threads with 4 workers each for 30 seconds, (5) Critical metrics are wakeup latency (time from wake to execution), request latency (end-to-end), and throughput (requests/sec). The workload is particularly sensitive to scheduler wakeup efficiency, CPU affinity decisions, and timeslice allocation. Optimal schedulers should minimize wakeup latency while maintaining high CPU utilization and avoiding unnecessary thread migrations that disrupt cache locality.
+2025-08-03T04:40:49.577062Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T04:40:49.577080Z  INFO Created workload profile with ID: 3fc66918-2cc2-49b1-adc1-c27915e23880
+2025-08-03T04:41:31.161882Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T04:41:43.914250Z  INFO SchedCP MCP server starting up
+2025-08-03T04:41:43.914347Z  INFO No sudo password provided, will attempt passwordless sudo for schedulers
+2025-08-03T04:41:51.457020Z  INFO Loaded workload store from schedcp_workloads.json
+2025-08-03T04:41:51.457150Z  INFO Starting sched-ext MCP server on stdio
+2025-08-03T04:41:51.459482Z  INFO client initialized
+2025-08-03T04:41:51.459513Z  INFO serve_inner: Service initialized as server peer_info=Some(InitializeRequestParam { protocol_version: ProtocolVersion("2025-06-18"), capabilities: ClientCapabilities { experimental: None, roots: Some(RootsCapabilities { list_changed: None }), sampling: None }, client_info: Implementation { name: "claude-code", version: "1.0.64" } })
+2025-08-03T04:41:51.459542Z  INFO MCP server is now running and waiting for requests
+2025-08-03T04:42:09.186613Z  WARN response error id=2 error=ErrorData { code: ErrorCode(-32602), message: "failed to deserialize parameters: invalid type: string \"\", expected a boolean", data: None }
+2025-08-03T04:42:12.553356Z  INFO list_schedulers called with filters: name=None, production_ready=None
+2025-08-03T04:42:12.553493Z  INFO list_schedulers returning 20 schedulers
+2025-08-03T04:42:51.458693Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T04:43:51.460332Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T04:44:51.461506Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T04:45:51.462430Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T04:46:51.465043Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T04:46:52.167683Z  INFO SchedCP MCP server starting up
+2025-08-03T04:46:52.167775Z  INFO No sudo password provided, will attempt passwordless sudo for schedulers
+2025-08-03T04:46:59.731584Z  INFO Loaded workload store from schedcp_workloads.json
+2025-08-03T04:46:59.731721Z  INFO Starting sched-ext MCP server on stdio
+2025-08-03T04:46:59.733649Z  INFO client initialized
+2025-08-03T04:46:59.733681Z  INFO serve_inner: Service initialized as server peer_info=Some(InitializeRequestParam { protocol_version: ProtocolVersion("2025-06-18"), capabilities: ClientCapabilities { experimental: None, roots: Some(RootsCapabilities { list_changed: None }), sampling: None }, client_info: Implementation { name: "claude-code", version: "1.0.64" } })
+2025-08-03T04:46:59.733704Z  INFO MCP server is now running and waiting for requests
+2025-08-03T04:47:59.732674Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T04:48:59.733821Z  INFO Saved workload store to schedcp_workloads.json
+2025-08-03T04:49:41.181757Z  INFO SchedCP MCP server starting up
+2025-08-03T04:49:41.181813Z  INFO No sudo password provided, will attempt passwordless sudo for schedulers
+2025-08-03T04:49:48.795824Z  INFO Loaded workload store from schedcp_workloads.json
+2025-08-03T04:49:48.795912Z  INFO Starting sched-ext MCP server on stdio
+2025-08-03T04:49:48.797699Z  INFO client initialized
+2025-08-03T04:49:48.797724Z  INFO serve_inner: Service initialized as server peer_info=Some(InitializeRequestParam { protocol_version: ProtocolVersion("2025-06-18"), capabilities: ClientCapabilities { experimental: None, roots: Some(RootsCapabilities { list_changed: None }), sampling: None }, client_info: Implementation { name: "claude-code", version: "1.0.64" } })
+2025-08-03T04:49:48.797744Z  INFO MCP server is now running and waiting for requests
