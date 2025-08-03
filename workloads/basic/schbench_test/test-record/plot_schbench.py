@@ -11,9 +11,9 @@ def parse_scheduler_name(filename):
     if 'default.json' in filename:
         return 'Default Linux'
     elif 'scx_bpfland_aggressive.json' in filename:
-        return 'scx_bpfland (aggressive)'
+        return 'First Attempt (scx_bpfland)'
     elif 'scx_rusty_lowlat.json' in filename:
-        return 'scx_rusty (lowlat)'
+        return 'Iter 3 times (scx_rusty)'
     return filename
 
 def create_grouped_bar_chart():
@@ -54,32 +54,35 @@ def create_grouped_bar_chart():
     ax.set_yticklabels(schedulers, fontsize=24)
     ax.tick_params(axis='x', labelsize=22)
     
-    # Add value labels on bars with proper spacing
-    for bar, value in zip(bars1, throughputs):
-        width = bar.get_width()
-        ax.text(width + 10, bar.get_y() + bar.get_height()/2.,
-                f'{value:.0f} req/s', ha='left', va='center', fontsize=24, fontweight='bold')
-    
-    for bar, value in zip(bars2, p99_latencies):
-        width = bar.get_width()
-        ax.text(width + 0.5, bar.get_y() + bar.get_height()/2.,
-                f'{value/1000:.1f} ms', ha='left', va='center', fontsize=24, fontweight='bold')
-    
     # No grid for cleaner look
     ax.grid(False)
     
-    # # Add throughput improvement relative to baseline
-    # baseline_throughput = throughputs[0]
-    # baseline_latency = p99_latencies[0]
-    # for i, (throughput, latency) in enumerate(zip(throughputs, p99_latencies)):
-    #     if i != 0:  # Skip baseline
-    #         throughput_improvement = throughput / baseline_throughput
-    #         latency_improvement = baseline_latency / latency
-    #         # Position text further right to avoid overlap
-    #         ax.text(max(throughput, latency/1000) + 100, i - width/2, f'{throughput_improvement:.2f}×', 
-    #                ha='left', va='center', fontsize=24, color='green', fontweight='bold')
-    #         ax.text(max(throughput, latency/1000) + 100, i + width/2, f'{latency_improvement:.2f}×', 
-    #                ha='left', va='center', fontsize=24, color='green', fontweight='bold')
+    # Add value labels and improvement relative to baseline
+    baseline_throughput = throughputs[0]
+    baseline_latency = p99_latencies[0]
+    
+    for i, (bar1, bar2, throughput, latency) in enumerate(zip(bars1, bars2, throughputs, p99_latencies)):
+        # Throughput bar
+        bar1_width = bar1.get_width()
+        if i == 0:  # Baseline
+            ax.text(bar1_width + 10, bar1.get_y() + bar1.get_height()/2.,
+                    f'{throughput:.0f} req/s', ha='left', va='center', fontsize=24, fontweight='bold')
+        else:  # With improvement
+            throughput_improvement = throughput / baseline_throughput
+            ax.text(bar1_width + 10, bar1.get_y() + bar1.get_height()/2.,
+                    f'{throughput:.0f} req/s ({throughput_improvement:.2f}×)', 
+                    ha='left', va='center', fontsize=24, fontweight='bold')
+        
+        # Latency bar
+        bar2_width = bar2.get_width()
+        if i == 0:  # Baseline
+            ax.text(bar2_width + 0.5, bar2.get_y() + bar2.get_height()/2.,
+                    f'{latency/1000:.1f} ms', ha='left', va='center', fontsize=24, fontweight='bold')
+        else:  # With improvement
+            latency_improvement = baseline_latency / latency
+            ax.text(bar2_width + 0.5, bar2.get_y() + bar2.get_height()/2.,
+                    f'{latency/1000:.1f} ms ({latency_improvement:.2f}×)', 
+                    ha='left', va='center', fontsize=24, fontweight='bold')
     
     # Legend
     ax.legend(loc='lower right', fontsize=20, framealpha=0.9)
