@@ -17,6 +17,7 @@ impl PersistentStorage {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_path<P: AsRef<Path>>(path: P) -> Self {
         Self {
             file_path: path.as_ref().to_string_lossy().to_string(),
@@ -55,6 +56,11 @@ impl PersistentStorage {
 
     pub fn save(&self, store: &WorkloadStore) -> Result<()> {
         let data = serde_json::to_string_pretty(store)?;
+        
+        // Ensure parent directory exists
+        if let Some(parent) = Path::new(&self.file_path).parent() {
+            fs::create_dir_all(parent)?;
+        }
         
         // Write to temporary file first
         let temp_path = format!("{}.tmp", self.file_path);

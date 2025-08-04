@@ -54,6 +54,7 @@ impl WorkloadStore {
         id
     }
 
+    #[allow(dead_code)]
     pub fn update_profile(&mut self, id: &str, description: String) -> Result<()> {
         if let Some(profile) = self.profiles.get_mut(id) {
             profile.description = description;
@@ -75,6 +76,7 @@ impl WorkloadStore {
         self.profiles.values().collect()
     }
 
+    #[allow(dead_code)]
     pub fn delete_profile(&mut self, id: &str) -> Result<()> {
         if self.profiles.remove(id).is_some() {
             // Also remove associated history entries
@@ -120,12 +122,14 @@ impl WorkloadStore {
             .collect()
     }
 
+    #[allow(dead_code)]
     pub fn get_history_by_execution(&self, execution_id: &str) -> Option<&ExecutionHistory> {
         self.history
             .iter()
             .find(|h| h.execution_id == execution_id)
     }
 
+    #[allow(dead_code)]
     pub fn get_all_history(&self) -> &Vec<ExecutionHistory> {
         &self.history
     }

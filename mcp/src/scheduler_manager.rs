@@ -103,6 +103,7 @@ impl SchedulerManager {
         })
     }
 
+    #[allow(dead_code)]
     pub fn set_sudo_password(&mut self, password: String) {
         self.sudo_password = Some(password);
     }
@@ -115,6 +116,7 @@ impl SchedulerManager {
         self.config.schedulers.iter().find(|s| s.name == name)
     }
 
+    #[allow(dead_code)]
     pub async fn stop_running_schedulers(&self) -> Vec<String> {
         let mut stopped = Vec::new();
         let running_processes = self.process_manager.get_running_processes();
@@ -234,6 +236,7 @@ impl SchedulerManager {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn stop_scheduler(&self, execution_id: &str) -> Result<()> {
         let executions = self.executions.lock().await;
         if let Some(exec) = executions.get(execution_id) {
@@ -244,6 +247,7 @@ impl SchedulerManager {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn cleanup_old_executions(&self, max_age_secs: u64) {
         let current_time = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -267,6 +271,7 @@ impl SchedulerManager {
         }
     }
 
+    #[allow(dead_code)]
     pub fn available_schedulers(&self) -> Vec<String> {
         self.process_manager.available_binaries()
             .into_iter()
@@ -275,11 +280,13 @@ impl SchedulerManager {
     }
 
     // Compatibility methods for CLI
+    #[allow(dead_code)]
     pub async fn extract_schedulers(&mut self) -> Result<()> {
         // Already extracted in new(), but we can verify
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub async fn run_scheduler(
         &self,
         name: &str,
@@ -308,6 +315,7 @@ impl SchedulerManager {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn print_scheduler_info(&self, scheduler: &SchedulerInfo) {
         println!("================================================================================");
         println!("Scheduler: {}", scheduler.name);

@@ -38,6 +38,11 @@ log = "0.4"
 
 [dev-dependencies]
 tempfile = "3.13"
+rmcp = { version = "0.2.0", features = ["server", "transport-io"] }
+
+[lib]
+name = "schedcp"
+path = "src/lib.rs"
 
 [[bin]]
 name = "schedcp"
