@@ -37,8 +37,8 @@ async fn main() -> Result<()> {
     // Example usage - in production this would be integrated with the BPF scheduler
     let features = MigrationFeatures {
         cpu: 172,
-        cpu_idle: 171,
-        cpu_not_idle: 1,
+        cpu_idle: 1,
+        cpu_not_idle: 171,
         src_dom_load: 0.5,
         dst_dom_load: 0.5,
     };

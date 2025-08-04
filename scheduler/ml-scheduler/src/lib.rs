@@ -28,7 +28,7 @@ impl TensorFlowModel {
         // Model expects [batch_size, 10] shape, so we create a 2D tensor with batch size 1
         let input_tensor = Tensor::new(&[1, input_data.len() as u64]).with_values(&input_data)?;
 
-        let input_op = self.graph.operation_by_name_required("serving_default_input")?;
+        let input_op = self.graph.operation_by_name_required("serve_input")?;
         let output_op = self.graph.operation_by_name_required("StatefulPartitionedCall")?;
 
         let mut args = SessionRunArgs::new();
