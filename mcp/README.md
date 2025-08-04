@@ -1,14 +1,18 @@
-# SchedCP - Sched-ext Scheduler Management Tools
+# SchedCP - MCP Server for Sched-ext Scheduler Management
 
-A Model Context Protocol (MCP) server and CLI tool for managing Linux sched-ext schedulers. This is part of the [ai-os](https://github.com/yunwei37/ai-os) project.
+A Model Context Protocol (MCP) server and CLI tool for managing Linux sched-ext schedulers. This is part of the [ai-os](https://github.com/yunwei37/ai-os) project that enables AI assistants to optimize Linux kernel scheduling for specific workloads.
 
 ## Overview
 
-SchedCP provides two interfaces for managing Linux kernel schedulers:
-- **schedcp-cli** - Command-line tool for direct scheduler management
-- **schedcp** - MCP server enabling AI assistants to manage schedulers
+SchedCP provides intelligent scheduler management through two interfaces:
+- **schedcp** - MCP server enabling AI assistants (like Claude) to manage schedulers programmatically
+- **schedcp-cli** - Command-line tool for direct scheduler management and testing
 
-All scheduler binaries and configuration are embedded in the executables, making deployment simple and self-contained.
+The MCP server allows AI assistants to:
+- Analyze workload characteristics and select optimal schedulers
+- Create and manage workload profiles with natural language descriptions
+- Track scheduler performance across different workloads
+- Make data-driven scheduler recommendations based on execution history
 
 ## Features
 

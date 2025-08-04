@@ -52,3 +52,5 @@ Thumbs.db
 # Project specific
 *.log
 execution_buffers/
+/schedcp_workloads.json
+

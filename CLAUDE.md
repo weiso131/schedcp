@@ -4,9 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-schedcp is a Linux scheduler optimization project that uses the sched-ext (scx) framework to implement and test various BPF-based kernel schedulers. The project includes multiple scheduler implementations in both C and Rust, along with benchmarking tools and workloads.
+schedcp is a Linux scheduler optimization project that uses the sched-ext (scx) framework to implement and test various BPF-based kernel schedulers. The project includes multiple scheduler implementations in both C and Rust, along with benchmarking tools, workloads, and an MCP (Model Context Protocol) server for AI-assisted scheduler management.
 
 ## Build Commands
+
+### Building the MCP Server
+```bash
+# Build the schedcp MCP server and CLI
+cd mcp
+cargo build --release
+
+# The binaries will be at:
+# - mcp/target/release/schedcp (MCP server)
+# - mcp/target/release/schedcp-cli (CLI tool)
+```
 
 ### Building Schedulers
 ```bash
@@ -65,6 +76,16 @@ python workloads/cxl-micro/cxl_micro_bench_start.py
 ## Architecture
 
 ### Directory Structure
+- **mcp/**: MCP server for AI-assisted scheduler management
+  - **src/**: Server source code
+    - **main.rs**: MCP server entry point
+    - **cli.rs**: Command-line interface tool
+    - **scheduler_manager.rs**: Scheduler lifecycle management
+    - **workload_profile.rs**: Workload profiling and history
+    - **storage.rs**: Persistent storage for workload data
+  - **lib/process_manager/**: Process management library
+  - **schedcp_workloads.json**: Workload profiles and execution history
+  
 - **scheduler/**: Main scheduler code and build system
   - **scx/**: Submodule containing the sched-ext framework
   - **sche_bin/**: Compiled scheduler binaries (after build)
@@ -104,6 +125,43 @@ The project includes various scheduler types optimized for different workloads:
 - **scx_bpfland**: Interactive workload prioritization
 - **scx_flash**: EDF-based scheduler for predictable latency
 - **scx_flatcg**: Cgroup-aware scheduler for containers
+
+## Using the MCP Server with Claude
+
+The schedcp MCP server enables AI-assisted scheduler optimization. When integrated with Claude, you can:
+
+### MCP Server Commands
+- **list_schedulers**: Get information about all available schedulers
+- **run_scheduler**: Start a scheduler with specific parameters
+- **stop_scheduler**: Stop the currently running scheduler
+- **get_execution_status**: Check the status and output of a running scheduler
+- **create_workload_profile**: Create a workload profile with natural language description
+- **get_workload_history**: View execution history for a workload profile
+- **add_execution_history**: Record performance results for a workload
+
+### Example Workflow with Claude
+1. Ask Claude to "analyze my workload and recommend a scheduler"
+2. Claude will use the MCP server to:
+   - Create a workload profile based on your description
+   - List available schedulers and their characteristics
+   - Run benchmarks with different schedulers
+   - Track performance metrics
+   - Recommend the optimal scheduler based on results
+
+### Using schedcp CLI
+```bash
+# List all available schedulers
+./mcp/target/release/schedcp-cli list
+
+# Run a specific scheduler
+./mcp/target/release/schedcp-cli run scx_rusty --slice-us 20000
+
+# Check status
+./mcp/target/release/schedcp-cli status
+
+# Stop the running scheduler
+./mcp/target/release/schedcp-cli stop
+```
 
 ## Development Tips
 

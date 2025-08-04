@@ -4,3 +4,4 @@ __pycache__
        
 bcc
 schedcp.log.*
+/schedcp_workloads.json

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Setup script for adding bpftrace MCP server to Claude Code
+# Setup script for adding schedcp MCP server to Claude Code
 
-echo "🚀 Setting up bpftrace MCP server for Claude Code"
+echo "🚀 Setting up schedcp MCP server for Claude Code"
 echo "=============================================="
 
 # Colors for output
@@ -12,8 +12,8 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Get the absolute path of the project
-PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-SERVER_BINARY="$PROJECT_DIR/target/release/bpftrace-mcp-server"
+PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SERVER_BINARY="$PROJECT_DIR/target/release/schedcp"
 
 echo -e "${GREEN}📁 Project directory: $PROJECT_DIR${NC}"
 
@@ -31,12 +31,13 @@ fi
 
 echo -e "${GREEN}🦀 Rust/Cargo found${NC}"
 
-# Check if bpftrace is installed
-if ! command -v bpftrace &> /dev/null; then
-    echo -e "${YELLOW}⚠️  Warning: bpftrace not found!${NC}"
-    echo "Please install bpftrace:"
-    echo "  Ubuntu/Debian: sudo apt-get install bpftrace"
-    echo "  Fedora: sudo dnf install bpftrace"
+# Check if scheduler binaries exist
+SCHEDULER_BIN_DIR="$(cd "$PROJECT_DIR/.." && pwd)/scheduler/sche_bin"
+if [ ! -d "$SCHEDULER_BIN_DIR" ] || [ -z "$(ls -A $SCHEDULER_BIN_DIR 2>/dev/null)" ]; then
+    echo -e "${YELLOW}⚠️  Warning: Scheduler binaries not found!${NC}"
+    echo "Please build the schedulers first:"
+    echo "  cd $(dirname "$PROJECT_DIR")"
+    echo "  make"
     echo ""
 fi
 
@@ -68,10 +69,10 @@ echo -e "${GREEN}📦 Installing with $SCOPE_NAME scope${NC}"
 
 # Build the Rust server
 echo ""
-echo -e "${GREEN}Building Rust server...${NC}"
+echo -e "${GREEN}Building schedcp MCP server...${NC}"
 cd "$PROJECT_DIR"
 if cargo build --release; then
-    echo -e "${GREEN}✅ Successfully built bpftrace MCP server!${NC}"
+    echo -e "${GREEN}✅ Successfully built schedcp MCP server!${NC}"
 else
     echo -e "${RED}❌ Failed to build server${NC}"
     exit 1
@@ -85,10 +86,10 @@ fi
 
 # Add the server to Claude Code
 echo ""
-echo -e "${GREEN}Adding bpftrace server to Claude Code...${NC}"
+echo -e "${GREEN}Adding schedcp server to Claude Code...${NC}"
 
-if claude mcp add $SCOPE bpftrace "$SERVER_BINARY"; then
-    echo -e "${GREEN}✅ Successfully added bpftrace MCP server!${NC}"
+if claude mcp add $SCOPE schedcp "$SERVER_BINARY"; then
+    echo -e "${GREEN}✅ Successfully added schedcp MCP server!${NC}"
 else
     echo -e "${RED}❌ Failed to add server to Claude Code${NC}"
     exit 1
@@ -102,13 +103,15 @@ claude mcp list
 echo ""
 echo -e "${GREEN}✅ Setup complete!${NC}"
 echo ""
-echo "You can now use bpftrace in Claude Code. Try asking:"
-echo "  - 'List available bpftrace probes'"
-echo "  - 'Show me bpftrace helper functions'"
-echo "  - 'Trace system calls with bpftrace'"
+echo "You can now use schedcp in Claude Code. Try asking:"
+echo "  - 'List available sched-ext schedulers'"
+echo "  - 'Analyze my workload and recommend a scheduler'"
+echo "  - 'Run scx_rusty scheduler with custom parameters'"
+echo "  - 'Create a workload profile for my application'"
 echo ""
 echo -e "${YELLOW}⚠️  Security Note:${NC}"
-echo "The server will prompt for your sudo password when started."
-echo "For production use, configure passwordless sudo for bpftrace:"
-echo "  sudo visudo"
-echo "  Add: $USER ALL=(ALL) NOPASSWD: /usr/bin/bpftrace"
+echo "The schedcp server requires root privileges to manage kernel schedulers."
+echo "Make sure you have appropriate permissions to run schedulers."
+echo ""
+echo "To use the CLI tool directly:"
+echo "  $PROJECT_DIR/target/release/schedcp-cli --help"

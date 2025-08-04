@@ -1,24 +1,72 @@
 # schedcp
 
-add ./mcp/target/release/schedcp to mcp
+schedcp is  an MCP (Model Context Protocol) server that enables AI assistants to intelligently manage Linux kernel schedulers. It provides real-time workload analysis and automatic scheduler optimization through the sched_ext (scx) framework.
 
-```
-claude mcp add /home/yunwei37/ai-os/mcp/target/release/schedcp
-```
+## Features
 
-schedcp is an AI-driven control-plane for the Linux kernel: a lightweight management daemon plus an eBPF-/MCP-based server that watches live workload signals (perf, DAMON, energy, sched_ext events) and allow your AI Agents like claude-code to learns how to tweak schedulers, sysctls and other kernel knobs in real time.
+- **AI-Powered Scheduler Selection**: Natural language workload descriptions for intelligent scheduler recommendations
+- **Workload Profiling**: Create and manage workload profiles with execution history tracking
+- **Real-time Management**: Start, stop, and monitor sched_ext schedulers dynamically
+- **Performance Tracking**: Capture and analyze scheduler performance metrics across different workloads
+- **MCP Integration**: Seamless integration with AI assistants like Claude for automated optimization
 
 ## Quick Start
 
+### Building schedcp
+
 ```bash
-# Build all components
+# Clone the repository
+git clone https://github.com/yunwei37/ai-os
+cd ai-os
+
+# Build the MCP server and CLI
+cd mcp
+cargo build --release
+
+# The binaries will be at:
+# - mcp/target/release/schedcp (MCP server)
+# - mcp/target/release/schedcp-cli (CLI tool)
+```
+
+### Installing the MCP Server
+
+For Claude Code:
+
+```bash
+# Add to Claude Code configuration
+claude mcp add schedcp /path/to/ai-os/mcp/target/release/schedcp
+```
+
+### Using schedcp CLI
+
+```bash
+# List available schedulers
+./mcp/target/release/schedcp-cli list
+
+# Run a scheduler
+./mcp/target/release/schedcp-cli run scx_rusty --slice-us 20000
+
+# Stop the running scheduler
+./mcp/target/release/schedcp-cli stop
+
+# Check scheduler status
+./mcp/target/release/schedcp-cli status
+```
+
+### Building Kernel Schedulers
+
+```bash
+# Build all schedulers (outputs to scheduler/sche_bin/)
 make
 
-# Run a scheduler with schedcp
-./scheduler/sche_bin/scx_rusty --slice-us 20000
+# Build only C schedulers
+make build-c
 
-# Monitor performance
-./scheduler/tools/scxtop
+# Build only Rust schedulers
+make build-rust
+
+# Build tools (scxtop, scxctl)
+make build-tools
 ```
 
 ## Architecture
