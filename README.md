@@ -22,7 +22,6 @@ cd ai-os
 # Build the MCP server and CLI
 cd mcp
 cargo build --release
-
 # The binaries will be at:
 # - mcp/target/release/schedcp (MCP server)
 # - mcp/target/release/schedcp-cli (CLI tool)
