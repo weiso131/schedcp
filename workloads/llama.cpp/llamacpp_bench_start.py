@@ -56,6 +56,7 @@ class LlamaBenchmarkTester(SchedulerBenchmark):
             "batch_size": 512,
             "repetitions": 3,
             "timeout": 300,
+            "n_samples": 1,
         }
         
         # Environment setup - change to the directory containing llama-bench
@@ -85,6 +86,7 @@ class LlamaBenchmarkTester(SchedulerBenchmark):
             "-t", str(self.test_params["threads"]),
             "-b", str(self.test_params["batch_size"]),
             "-r", str(self.test_params["repetitions"]),
+            "-n", str(self.test_params["n_samples"]),
             "-o", "json",
         ]
     
@@ -463,13 +465,21 @@ class LlamaBenchmarkTester(SchedulerBenchmark):
 
 
 def main():
+
+    # get the abs path opf current file
+    current_file = os.path.abspath(__file__)
+    current_dir = os.path.dirname(current_file)
+    print(f"Current file: {current_file}")
+    print(f"Current dir: {current_dir}")
+
+
     """Main function for llama scheduler testing"""
     parser = argparse.ArgumentParser(description="Test schedulers with llama-bench")
     parser.add_argument("--llama-bench-path", 
-                       default="/root/yunwei37/ai-os/workloads/llama.cpp/build/llama-bench",
+                       default=os.path.join(current_dir, "build/bin/llama-bench"),
                        help="Path to llama-bench binary")
     parser.add_argument("--model-path", 
-                       default="/root/.cache/llama.cpp/ggml-org_gemma-3-1b-it-GGUF_gemma-3-1b-it-Q4_K_M.gguf",
+                       default=os.path.join(current_dir, "models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"),
                        help="Path to model file")
     parser.add_argument("--results-dir", default="results", 
                        help="Directory to store results")

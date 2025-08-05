@@ -169,3 +169,27 @@ The 60% success rate (12/20) is primarily due to:
 - Server capacity limits
 
 This is not a scheduler problem but rather a capacity/configuration issue that affects all schedulers equally. For production use, implement proper queue management and resource monitoring.
+
+## on my laptop
+
+
+ /home/yunwei37/ai-os/workloads/llama.cpp/build/bin/llama-bench  -m /home/yunwei37/ai-os/workloads/llama.cpp/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf -n 1
+| model                          |       size |     params | backend    | threads |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | ------: | --------------: | -------------------: |
+| llama 1B Q4_K - Medium         | 636.18 MiB |     1.10 B | CPU        |       2 |           pp512 |         58.31 ± 1.75 |
+| llama 1B Q4_K - Medium         | 636.18 MiB |     1.10 B | CPU        |       2 |             tg1 |         27.86 ± 1.62 |
+
+build: 5aa1105da (6082)
+
+yunwei37@victoryang00-ASUS-Zenbook-S-14-UX5406SA-UX5406SA:~/ai-os/workloads/llama.cpp/llama.cpp$ /home/yunwei37/ai-os/workloads/llama.cpp/llama.cpp/build/bin/llama-bench -m /home/yunwei37/ai-os/workloads/llama.cpp/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf -n 1
+
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+get_memory_info: [warning] ext_intel_free_memory is not supported (export/set ZES_ENABLE_SYSMAN=1 to support), use total memory as free memory
+get_memory_info: [warning] ext_intel_free_memory is not supported (export/set ZES_ENABLE_SYSMAN=1 to support), use total memory as free memory
+get_memory_info: [warning] ext_intel_free_memory is not supported (export/set ZES_ENABLE_SYSMAN=1 to support), use total memory as free memory
+| llama 1B Q4_K - Medium         | 636.18 MiB |     1.10 B | SYCL       |  99 |           pp512 |      629.25 ± 288.96 |
+| llama 1B Q4_K - Medium         | 636.18 MiB |     1.10 B | SYCL       |  99 |             tg1 |        23.02 ± 12.81 |
+
+build: 5aa1105da (6082)
+
