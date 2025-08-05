@@ -151,7 +151,7 @@ class SchedulerRunner:
             raise FileNotFoundError(f"Scheduler binary not found: {binary_path}")
         
         # Build command
-        cmd = [binary_path]
+        cmd = ["sudo", binary_path]
         
         # Special handling for scx_layered - add --run-example if no config specified
         if scheduler_name == "scx_layered" and (not args or not any("--config" in arg or "-c" in arg for arg in (args or []))):

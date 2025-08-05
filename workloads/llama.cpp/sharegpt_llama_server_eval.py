@@ -26,7 +26,7 @@ import psutil
 import socket
 
 # Add the scheduler module to the path
-sys.path.insert(0, '/root/yunwei37/ai-os')
+sys.path.insert(0, '../../')
 from scheduler import SchedulerRunner, SchedulerBenchmark
 
 
@@ -646,10 +646,10 @@ class LlamaServerBenchmark(SchedulerBenchmark):
 def main():
     parser = argparse.ArgumentParser(description="Benchmark llama.cpp server with ShareGPT")
     parser.add_argument("--server-binary", 
-                       default="/root/yunwei37/ai-os/workloads/llama.cpp/build/bin/llama-server",
+                       default="build/bin/llama-server",
                        help="Path to llama-server binary")
     parser.add_argument("--model", 
-                       default="/root/yunwei37/ai-os/workloads/llama.cpp/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+                       default="models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
                        help="Path to model file")
     parser.add_argument("--dataset", 
                        default=None,

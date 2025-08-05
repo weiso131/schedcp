@@ -3,7 +3,7 @@ build/
 build-*/
 bin/
 lib/
-
+/schedcp_workloads.json
 # CMake generated files
 CMakeCache.txt
 CMakeFiles/

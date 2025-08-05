@@ -140,9 +140,9 @@ SHAREGPT_VICUNA := $(DATASET_DIR)/sharegpt_vicuna.json
 SHAREGPT_BENCH := $(DATASET_DIR)/sharegpt_benchmark.json
 
 # Benchmark parameters
-SAMPLES_QUICK := 5
+SAMPLES_QUICK := 30
 SAMPLES_FULL := 1000
-CONCURRENT_QUICK := 2
+CONCURRENT_QUICK := 4
 CONCURRENT_FULL := 64
 
 help:
