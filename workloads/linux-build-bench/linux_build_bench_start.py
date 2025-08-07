@@ -10,9 +10,9 @@ from linux_build_tester import LinuxBuildTester
 
 def main():
     parser = argparse.ArgumentParser(description='Run Linux kernel build benchmark with different schedulers')
-    parser.add_argument('--jobs', type=int, default=0, 
+    parser.add_argument('--jobs', type=int, default=172, 
                         help='Number of parallel build jobs (default: 0 = auto/nproc)')
-    parser.add_argument('--config', type=str, default='tinyconfig', 
+    parser.add_argument('--config', type=str, default='defconfig', 
                         help='Kernel config to use (default: tinyconfig, options: defconfig, tinyconfig, allnoconfig)')
     parser.add_argument('--clean-between', action='store_true', 
                         help='Clean build artifacts between scheduler tests')
