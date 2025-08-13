@@ -2,7 +2,7 @@
 # This makefile compiles multiple schedulers independently from the main scx tree
 
 # Scheduler names - just add scheduler names here to build them
-SCHED_NAMES = scx_simple scx_cxl
+SCHED_NAMES = scx_cxl scx_cxl_rl scx_pair scx_pmu
 
 # Compiler and tools
 CLANG = clang

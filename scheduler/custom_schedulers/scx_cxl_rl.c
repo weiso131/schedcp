@@ -56,7 +56,7 @@ static void sigint_handler(int simple)
 	exit_req = 1;
 }
 
-static void print_q_table(struct scx_simple *skel)
+static void print_q_table(struct scx_cxl_rl *skel)
 {
 	struct q_entry entry;
 	__u32 state;
@@ -82,7 +82,7 @@ static void print_q_table(struct scx_simple *skel)
 	}
 }
 
-static void print_cpu_stats(struct scx_simple *skel)
+static void print_cpu_stats(struct scx_cxl_rl *skel)
 {
 	struct cpu_ctx ctx;
 	__u32 cpu;
@@ -103,7 +103,7 @@ static void print_cpu_stats(struct scx_simple *skel)
 
 int main(int argc, char **argv)
 {
-	struct scx_simple *skel;
+	struct scx_cxl_rl *skel;
 	struct bpf_link *link;
 	__u32 opt;
 	int iter = 0;

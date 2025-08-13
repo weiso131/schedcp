@@ -319,7 +319,6 @@ SEC("struct_ops/cxl_rl_select_cpu")
 s32 cxl_rl_select_cpu(struct task_struct *p, s32 prev_cpu, u64 wake_flags)
 {
     struct task_ctx *tctx;
-    struct cpu_ctx *cpu;
     u64 now = bpf_ktime_get_ns();
     u32 bw_mb;
     u8 action;

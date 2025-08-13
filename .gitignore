@@ -5,3 +5,13 @@ __pycache__
 bcc
 schedcp.log.*
 /schedcp_workloads.json
+
+# Custom scheduler executables
+scheduler/custom_schedulers/scx_cxl
+scheduler/custom_schedulers/scx_cxl_rl
+scheduler/custom_schedulers/scx_pair
+scheduler/custom_schedulers/scx_pmu
+
+# BPF object files and skeletons
+scheduler/custom_schedulers/*.bpf.o
+scheduler/custom_schedulers/*.bpf.skel.h

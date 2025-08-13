@@ -63,7 +63,8 @@ const char help_fmt[] =
 static bool verbose;
 static volatile int exit_req;
 
-/* Task type names for display */
+/* Task type names for display - unused but kept for reference */
+#if 0
 static const char *task_type_names[] = {
     [0] = "UNKNOWN",
     [1] = "MOE_VECTORDB",
@@ -71,6 +72,7 @@ static const char *task_type_names[] = {
     [3] = "REGULAR",
     [4] = "BANDWIDTH"
 };
+#endif
 
 static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va_list args)
 {
@@ -84,7 +86,7 @@ static void sigint_handler(int simple)
 	exit_req = 1;
 }
 
-static void print_cpu_stats(struct scx_sdt *skel)
+static void print_cpu_stats(struct scx_pmu *skel)
 {
 	struct cpu_ctx ctx;
 	int nr_cpus = libbpf_num_possible_cpus();
@@ -114,10 +116,9 @@ static void print_cpu_stats(struct scx_sdt *skel)
 	}
 }
 
-static void print_memory_patterns(struct scx_sdt *skel)
+static void print_memory_patterns(struct scx_pmu *skel)
 {
 	struct memory_pattern pattern;
-	struct task_ctx tctx;
 	__u32 pid;
 	int ret;
 	static int print_header = 1;
@@ -153,7 +154,7 @@ static void print_memory_patterns(struct scx_sdt *skel)
 
 int main(int argc, char **argv)
 {
-	struct scx_sdt *skel;
+	struct scx_pmu *skel;
 	struct bpf_link *link;
 	__u32 opt;
 	int iter = 0;
