@@ -1,18 +1,8 @@
-# Standalone Makefile for scx_simple scheduler - out of tree build
-# This makefile compiles the scheduler independently from the main scx tree
+# Standalone Makefile for custom schedulers - out of tree build
+# This makefile compiles multiple schedulers independently from the main scx tree
 
-# Scheduler name
-SCHED_NAME = scx_simple
-
-# Source files
-BPF_SRC = $(SCHED_NAME).bpf.c
-USER_SRC = $(SCHED_NAME).c
-BPF_OBJ = $(SCHED_NAME).bpf.o
-BPF_L1O = $(SCHED_NAME).bpf.l1o
-BPF_L2O = $(SCHED_NAME).bpf.l2o
-BPF_L3O = $(SCHED_NAME).bpf.l3o
-SKEL_H = $(SCHED_NAME).bpf.skel.h
-TARGET = $(SCHED_NAME)
+# Scheduler names - just add scheduler names here to build them
+SCHED_NAMES = scx_simple scx_cxl
 
 # Compiler and tools
 CLANG = clang
@@ -49,49 +39,57 @@ USER_CFLAGS = -O2 -g -Wall -Werror \
 
 USER_LDFLAGS = $(shell pkg-config --libs libbpf) -lelf -lz -lzstd
 
-# Default target
-all: $(TARGET)
+# Generate file lists for all schedulers
+BPF_SRCS = $(addsuffix .bpf.c,$(SCHED_NAMES))
+USER_SRCS = $(addsuffix .c,$(SCHED_NAMES))
+BPF_OBJS = $(addsuffix .bpf.o,$(SCHED_NAMES))
+SKEL_HS = $(addsuffix .bpf.skel.h,$(SCHED_NAMES))
+TARGETS = $(SCHED_NAMES)
 
-# Compile BPF program
-$(BPF_OBJ): $(BPF_SRC)
+# Default target - build all schedulers
+all: $(TARGETS)
+
+# Pattern rules for BPF compilation
+%.bpf.o: %.bpf.c
 	@echo "Compiling BPF program: $<"
 	$(CLANG) $(BPF_CFLAGS) -target bpf -c $< -o $@
 
-# Multi-stage BPF object processing (like main scx build)
-$(BPF_L1O): $(BPF_OBJ)
-	@echo "Processing BPF object L1: $@"
-	$(BPFTOOL) gen object $@ $<
-
-$(BPF_L2O): $(BPF_L1O)
-	@echo "Processing BPF object L2: $@"
-	$(BPFTOOL) gen object $@ $<
-
-$(BPF_L3O): $(BPF_L2O)
-	@echo "Processing BPF object L3: $@"
-	$(BPFTOOL) gen object $@ $<
-	@echo "Verifying L2 and L3 objects are identical"
-	cmp $(BPF_L2O) $(BPF_L3O)
-
-# Generate BPF skeleton from final processed object
-$(SKEL_H): $(BPF_L3O)
+# Generate BPF skeleton directly from BPF object
+%.bpf.skel.h: %.bpf.o
 	@echo "Generating BPF skeleton: $@"
-	$(BPFTOOL) gen skeleton $< name $(SCHED_NAME) > $@
+	$(BPFTOOL) gen skeleton $< name $(patsubst %.bpf.skel.h,%,$@) > $@
 
 # Compile user space program
-$(TARGET): $(SKEL_H) $(USER_SRC)
-	@echo "Compiling user space program: $(USER_SRC)"
-	$(CC) $(USER_CFLAGS) $(USER_SRC) -o $@ $(USER_LDFLAGS)
+# Each scheduler depends on its skeleton header and C source file
+define SCHEDULER_TARGET
+$(1): $(1).bpf.skel.h $(1).c
+	@echo "Compiling user space program: $(1).c"
+	$$(CC) $$(USER_CFLAGS) $(1).c -o $(1) $$(USER_LDFLAGS)
+endef
+
+# Generate rules for each scheduler
+$(foreach sched,$(SCHED_NAMES),$(eval $(call SCHEDULER_TARGET,$(sched))))
+
+# Install target
+install: all
+	@echo "Installing to ../sche_bin/"
+	mkdir -p ../sche_bin
+	cp $(TARGETS) ../sche_bin/
 
 # Clean build artifacts
 clean:
-	rm -f $(BPF_OBJ) $(BPF_L1O) $(BPF_L2O) $(BPF_L3O) $(SKEL_H) $(TARGET)
+	@echo "Cleaning build artifacts..."
+	rm -f $(BPF_OBJS) $(SKEL_HS) $(TARGETS)
 
 # Help target
 help:
 	@echo "Available targets:"
-	@echo "  make         - Build the scheduler"
+	@echo "  make         - Build all schedulers: $(SCHED_NAMES)"
 	@echo "  make clean   - Clean build artifacts"
 	@echo "  make install - Install to ../sche_bin/"
 	@echo "  make help    - Show this help"
+	@echo ""
+	@echo "To add more schedulers, edit SCHED_NAMES variable in the Makefile"
+	@echo "Current schedulers: $(SCHED_NAMES)"
 
 .PHONY: all clean install help
