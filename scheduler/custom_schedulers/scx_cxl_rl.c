@@ -11,7 +11,7 @@
 #include <string.h>
 #include <bpf/bpf.h>
 #include <scx/common.h>
-#include "scx_simple.bpf.skel.h"
+#include "scx_cxl_rl.bpf.skel.h"
 
 /* RL States and Actions */
 #define MAX_ACTIONS 8
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
 	signal(SIGINT, sigint_handler);
 	signal(SIGTERM, sigint_handler);
 
-	skel = SCX_OPS_OPEN(cxl_rl_ops, scx_simple);
+	skel = SCX_OPS_OPEN(cxl_rl_ops, scx_cxl_rl);
 
 	while ((opt = getopt(argc, argv, "vh")) != -1) {
 		switch (opt) {
@@ -125,8 +125,8 @@ int main(int argc, char **argv)
 		}
 	}
 
-	SCX_OPS_LOAD(skel, cxl_rl_ops, scx_simple, uei);
-	link = SCX_OPS_ATTACH(skel, cxl_rl_ops, scx_simple);
+	SCX_OPS_LOAD(skel, cxl_rl_ops, scx_cxl_rl, uei);
+	link = SCX_OPS_ATTACH(skel, cxl_rl_ops, scx_cxl_rl);
 
 	printf("CXL RL Scheduler started\n");
 	printf("Press Ctrl-C to exit\n\n");
@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 	}
 
 	bpf_link__destroy(link);
-	scx_simple__destroy(skel);
+	scx_cxl_rl__destroy(skel);
 	
 	if (UEI_EXITED(skel, uei)) {
 		printf("Scheduler exited\n");

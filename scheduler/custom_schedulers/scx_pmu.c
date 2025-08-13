@@ -10,7 +10,7 @@
 #include <string.h>
 #include <bpf/bpf.h>
 #include <scx/common.h>
-#include "scx_sdt.bpf.skel.h"
+#include "scx_pmu.bpf.skel.h"
 
 /* Constants */
 #define MAX_CPUS 64
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 	signal(SIGINT, sigint_handler);
 	signal(SIGTERM, sigint_handler);
 
-	skel = SCX_OPS_OPEN(cxl_ops, scx_sdt);
+	skel = SCX_OPS_OPEN(cxl_ops, scx_pmu);
 
 	while ((opt = getopt(argc, argv, "vh")) != -1) {
 		switch (opt) {
@@ -175,8 +175,8 @@ int main(int argc, char **argv)
 		}
 	}
 
-	SCX_OPS_LOAD(skel, cxl_ops, scx_sdt, uei);
-	link = SCX_OPS_ATTACH(skel, cxl_ops, scx_sdt);
+	SCX_OPS_LOAD(skel, cxl_ops, scx_pmu, uei);
+	link = SCX_OPS_ATTACH(skel, cxl_ops, scx_pmu);
 
 	printf("CXL PMU-aware Scheduler started\n");
 	printf("Optimizing for memory bandwidth with read/write thread separation\n");
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
 	}
 
 	bpf_link__destroy(link);
-	scx_sdt__destroy(skel);
+	scx_pmu__destroy(skel);
 	
 	if (UEI_EXITED(skel, uei)) {
 		printf("Scheduler exited\n");
