@@ -486,9 +486,9 @@ def main():
                        help="Number of threads for testing")
     parser.add_argument("--array-size", type=int, default=1073741824, 
                        help="Array size in bytes (default 1GB)")
-    parser.add_argument("--iterations", type=int, default=10, 
+    parser.add_argument("--iterations", type=int, default=3, 
                        help="Number of iterations per test")
-    parser.add_argument("--timeout", type=int, default=300, 
+    parser.add_argument("--timeout", type=int, default=30000, 
                        help="Timeout in seconds")
     parser.add_argument("--parameter-sweep", action="store_true",
                        help="Run parameter sweep for each scheduler")

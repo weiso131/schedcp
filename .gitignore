@@ -9,7 +9,7 @@ schedcp.log.*
 # Custom scheduler executables
 scheduler/custom_schedulers/scx_cxl
 scheduler/custom_schedulers/scx_cxl_rl
-scheduler/custom_schedulers/scx_pair
+scheduler/custom_schedulers/scx_simple_cxl_pmu
 scheduler/custom_schedulers/scx_pmu
 
 # BPF object files and skeletons
