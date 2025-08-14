@@ -22,3 +22,6 @@
 *.bpf.l19o
 scx_simple
 scx_cxl
+runqslower
+scx_simple_cxl_pmu
+

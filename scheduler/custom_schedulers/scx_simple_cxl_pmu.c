@@ -67,11 +67,11 @@ int main(int argc, char **argv)
 	}
 
 	/* Open and load BPF program */
-	skel = SCX_OPS_OPEN(simple_cxl_pmu_ops, scx_simple_cxl_pmu);
-	SCX_OPS_LOAD(skel, simple_cxl_pmu_ops, scx_simple_cxl_pmu, uei);
+	skel = SCX_OPS_OPEN(simple_ops, scx_simple_cxl_pmu);
+	SCX_OPS_LOAD(skel, simple_ops, scx_simple_cxl_pmu, uei);
 	
 	/* Attach the scheduler */
-	link = SCX_OPS_ATTACH(skel, simple_cxl_pmu_ops, scx_simple_cxl_pmu);
+	link = SCX_OPS_ATTACH(skel, simple_ops, scx_simple_cxl_pmu);
 
 	printf("Simple CXL PMU scheduler running. Press Ctrl-C to exit.\n");
 	if (verbose) {
