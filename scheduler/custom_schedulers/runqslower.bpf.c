@@ -31,6 +31,14 @@ struct {
 	__uint(value_size, sizeof(u32));
 } events SEC(".maps");
 
+/* PMU perf event array for hardware counters */
+struct {
+	__uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);
+	__uint(key_size, sizeof(int));
+	__uint(value_size, sizeof(u32));
+	__uint(max_entries, 64);
+} pmu_counters SEC(".maps");
+
 
 /* record enqueue timestamp */
 static int trace_enqueue(u32 tgid, u32 pid)
@@ -52,8 +60,11 @@ static int trace_enqueue(u32 tgid, u32 pid)
 static int handle_switch(void *ctx, struct task_struct *prev, struct task_struct *next)
 {
 	struct event event = {};
+	struct bpf_perf_event_value pmu_val = {};
 	u64 *tsp, delta_us;
 	u32 pid;
+	u32 cpu = bpf_get_smp_processor_id();
+	
 	/* ivcsw: treat like an enqueue event and store timestamp */
 	if (get_task_state(prev) == TASK_RUNNING) {
 		trace_enqueue(BPF_CORE_READ(prev, tgid), BPF_CORE_READ(prev, pid));
@@ -73,8 +84,16 @@ static int handle_switch(void *ctx, struct task_struct *prev, struct task_struct
 	event.pid = pid;
 	event.prev_pid = BPF_CORE_READ(prev, pid);
 	event.delta_us = delta_us;
+	event.cpu = cpu;
 	bpf_probe_read_kernel_str(&event.task, sizeof(event.task), next->comm);
 	bpf_probe_read_kernel_str(&event.prev_task, sizeof(event.prev_task), prev->comm);
+
+	/* Read PMU counter (e.g., CPU cycles) */
+	if (bpf_perf_event_read_value(&pmu_counters, cpu, &pmu_val, sizeof(pmu_val)) == 0) {
+		event.pmu_counter = pmu_val.counter;
+		event.pmu_enabled = pmu_val.enabled;
+		event.pmu_running = pmu_val.running;
+	}
 
 	/* output */
 	bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU,

@@ -8,8 +8,13 @@ struct event {
 	char task[TASK_COMM_LEN];
 	char prev_task[TASK_COMM_LEN];
 	__u64 delta_us;
-	pid_t pid;
-	pid_t prev_pid;
+	__s32 pid;
+	__s32 prev_pid;
+	__u32 cpu;
+	/* Raw PMU counter values */
+	__u64 pmu_counter;
+	__u64 pmu_enabled;
+	__u64 pmu_running;
 };
 
 #endif /* __RUNQSLOWER_H */

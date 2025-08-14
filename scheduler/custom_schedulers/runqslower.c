@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <linux/perf_event.h>
 #include <bpf/libbpf.h>
 #include <bpf/bpf.h>
 #include "runqslower.h"
@@ -142,12 +146,58 @@ void handle_event(void *ctx, int cpu, void *data, __u32 data_sz)
 
 	str_timestamp("%H:%M:%S", ts, sizeof(ts));
 
-	printf("%-8s %-16s %-6d %14llu %-16s %-6d\n", ts, e.task, e.pid, e.delta_us, e.prev_task, e.prev_pid);
+	printf("%-8s %-3u %-16s %-6d %14llu %-16s %-6d %14llu %14llu %14llu\n", 
+	       ts, e.cpu, e.task, e.pid, e.delta_us, e.prev_task, e.prev_pid, 
+	       e.pmu_counter, e.pmu_enabled, e.pmu_running);
 }
 
 void handle_lost_events(void *ctx, int cpu, __u64 lost_cnt)
 {
 	printf("Lost %llu events on CPU #%d!\n", lost_cnt, cpu);
+}
+
+static int open_pmu_counter(int cpu, int type, int config)
+{
+	struct perf_event_attr attr = {};
+	int fd;
+
+	attr.type = type;
+	attr.size = sizeof(attr);
+	attr.config = config;
+	attr.freq = 0;
+	attr.sample_period = 0;
+	attr.inherit = 0;
+	attr.read_format = 0;
+	attr.sample_type = 0;
+	attr.disabled = 0;
+
+	fd = syscall(__NR_perf_event_open, &attr, -1, cpu, -1, 0);
+	if (fd < 0) {
+		fprintf(stderr, "Failed to open PMU counter on CPU %d: %s\n", 
+		        cpu, strerror(errno));
+	}
+	return fd;
+}
+
+static int setup_pmu_counters(struct runqslower *obj)
+{
+	int ncpus = libbpf_num_possible_cpus();
+	int cpu, fd;
+
+	for (cpu = 0; cpu < ncpus; cpu++) {
+		/* Open CPU cycles counter */
+		fd = open_pmu_counter(cpu, PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
+		if (fd < 0)
+			continue; /* Skip if PMU not available on this CPU */
+		
+		/* Update BPF map with the file descriptor */
+		if (bpf_map_update_elem(bpf_map__fd(obj->maps.pmu_counters), 
+		                        &cpu, &fd, BPF_ANY) < 0) {
+			fprintf(stderr, "Failed to update PMU map for CPU %d\n", cpu);
+			close(fd);
+		}
+	}
+	return 0;
 }
 
 int main(int argc, char **argv)
@@ -194,6 +244,13 @@ int main(int argc, char **argv)
 		goto cleanup;
 	}
 
+	/* Setup PMU counters after loading BPF program */
+	err = setup_pmu_counters(obj);
+	if (err < 0) {
+		fprintf(stderr, "Warning: PMU counters setup failed, continuing without PMU data\n");
+		/* Continue without PMU data */
+	}
+
 	err = runqslower__attach(obj);
 	if (err) {
 		fprintf(stderr, "failed to attach BPF programs\n");
@@ -201,7 +258,9 @@ int main(int argc, char **argv)
 	}
 
 	printf("Tracing run queue latency higher than %llu us\n", env.min_us);
-	printf("%-8s %-16s %-6s %14s %-16s %-6s\n", "TIME", "COMM", "TID", "LAT(us)", "PREV COMM", "PREV TID");
+	printf("%-8s %-3s %-16s %-6s %14s %-16s %-6s %14s %14s %14s\n", 
+	       "TIME", "CPU", "COMM", "TID", "LAT(us)", "PREV COMM", "PREV TID", 
+	       "PMU_COUNTER", "PMU_ENABLED", "PMU_RUNNING");
 
 	pb = perf_buffer__new(bpf_map__fd(obj->maps.events), 64,
 			      handle_event, handle_lost_events, NULL, NULL);
