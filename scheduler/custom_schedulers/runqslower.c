@@ -137,8 +137,8 @@ void handle_event(void *ctx, int cpu, void *data, __u32 data_sz)
 	struct event e;
 	char ts[32];
 
+
 	if (data_sz < sizeof(e)) {
-		printf("Error: packet too small\n");
 		return;
 	}
 	/* Copy data as alignment in the perf buffer isn't guaranteed. */
@@ -146,9 +146,14 @@ void handle_event(void *ctx, int cpu, void *data, __u32 data_sz)
 
 	str_timestamp("%H:%M:%S", ts, sizeof(ts));
 
-	printf("%-8s %-3u %-16s %-6d %14llu %-16s %-6d %14llu %14llu %14llu\n", 
-	       ts, e.cpu, e.task, e.pid, e.delta_us, e.prev_task, e.prev_pid, 
-	       e.pmu_counter, e.pmu_enabled, e.pmu_running);
+	/* Output as JSON - one event per line */
+	printf("{\"timestamp\":\"%s\",\"cpu\":%u,\"task\":\"%s\",\"pid\":%d,\"latency_us\":%llu,"
+	       "\"prev_task\":\"%s\",\"prev_pid\":%d,\"pmu_counter\":%llu,"
+	       "\"pmu_enabled\":%llu,\"pmu_running\":%llu}\n",
+	       ts, e.cpu, e.task, e.pid, e.delta_us, 
+	       e.prev_task, e.prev_pid, e.pmu_counter,
+	       e.pmu_enabled, e.pmu_running);
+	fflush(stdout);
 }
 
 void handle_lost_events(void *ctx, int cpu, __u64 lost_cnt)
@@ -257,10 +262,7 @@ int main(int argc, char **argv)
 		goto cleanup;
 	}
 
-	printf("Tracing run queue latency higher than %llu us\n", env.min_us);
-	printf("%-8s %-3s %-16s %-6s %14s %-16s %-6s %14s %14s %14s\n", 
-	       "TIME", "CPU", "COMM", "TID", "LAT(us)", "PREV COMM", "PREV TID", 
-	       "PMU_COUNTER", "PMU_ENABLED", "PMU_RUNNING");
+	fprintf(stderr, "Tracing run queue latency higher than %llu us\n", env.min_us);
 
 	pb = perf_buffer__new(bpf_map__fd(obj->maps.events), 64,
 			      handle_event, handle_lost_events, NULL, NULL);
