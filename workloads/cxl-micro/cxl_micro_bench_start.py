@@ -320,73 +320,96 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             print(f"  Threads:         {result.get('threads', 0):8d}")
             print(f"  Read Ratio:      {result.get('read_ratio', 0):8.2f}")
     
-    def run_parameter_sweep(self, scheduler_name: str = None, 
-                           thread_counts: list = None, read_ratios: list = None):
+    def run_parameter_sweep_multi_schedulers(self, schedulers: list = None,
+                                            thread_counts: list = None, 
+                                            read_ratios: list = None,
+                                            production_only: bool = True):
         """
-        Run parameter sweep for a specific scheduler testing thread counts and read ratios.
+        Run parameter sweep for multiple schedulers and generate comparison plots.
         
         Args:
-            scheduler_name: Name of the scheduler to test
+            schedulers: List of scheduler names to test (None for all + default)
             thread_counts: List of thread counts to test
             read_ratios: List of read ratios to test (0.0-1.0)
+            production_only: Only test production-ready schedulers if schedulers is None
         """
-        thread_counts = thread_counts or [1, 8, 64, 128]
+        thread_counts = thread_counts or [4, 16, 64, 128]
         read_ratios = read_ratios or [0.25, 0.5, 0.75]
+        
+        # Get schedulers to test
+        if schedulers is None:
+            schedulers = ['default'] + self.runner.get_available_schedulers(production_only)
+        elif 'default' not in schedulers:
+            schedulers = ['default'] + schedulers
         
         # Keep array size fixed at 1GB for consistency
         array_size = int(1 * 1024**3)
         
-        print(f"Running parameter sweep for scheduler: {scheduler_name or 'default'}")
+        print(f"Running parameter sweep for schedulers: {schedulers}")
         print(f"Thread counts: {thread_counts}")
         print(f"Read ratios: {read_ratios}")
         print(f"Fixed array size: {array_size/(1024**3):.1f} GB")
         
-        results = []
-        total_tests = len(thread_counts) * len(read_ratios)
+        all_results = []
+        total_tests = len(schedulers) * len(thread_counts) * len(read_ratios)
         test_count = 0
         
-        for threads in thread_counts:
-            for read_ratio in read_ratios:
-                test_count += 1
-                print(f"\nTest {test_count}/{total_tests}: "
-                      f"threads={threads}, read_ratio={read_ratio:.2f}")
-                
-                # Update test parameters
-                self.set_test_params(threads=threads, array_size=array_size, read_ratio=read_ratio)
-                
-                # Run benchmark
-                result = self.run_cxl_benchmark(scheduler_name)
-                
-                if "error" not in result:
-                    results.append({
-                        'scheduler': scheduler_name or 'default',
-                        'threads': threads,
-                        'read_ratio': read_ratio,
-                        'bandwidth_mbps': result.get('bandwidth_mbps', 0),
-                        'execution_time': result.get('execution_time', 0),
-                        'array_size_gb': array_size / (1024**3)
-                    })
-                    print(f"  Bandwidth: {result.get('bandwidth_mbps', 0):.2f} MB/s")
-                else:
-                    print(f"  Failed: {result['error']}")
-                
-                time.sleep(1)  # Brief pause between tests
-        
-        if results:
-            # Save results
-            df = pd.DataFrame(results)
-            results_file = os.path.join(self.results_dir, 
-                                      f"parameter_sweep_{scheduler_name or 'default'}.csv")
-            df.to_csv(results_file, index=False)
-            print(f"\nParameter sweep results saved to {results_file}")
+        for scheduler_name in schedulers:
+            print(f"\n{'='*50}")
+            print(f"Testing scheduler: {scheduler_name}")
+            print(f"{'='*50}")
             
-            # Generate parameter sweep visualization with grid layout
-            self._generate_parameter_sweep_plot(df, scheduler_name or 'default')
-    
-    def _generate_parameter_sweep_plot(self, df, scheduler_name):
-        """Generate parameter sweep visualization with grid of bar plots for each configuration"""
+            for threads in thread_counts:
+                for read_ratio in read_ratios:
+                    test_count += 1
+                    print(f"\nTest {test_count}/{total_tests}: "
+                          f"scheduler={scheduler_name}, threads={threads}, read_ratio={read_ratio:.2f}")
+                    
+                    # Update test parameters
+                    self.set_test_params(threads=threads, array_size=array_size, read_ratio=read_ratio)
+                    
+                    # Run benchmark
+                    scheduler_to_test = None if scheduler_name == 'default' else scheduler_name
+                    result = self.run_cxl_benchmark(scheduler_to_test)
+                    
+                    if "error" not in result:
+                        all_results.append({
+                            'scheduler': scheduler_name,
+                            'threads': threads,
+                            'read_ratio': read_ratio,
+                            'bandwidth_mbps': result.get('bandwidth_mbps', 0),
+                            'execution_time': result.get('execution_time', 0),
+                            'array_size_gb': array_size / (1024**3)
+                        })
+                        print(f"  Bandwidth: {result.get('bandwidth_mbps', 0):.2f} MB/s")
+                    else:
+                        print(f"  Failed: {result['error']}")
+                        all_results.append({
+                            'scheduler': scheduler_name,
+                            'threads': threads,
+                            'read_ratio': read_ratio,
+                            'bandwidth_mbps': 0,
+                            'execution_time': 0,
+                            'array_size_gb': array_size / (1024**3)
+                        })
+                    
+                    time.sleep(1)  # Brief pause between tests
         
-        # Get unique thread counts and read ratios
+        if all_results:
+            # Save results
+            df = pd.DataFrame(all_results)
+            results_file = os.path.join(self.results_dir, "parameter_sweep_multi_schedulers.csv")
+            df.to_csv(results_file, index=False)
+            print(f"\nMulti-scheduler parameter sweep results saved to {results_file}")
+            
+            # Generate multi-scheduler comparison visualization
+            self._generate_multi_scheduler_sweep_plot(df)
+    
+    def _generate_multi_scheduler_sweep_plot(self, df):
+        """Generate parameter sweep visualization comparing multiple schedulers in larger subplots"""
+        
+        # Get unique values
+        schedulers = sorted(df['scheduler'].unique())
         thread_counts = sorted(df['threads'].unique())
         read_ratios = sorted(df['read_ratio'].unique())
         
@@ -394,10 +417,10 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
         n_threads = len(thread_counts)
         n_ratios = len(read_ratios)
         
-        # Create figure with subplots grid
-        fig, axes = plt.subplots(n_ratios, n_threads, figsize=(4*n_threads, 3*n_ratios))
-        fig.suptitle(f'Parameter Sweep: {scheduler_name} - Bandwidth (MB/s) for Each Configuration', 
-                     fontsize=16, y=1.02)
+        # Create figure with larger subplots - similar to generate_performance_figures
+        fig, axes = plt.subplots(n_ratios, n_threads, figsize=(8*n_threads, 6*n_ratios))
+        fig.suptitle('Multi-Scheduler Parameter Sweep: Bandwidth Comparison', 
+                     fontsize=20, y=0.98)
         
         # Ensure axes is always 2D array for consistent indexing
         if n_ratios == 1:
@@ -405,10 +428,11 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
         if n_threads == 1:
             axes = axes.reshape(-1, 1)
         
-        # Color for bars
-        bar_color = 'skyblue'
+        # Color palette for different schedulers - use distinct colors
+        colors = plt.cm.tab10(np.linspace(0, 1, len(schedulers)))
+        scheduler_colors = {sched: colors[i] for i, sched in enumerate(schedulers)}
         
-        # Create a bar plot for each thread count and read ratio combination
+        # Create grouped bar plots for each configuration
         for i, read_ratio in enumerate(read_ratios):
             for j, threads in enumerate(thread_counts):
                 ax = axes[i, j]
@@ -417,59 +441,69 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
                 config_data = df[(df['threads'] == threads) & (df['read_ratio'] == read_ratio)]
                 
                 if not config_data.empty:
-                    bandwidth = config_data['bandwidth_mbps'].values[0]
+                    # Prepare data for grouped bars
+                    bandwidths = []
+                    scheduler_names = []
                     
-                    # Create bar plot
-                    bar = ax.bar([0], [bandwidth], color=bar_color, alpha=0.8, width=0.6)
+                    for sched in schedulers:
+                        sched_data = config_data[config_data['scheduler'] == sched]
+                        if not sched_data.empty:
+                            bandwidths.append(sched_data['bandwidth_mbps'].values[0])
+                            scheduler_names.append(sched)
+                        else:
+                            bandwidths.append(0)
+                            scheduler_names.append(sched)
                     
-                    # Add value label on bar
-                    ax.text(0, bandwidth, f'{bandwidth:.0f}', 
-                           ha='center', va='bottom', fontsize=9)
+                    # Create bars - similar style to generate_performance_figures
+                    bars = ax.bar(scheduler_names, bandwidths, 
+                                 color=[scheduler_colors[s] for s in scheduler_names],
+                                 alpha=0.8, edgecolor='black', linewidth=1)
+                    
+                    # Add value labels on bars
+                    for bar in bars:
+                        height = bar.get_height()
+                        if height > 0:
+                            ax.text(bar.get_x() + bar.get_width()/2., height,
+                                   f'{height:.0f}',
+                                   ha='center', va='bottom', fontsize=12, fontweight='bold')
                     
                     # Set title for each subplot
-                    ax.set_title(f'T={threads}, R={read_ratio:.2f}', fontsize=10)
+                    ax.set_title(f'Threads: {threads}, Read Ratio: {read_ratio:.2f}', 
+                               fontsize=14, fontweight='bold', pad=20)
                     
-                    # Set y-axis label only for leftmost column
-                    if j == 0:
-                        ax.set_ylabel('Bandwidth (MB/s)', fontsize=9)
+                    # Set axis labels with larger fonts
+                    ax.set_ylabel('Bandwidth (MB/s)', fontsize=12)
+                    ax.set_xlabel('Scheduler', fontsize=12)
                     
-                    # Remove x-axis labels and ticks
-                    ax.set_xticks([])
-                    ax.set_xlim(-0.5, 0.5)
+                    # Rotate x-axis labels for better readability
+                    ax.set_xticklabels(scheduler_names, rotation=45, ha='right', fontsize=11)
                     
                     # Add grid
                     ax.grid(True, alpha=0.3, axis='y')
                     
-                    # Set y-axis limits for consistency across all subplots
+                    # Set y-axis limits for consistency
                     max_bandwidth = df['bandwidth_mbps'].max()
-                    ax.set_ylim(0, max_bandwidth * 1.15)
+                    ax.set_ylim(0, max_bandwidth * 1.2)
+                    
+                    # Improve tick formatting
+                    ax.tick_params(axis='y', labelsize=11)
+                    
                 else:
                     # If no data, show empty plot with message
-                    ax.text(0.5, 0.5, 'No Data', 
-                           ha='center', va='center', transform=ax.transAxes)
-                    ax.set_title(f'T={threads}, R={read_ratio:.2f}', fontsize=10)
+                    ax.text(0.5, 0.5, 'No Data Available', 
+                           ha='center', va='center', transform=ax.transAxes,
+                           fontsize=14, fontweight='bold')
+                    ax.set_title(f'Threads: {threads}, Read Ratio: {read_ratio:.2f}', 
+                               fontsize=14, fontweight='bold')
                     ax.set_xticks([])
                     ax.set_yticks([])
-        
-        # Add labels for the grid
-        # Add column header
-        for j, threads in enumerate(thread_counts):
-            axes[0, j].text(0.5, 1.15, f'{threads} Threads', 
-                          transform=axes[0, j].transAxes,
-                          ha='center', fontsize=11, weight='bold')
-        
-        # Add row header
-        for i, read_ratio in enumerate(read_ratios):
-            axes[i, 0].text(-0.3, 0.5, f'Read\nRatio\n{read_ratio:.2f}', 
-                          transform=axes[i, 0].transAxes,
-                          ha='center', va='center', fontsize=11, weight='bold')
         
         plt.tight_layout()
         
         # Save figure
-        figure_path = os.path.join(self.results_dir, f"parameter_sweep_{scheduler_name}.png")
+        figure_path = os.path.join(self.results_dir, "parameter_sweep_multi_schedulers.png")
         plt.savefig(figure_path, dpi=300, bbox_inches='tight')
-        print(f"Parameter sweep figure saved to {figure_path}")
+        print(f"Multi-scheduler parameter sweep figure saved to {figure_path}")
 
 
 def main():
@@ -493,7 +527,7 @@ def main():
     parser.add_argument("--timeout", type=int, default=30000, 
                        help="Timeout in seconds")
     parser.add_argument("--parameter-sweep", action="store_true",
-                       help="Run parameter sweep for each scheduler")
+                       help="Run parameter sweep comparing all schedulers")
     parser.add_argument("--scheduler", type=str, default=None,
                        help="Test specific scheduler only")
     
@@ -522,21 +556,14 @@ def main():
         sys.exit(1)
     
     if args.parameter_sweep:
+        print("Running multi-scheduler parameter sweep...")
+        schedulers = None
         if args.scheduler:
-            print(f"Running parameter sweep for scheduler: {args.scheduler}")
-            tester.run_parameter_sweep(args.scheduler)
-        else:
-            print("Running parameter sweep for all schedulers...")
-            # Run parameter sweep for default scheduler
-            tester.run_parameter_sweep()
-            
-            # Run parameter sweep for each scheduler
-            schedulers = tester.runner.get_available_schedulers(args.production_only)
-            for scheduler_name in schedulers:
-                try:
-                    tester.run_parameter_sweep(scheduler_name)
-                except Exception as e:
-                    print(f"Error in parameter sweep for {scheduler_name}: {e}")
+            schedulers = [args.scheduler]
+        tester.run_parameter_sweep_multi_schedulers(
+            schedulers=schedulers,
+            production_only=args.production_only
+        )
     else:
         if args.scheduler:
             print(f"Testing scheduler: {args.scheduler}")
