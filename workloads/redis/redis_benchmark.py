@@ -62,7 +62,6 @@ class RedisBenchmark:
             "port 6379",
             "bind 127.0.0.1",
             "daemonize no",
-            "save \"\"",
             "loglevel warning",
             "maxclients 10000",
             "timeout 0",
@@ -300,45 +299,75 @@ class RedisBenchmark:
                 return float(part)
         return 0.0
     
-    def run_comprehensive_benchmark(self):
+    def run_comprehensive_benchmark(self, clients=50, requests=100000, data_size=3, pipeline=1, 
+                                   keyspace=None, tests=None, threads=None, cluster=False, 
+                                   precision=0, seed=None):
         """Run comprehensive Redis benchmarks"""
         if not self.start_redis():
             return None
         
-        benchmarks = [
-            {
-                "name": "SET_operations",
-                "args": ["-t", "set", "-n", "100000", "-c", "50", "-P", "16", "--csv"]
-            },
-            {
-                "name": "GET_operations", 
-                "args": ["-t", "get", "-n", "100000", "-c", "50", "-P", "16", "--csv"]
-            },
-            {
-                "name": "INCR_operations",
-                "args": ["-t", "incr", "-n", "50000", "-c", "25", "-P", "16", "--csv"]
-            },
-            {
-                "name": "LPUSH_operations",
-                "args": ["-t", "lpush", "-n", "50000", "-c", "25", "-P", "16", "--csv"]
-            },
-            {
-                "name": "LPOP_operations",
-                "args": ["-t", "lpop", "-n", "50000", "-c", "25", "-P", "16", "--csv"]
-            },
-            {
-                "name": "SADD_operations",
-                "args": ["-t", "sadd", "-n", "50000", "-c", "25", "-P", "16", "--csv"]
-            },
-            {
-                "name": "HSET_operations",
-                "args": ["-t", "hset", "-n", "50000", "-c", "25", "-P", "16", "--csv"]
-            },
-            {
-                "name": "mixed_workload",
-                "args": ["-n", "100000", "-c", "50", "-P", "16", "--csv"]
-            }
-        ]
+        # Build base arguments
+        base_args = ["-n", str(requests), "-c", str(clients), "-P", str(pipeline), "--csv"]
+        
+        if data_size != 3:
+            base_args.extend(["-d", str(data_size)])
+        if keyspace:
+            base_args.extend(["-r", str(keyspace)])
+        if threads:
+            base_args.extend(["--threads", str(threads)])
+        if cluster:
+            base_args.append("--cluster")
+        if precision != 0:
+            base_args.extend(["--precision", str(precision)])
+        if seed:
+            base_args.extend(["--seed", str(seed)])
+        
+        # Define test configurations
+        if tests:
+            # Use specific tests provided
+            test_list = [t.strip() for t in tests.split(',')]
+            benchmarks = []
+            for test in test_list:
+                benchmarks.append({
+                    "name": f"{test.upper()}_operations",
+                    "args": ["-t", test] + base_args
+                })
+        else:
+            # Use default comprehensive test suite
+            benchmarks = [
+                {
+                    "name": "SET_operations",
+                    "args": ["-t", "set"] + base_args
+                },
+                {
+                    "name": "GET_operations", 
+                    "args": ["-t", "get"] + base_args
+                },
+                {
+                    "name": "INCR_operations",
+                    "args": ["-t", "incr"] + base_args
+                },
+                {
+                    "name": "LPUSH_operations",
+                    "args": ["-t", "lpush"] + base_args
+                },
+                {
+                    "name": "LPOP_operations",
+                    "args": ["-t", "lpop"] + base_args
+                },
+                {
+                    "name": "SADD_operations",
+                    "args": ["-t", "sadd"] + base_args
+                },
+                {
+                    "name": "HSET_operations",
+                    "args": ["-t", "hset"] + base_args
+                },
+                {
+                    "name": "mixed_workload",
+                    "args": base_args  # No specific test, runs all
+                }
+            ]
         
         results = []
         
@@ -394,7 +423,9 @@ class RedisBenchmark:
         
         return summary
 
-    def run_quick_benchmark(self):
+    def run_quick_benchmark(self, clients=50, requests=10000, data_size=3, pipeline=16, 
+                           keyspace=None, tests="set,get", threads=None, cluster=False, 
+                           precision=0, seed=None):
         """Run a quick benchmark test"""
         if not self.start_redis():
             return None
@@ -403,15 +434,21 @@ class RedisBenchmark:
             print("\nRunning quick benchmark test...")
             print("-" * 40)
             
-            # Simple SET/GET benchmark
-            cmd = [
-                self.redis_benchmark,
-                "-t", "set,get",
-                "-n", "10000",
-                "-c", "50",
-                "-P", "16",
-                "--csv"
-            ]
+            # Build command arguments
+            cmd = [self.redis_benchmark, "-t", tests, "-n", str(requests), "-c", str(clients), "-P", str(pipeline), "--csv"]
+            
+            if data_size != 3:
+                cmd.extend(["-d", str(data_size)])
+            if keyspace:
+                cmd.extend(["-r", str(keyspace)])
+            if threads:
+                cmd.extend(["--threads", str(threads)])
+            if cluster:
+                cmd.append("--cluster")
+            if precision != 0:
+                cmd.extend(["--precision", str(precision)])
+            if seed:
+                cmd.extend(["--seed", str(seed)])
             
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             
@@ -449,12 +486,25 @@ def main():
     parser.add_argument('--quick', action='store_true', help='Run quick benchmark only')
     parser.add_argument('--redis-dir', default='redis-src', help='Redis source directory')
     parser.add_argument('--results-dir', default='results', help='Results output directory')
-    parser.add_argument('--io-threads', type=int, help='Number of I/O threads (1-128)')
-    parser.add_argument('--io-threads-do-reads', choices=['yes', 'no'], help='Enable I/O threads for reads')
-    parser.add_argument('--maxmemory', help='Maximum memory usage (e.g., 1gb, 512mb)')
+    parser.add_argument('--io-threads', type=int, help='Number of I/O threads (1-128)', default=64)
+    parser.add_argument('--io-threads-do-reads', choices=['yes', 'no'], help='Enable I/O threads for reads', default='yes')
+    parser.add_argument('--maxmemory', help='Maximum memory usage (e.g., 1gb, 512mb)', default='256gb')
     parser.add_argument('--maxmemory-policy', choices=['noeviction', 'allkeys-lru', 'volatile-lru', 'allkeys-random', 'volatile-random', 'volatile-ttl'], help='Memory eviction policy')
-    parser.add_argument('--hz', type=int, help='Background task frequency (1-500)')
+    parser.add_argument('--hz', type=int, help='Background task frequency (1-500)', default=100)
     parser.add_argument('--explore-configs', action='store_true', help='Run benchmarks with different configurations')
+    
+    # Redis benchmark parameters
+    parser.add_argument('-c', '--clients', type=int, help='Number of parallel connections', default=50)
+    parser.add_argument('-n', '--requests', type=int, help='Total number of requests', default=100000)
+    parser.add_argument('-d', '--data-size', type=int, help='Data size of SET/GET value in bytes', default=3)
+    parser.add_argument('-P', '--pipeline', type=int, help='Pipeline requests', default=1)
+    parser.add_argument('-r', '--keyspace', type=int, help='Use random keys in specified range')
+    parser.add_argument('-t', '--tests', help='Specific tests to run (comma-separated: set,get,incr,lpush,lpop,sadd,hset)')
+    parser.add_argument('--threads', type=int, help='Enable multi-thread mode')
+    parser.add_argument('--cluster', action='store_true', help='Enable cluster mode')
+    parser.add_argument('--precision', type=int, help='Decimal places in latency output', default=0)
+    parser.add_argument('--seed', type=int, help='Random number generator seed')
+    
     args = parser.parse_args()
     
     # Build config options
@@ -469,6 +519,26 @@ def main():
         config_options['maxmemory_policy'] = args.maxmemory_policy
     if args.hz:
         config_options['hz'] = args.hz
+    
+    # Build benchmark parameters
+    benchmark_params = {
+        'clients': args.clients,
+        'requests': args.requests,
+        'data_size': args.data_size,
+        'pipeline': args.pipeline,
+        'precision': args.precision,
+        'cluster': args.cluster
+    }
+    
+    # Only add optional parameters if they are specified
+    if args.keyspace:
+        benchmark_params['keyspace'] = args.keyspace
+    if args.tests:
+        benchmark_params['tests'] = args.tests
+    if args.threads:
+        benchmark_params['threads'] = args.threads
+    if args.seed:
+        benchmark_params['seed'] = args.seed
     
     if args.explore_configs:
         # Test different configurations
@@ -487,7 +557,7 @@ def main():
             print('='*50)
             
             benchmark = RedisBenchmark(redis_dir=args.redis_dir, results_dir=args.results_dir, config_options=config)
-            result = benchmark.run_quick_benchmark()
+            result = benchmark.run_quick_benchmark(**benchmark_params)
             if result and result.get('parsed_metrics'):
                 print("\nParsed Metrics:")
                 for metric in result['parsed_metrics']:
@@ -505,7 +575,7 @@ def main():
     print("=" * 50)
     
     if args.quick:
-        result = benchmark.run_quick_benchmark()
+        result = benchmark.run_quick_benchmark(**benchmark_params)
         if result and result.get('parsed_metrics'):
             print("\nParsed Metrics:")
             for metric in result['parsed_metrics']:
@@ -517,7 +587,7 @@ def main():
                     print(f"  P99 Latency: {metric['p99_latency_ms']:.3f}ms")
                 print()
     else:
-        results = benchmark.run_comprehensive_benchmark()
+        results = benchmark.run_comprehensive_benchmark(**benchmark_params)
         
         if results:
             # Save detailed results
