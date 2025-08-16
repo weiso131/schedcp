@@ -18,7 +18,7 @@ LLAMA_BENCH_PATH = "/root/yunwei37/ai-os/workloads/llama.cpp/build/bin/llama-ben
 MODEL_PATH = "/root/.cache/llama.cpp/ggml-org_gemma-3-1b-it-GGUF_gemma-3-1b-it-Q4_K_M.gguf"
 
 # Test parameters
-THREAD_COUNTS = [1, 2, 4, 8, 16]
+THREAD_COUNTS = [1, 2, 8, 64, 128, 172]
 BATCH_SIZES = [128, 256, 512, 1024, 2048]
 REPETITIONS = 3
 
