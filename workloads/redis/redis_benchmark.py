@@ -5,21 +5,24 @@ Redis Benchmark Suite for Scheduler Performance Evaluation
 import subprocess
 import time
 import json
-import psutil
 import os
 import sys
+import csv
+import io
 from datetime import datetime
 import signal
 import atexit
 
 class RedisBenchmark:
-    def __init__(self, redis_dir="redis-src", results_dir="results"):
+    def __init__(self, redis_dir="redis-src", results_dir="results", config_options=None):
         self.redis_dir = redis_dir
         self.results_dir = results_dir
         self.redis_cli = os.path.join(redis_dir, "src", "redis-cli")
         self.redis_benchmark = os.path.join(redis_dir, "src", "redis-benchmark")
         self.redis_server = os.path.join(redis_dir, "src", "redis-server")
         self.redis_process = None
+        self.config_file = None
+        self.config_options = config_options or {}
         
         # Check if binaries exist
         if not all(os.path.exists(binary) for binary in [self.redis_server, self.redis_cli, self.redis_benchmark]):
@@ -45,6 +48,58 @@ class RedisBenchmark:
         if hasattr(self, 'redis_process') and self.redis_process:
             self.stop_redis()
         
+        # Clean up temporary config file
+        if self.config_file and os.path.exists(self.config_file):
+            try:
+                os.remove(self.config_file)
+            except:
+                pass
+        
+    def generate_config(self):
+        """Generate Redis configuration file"""
+        config_lines = [
+            "# Dynamically generated Redis configuration",
+            "port 6379",
+            "bind 127.0.0.1",
+            "daemonize no",
+            "save \"\"",
+            "loglevel warning",
+            "maxclients 10000",
+            "timeout 0",
+            "tcp-keepalive 300",
+            "tcp-backlog 511",
+            ""
+        ]
+        
+        # Add custom configuration options
+        for key, value in self.config_options.items():
+            if key == "io_threads" and value > 1:
+                config_lines.append(f"io-threads {value}")
+            elif key == "io_threads_do_reads":
+                config_lines.append(f"io-threads-do-reads {value}")
+            elif key == "threads":
+                config_lines.append(f"threads {value}")
+            elif key == "maxmemory":
+                config_lines.append(f"maxmemory {value}")
+            elif key == "maxmemory_policy":
+                config_lines.append(f"maxmemory-policy {value}")
+            elif key == "hz":
+                config_lines.append(f"hz {value}")
+            elif key == "client_output_buffer_limit":
+                config_lines.append(f"client-output-buffer-limit normal {value}")
+            else:
+                # Generic key-value pairs
+                config_lines.append(f"{key.replace('_', '-')} {value}")
+        
+        # Write to temporary file
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.config_file = f"redis_config_{timestamp}.conf"
+        
+        with open(self.config_file, 'w') as f:
+            f.write('\n'.join(config_lines))
+        
+        return self.config_file
+    
     def start_redis(self):
         """Start Redis server"""
         # First ensure no Redis is running
@@ -53,13 +108,8 @@ class RedisBenchmark:
         
         print("Starting Redis server...")
         
-        # Use the simple redis config
-        config_path = "redis-simple.conf"
-        if not os.path.exists(config_path):
-            config_path = "redis.conf"
-            if not os.path.exists(config_path):
-                # Use default config if custom one doesn't exist
-                config_path = os.path.join(self.redis_dir, "redis.conf")
+        # Generate configuration file
+        config_path = self.generate_config()
         
         cmd = [self.redis_server, config_path]
         
@@ -117,23 +167,55 @@ class RedisBenchmark:
         except:
             pass
     
+    def parse_csv_output(self, csv_output):
+        """Parse CSV output into structured JSON"""
+        lines = csv_output.strip().split('\n')
+        if len(lines) < 2:
+            return None
+        
+        # Parse header
+        header_line = lines[0].strip('"')
+        headers = [h.strip('"') for h in header_line.split('","')]
+        
+        results = []
+        for line in lines[1:]:
+            if line.strip():
+                # Parse data line
+                data_line = line.strip('"')
+                values = [v.strip('"') for v in data_line.split('","')]
+                
+                if len(values) == len(headers):
+                    row = {}
+                    for i, header in enumerate(headers):
+                        value = values[i]
+                        # Try to convert numeric values
+                        try:
+                            if '.' in value:
+                                row[header] = float(value)
+                            else:
+                                row[header] = int(value)
+                        except ValueError:
+                            row[header] = value
+                    results.append(row)
+        
+        return results
+    
     def run_benchmark(self, test_name, command_args):
         """Run a specific benchmark test"""
         print(f"Running {test_name} benchmark...")
         
-        # Start monitoring
         start_time = time.time()
-        start_cpu = psutil.cpu_percent(interval=1)
-        start_mem = psutil.virtual_memory().percent
         
         # Run benchmark
         cmd = [self.redis_benchmark] + command_args
         result = subprocess.run(cmd, capture_output=True, text=True)
         
-        # End monitoring
         end_time = time.time()
-        end_cpu = psutil.cpu_percent(interval=1)
-        end_mem = psutil.virtual_memory().percent
+        
+        # Parse CSV output if present
+        parsed_metrics = None
+        if "--csv" in command_args and result.stdout:
+            parsed_metrics = self.parse_csv_output(result.stdout)
         
         # Parse results
         return {
@@ -143,16 +225,7 @@ class RedisBenchmark:
             "stderr": result.stderr,
             "return_code": result.returncode,
             "duration": end_time - start_time,
-            "cpu_usage": {
-                "start": start_cpu,
-                "end": end_cpu,
-                "average": (start_cpu + end_cpu) / 2
-            },
-            "memory_usage": {
-                "start": start_mem,
-                "end": end_mem,
-                "average": (start_mem + end_mem) / 2
-            },
+            "parsed_metrics": parsed_metrics,
             "timestamp": datetime.now().isoformat()
         }
     
@@ -305,8 +378,7 @@ class RedisBenchmark:
             "successful_tests": sum(1 for r in results if r["return_code"] == 0),
             "failed_tests": sum(1 for r in results if r["return_code"] != 0),
             "total_duration": sum(r["duration"] for r in results),
-            "average_cpu_usage": sum(r["cpu_usage"]["average"] for r in results) / len(results),
-            "average_memory_usage": sum(r["memory_usage"]["average"] for r in results) / len(results),
+            "redis_config": self.config_options,
             "test_summary": []
         }
         
@@ -315,7 +387,8 @@ class RedisBenchmark:
                 "test_name": result["test_name"],
                 "status": "success" if result["return_code"] == 0 else "failed",
                 "duration": result["duration"],
-                "metrics": result.get("metrics", {})
+                "metrics": result.get("metrics", {}),
+                "parsed_metrics": result.get("parsed_metrics", [])
             }
             summary["test_summary"].append(test_summary)
         
@@ -337,7 +410,7 @@ class RedisBenchmark:
                 "-n", "10000",
                 "-c", "50",
                 "-P", "16",
-                "-q"
+                "--csv"
             ]
             
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
@@ -346,11 +419,15 @@ class RedisBenchmark:
                 print("Quick benchmark results:")
                 print(result.stdout)
                 
+                # Parse CSV output
+                parsed_metrics = self.parse_csv_output(result.stdout)
                 metrics = self.parse_benchmark_output(result.stdout)
+                
                 return {
                     "status": "success",
                     "output": result.stdout,
                     "metrics": metrics,
+                    "parsed_metrics": parsed_metrics,
                     "timestamp": datetime.now().isoformat()
                 }
             else:
@@ -372,24 +449,73 @@ def main():
     parser.add_argument('--quick', action='store_true', help='Run quick benchmark only')
     parser.add_argument('--redis-dir', default='redis-src', help='Redis source directory')
     parser.add_argument('--results-dir', default='results', help='Results output directory')
+    parser.add_argument('--io-threads', type=int, help='Number of I/O threads (1-128)')
+    parser.add_argument('--io-threads-do-reads', choices=['yes', 'no'], help='Enable I/O threads for reads')
+    parser.add_argument('--maxmemory', help='Maximum memory usage (e.g., 1gb, 512mb)')
+    parser.add_argument('--maxmemory-policy', choices=['noeviction', 'allkeys-lru', 'volatile-lru', 'allkeys-random', 'volatile-random', 'volatile-ttl'], help='Memory eviction policy')
+    parser.add_argument('--hz', type=int, help='Background task frequency (1-500)')
+    parser.add_argument('--explore-configs', action='store_true', help='Run benchmarks with different configurations')
     args = parser.parse_args()
     
-    benchmark = RedisBenchmark(redis_dir=args.redis_dir, results_dir=args.results_dir)
+    # Build config options
+    config_options = {}
+    if args.io_threads:
+        config_options['io_threads'] = args.io_threads
+    if args.io_threads_do_reads:
+        config_options['io_threads_do_reads'] = args.io_threads_do_reads
+    if args.maxmemory:
+        config_options['maxmemory'] = args.maxmemory
+    if args.maxmemory_policy:
+        config_options['maxmemory_policy'] = args.maxmemory_policy
+    if args.hz:
+        config_options['hz'] = args.hz
+    
+    if args.explore_configs:
+        # Test different configurations
+        configs_to_test = [
+            {},  # Default
+            {'io_threads': 4},
+            {'io_threads': 8},
+            {'io_threads': 4, 'io_threads_do_reads': 'yes'},
+            {'hz': 100},
+            {'maxmemory': '512mb', 'maxmemory_policy': 'allkeys-lru'}
+        ]
+        
+        for i, config in enumerate(configs_to_test):
+            print(f"\n{'='*50}")
+            print(f"Testing configuration {i+1}/{len(configs_to_test)}: {config}")
+            print('='*50)
+            
+            benchmark = RedisBenchmark(redis_dir=args.redis_dir, results_dir=args.results_dir, config_options=config)
+            result = benchmark.run_quick_benchmark()
+            if result and result.get('parsed_metrics'):
+                print("\nParsed Metrics:")
+                for metric in result['parsed_metrics']:
+                    print(f"  Test: {metric.get('test', 'N/A')}")
+                    print(f"  RPS: {metric.get('rps', 'N/A'):,.0f}")
+                    if 'avg_latency_ms' in metric:
+                        print(f"  Avg Latency: {metric['avg_latency_ms']:.3f}ms")
+                    if 'p99_latency_ms' in metric:
+                        print(f"  P99 Latency: {metric['p99_latency_ms']:.3f}ms")
+        return
+    
+    benchmark = RedisBenchmark(redis_dir=args.redis_dir, results_dir=args.results_dir, config_options=config_options)
     
     print("Redis Benchmark Suite")
     print("=" * 50)
     
     if args.quick:
         result = benchmark.run_quick_benchmark()
-        if result and result.get('metrics'):
+        if result and result.get('parsed_metrics'):
             print("\nParsed Metrics:")
-            for key, value in result['metrics'].items():
-                if isinstance(value, dict):
-                    print(f"  {key}:")
-                    for k, v in value.items():
-                        print(f"    {k}: {v}")
-                else:
-                    print(f"  {key}: {value}")
+            for metric in result['parsed_metrics']:
+                print(f"  Test: {metric.get('test', 'N/A')}")
+                print(f"  RPS: {metric.get('rps', 'N/A'):,.0f}")
+                if 'avg_latency_ms' in metric:
+                    print(f"  Avg Latency: {metric['avg_latency_ms']:.3f}ms")
+                if 'p99_latency_ms' in metric:
+                    print(f"  P99 Latency: {metric['p99_latency_ms']:.3f}ms")
+                print()
     else:
         results = benchmark.run_comprehensive_benchmark()
         
@@ -407,8 +533,8 @@ def main():
             print(f"Successful: {summary['successful_tests']}")
             print(f"Failed: {summary['failed_tests']}")
             print(f"Total duration: {summary['total_duration']:.2f} seconds")
-            print(f"Average CPU usage: {summary['average_cpu_usage']:.2f}%")
-            print(f"Average memory usage: {summary['average_memory_usage']:.2f}%")
+            if summary.get('redis_config'):
+                print(f"Redis config: {summary['redis_config']}")
             
             print("\nTest Results:")
             for test in summary['test_summary']:
