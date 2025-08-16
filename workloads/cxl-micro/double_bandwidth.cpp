@@ -28,7 +28,7 @@ pid_t gettid() { return syscall(SYS_gettid); }
 // Default parameters
 constexpr size_t DEFAULT_BUFFER_SIZE = 1 * 1024 * 1024 * 1024UL; // 1GB
 constexpr size_t DEFAULT_BLOCK_SIZE = 4096;                      // 4KB
-constexpr int DEFAULT_DURATION = 60;                             // seconds
+constexpr int DEFAULT_DURATION = 20;                             // seconds
 constexpr int DEFAULT_NUM_THREADS = 500;    // total threads
 constexpr float DEFAULT_READ_RATIO = 0.5;   // 50% readers, 50% writers
 constexpr size_t DEFAULT_MAX_BANDWIDTH = 0; // 0 means unlimited (MB/s)

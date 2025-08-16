@@ -261,7 +261,6 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
         # Extract data for plotting
         schedulers = []
         bandwidth_values = []
-        execution_times = []
         
         for scheduler_name, result in results.items():
             if "error" in result:
@@ -269,67 +268,28 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             
             schedulers.append(scheduler_name)
             bandwidth_values.append(result.get("bandwidth_mbps", 0))
-            execution_times.append(result.get("execution_time", 0))
         
         if not schedulers:
             print("No valid results to plot")
             return
         
-        # Create figure with subplots
-        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 6))
-        fig.suptitle('CXL Memory Bandwidth Scheduler Performance Comparison', fontsize=16)
+        # Create figure with single plot
+        plt.figure(figsize=(12, 8))
         
-        # Plot 1: Bandwidth Performance
-        bars1 = ax1.bar(schedulers, bandwidth_values, color='skyblue', alpha=0.8)
-        ax1.set_xlabel('Scheduler')
-        ax1.set_ylabel('Bandwidth (MB/s)')
-        ax1.set_title('Memory Bandwidth Performance')
-        ax1.tick_params(axis='x', rotation=45)
-        ax1.grid(True, alpha=0.3)
+        # Bandwidth Performance
+        bars = plt.bar(schedulers, bandwidth_values, color='skyblue', alpha=0.8)
+        plt.xlabel('Scheduler')
+        plt.ylabel('Bandwidth (MB/s)')
+        plt.title('CXL Memory Bandwidth Scheduler Performance Comparison')
+        plt.xticks(rotation=45)
+        plt.grid(True, alpha=0.3)
         
         # Add value labels on bars
-        for bar in bars1:
+        for bar in bars:
             height = bar.get_height()
-            ax1.text(bar.get_x() + bar.get_width()/2., height,
+            plt.text(bar.get_x() + bar.get_width()/2., height,
                     f'{height:.0f}',
-                    ha='center', va='bottom', fontsize=8)
-        
-        # Plot 2: Execution Time (if available)
-        if any(execution_times):
-            bars2 = ax2.bar(schedulers, execution_times, color='lightcoral', alpha=0.8)
-            ax2.set_xlabel('Scheduler')
-            ax2.set_ylabel('Execution Time (seconds)')
-            ax2.set_title('Execution Time Comparison')
-            ax2.tick_params(axis='x', rotation=45)
-            ax2.grid(True, alpha=0.3)
-            
-            # Add value labels on bars
-            for bar in bars2:
-                height = bar.get_height()
-                if height > 0:
-                    ax2.text(bar.get_x() + bar.get_width()/2., height,
-                            f'{height:.2f}',
-                            ha='center', va='bottom', fontsize=8)
-        
-        # Plot 3: Normalized Performance Score
-        if len(schedulers) > 1 and max(bandwidth_values) > 0:
-            # Normalize bandwidth (higher is better)
-            norm_bandwidth = np.array(bandwidth_values) / max(bandwidth_values)
-            
-            bars3 = ax3.bar(schedulers, norm_bandwidth, color='lightgreen', alpha=0.8)
-            ax3.set_xlabel('Scheduler')
-            ax3.set_ylabel('Normalized Performance Score')
-            ax3.set_title('Relative Performance\n(Higher is Better)')
-            ax3.tick_params(axis='x', rotation=45)
-            ax3.grid(True, alpha=0.3)
-            ax3.set_ylim(0, 1.1)
-            
-            # Add value labels on bars
-            for bar in bars3:
-                height = bar.get_height()
-                ax3.text(bar.get_x() + bar.get_width()/2., height,
-                        f'{height:.2%}',
-                        ha='center', va='bottom', fontsize=8)
+                    ha='center', va='bottom', fontsize=10)
         
         plt.tight_layout()
         
@@ -361,40 +321,38 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             print(f"  Read Ratio:      {result.get('read_ratio', 0):8.2f}")
     
     def run_parameter_sweep(self, scheduler_name: str = None, 
-                           thread_counts: list = None, array_sizes: list = None):
+                           thread_counts: list = None, read_ratios: list = None):
         """
-        Run parameter sweep for a specific scheduler.
+        Run parameter sweep for a specific scheduler testing thread counts and read ratios.
         
         Args:
             scheduler_name: Name of the scheduler to test
             thread_counts: List of thread counts to test
-            array_sizes: List of array sizes to test (in bytes)
+            read_ratios: List of read ratios to test (0.0-1.0)
         """
         thread_counts = thread_counts or [1, 2, 4, 8, 16, 32]
-        # Array sizes in GB converted to bytes
-        array_sizes = array_sizes or [
-            int(0.5 * 1024**3),  # 0.5 GB
-            int(1 * 1024**3),    # 1 GB
-            int(2 * 1024**3),    # 2 GB
-            int(4 * 1024**3),    # 4 GB
-        ]
+        read_ratios = read_ratios or [0.0, 0.25, 0.5, 0.75, 1.0]
+        
+        # Keep array size fixed at 1GB for consistency
+        array_size = int(1 * 1024**3)
         
         print(f"Running parameter sweep for scheduler: {scheduler_name or 'default'}")
         print(f"Thread counts: {thread_counts}")
-        print(f"Array sizes (GB): {[s/(1024**3) for s in array_sizes]}")
+        print(f"Read ratios: {read_ratios}")
+        print(f"Fixed array size: {array_size/(1024**3):.1f} GB")
         
         results = []
-        total_tests = len(thread_counts) * len(array_sizes)
+        total_tests = len(thread_counts) * len(read_ratios)
         test_count = 0
         
         for threads in thread_counts:
-            for array_size in array_sizes:
+            for read_ratio in read_ratios:
                 test_count += 1
                 print(f"\nTest {test_count}/{total_tests}: "
-                      f"threads={threads}, array_size={array_size/(1024**3):.1f}GB")
+                      f"threads={threads}, read_ratio={read_ratio:.2f}")
                 
                 # Update test parameters
-                self.set_test_params(threads=threads, array_size=array_size)
+                self.set_test_params(threads=threads, array_size=array_size, read_ratio=read_ratio)
                 
                 # Run benchmark
                 result = self.run_cxl_benchmark(scheduler_name)
@@ -403,10 +361,10 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
                     results.append({
                         'scheduler': scheduler_name or 'default',
                         'threads': threads,
-                        'array_size_gb': array_size / (1024**3),
+                        'read_ratio': read_ratio,
                         'bandwidth_mbps': result.get('bandwidth_mbps', 0),
                         'execution_time': result.get('execution_time', 0),
-                        'read_ratio': result.get('read_ratio', 0)
+                        'array_size_gb': array_size / (1024**3)
                     })
                     print(f"  Bandwidth: {result.get('bandwidth_mbps', 0):.2f} MB/s")
                 else:
@@ -422,53 +380,88 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             df.to_csv(results_file, index=False)
             print(f"\nParameter sweep results saved to {results_file}")
             
-            # Generate parameter sweep visualization
+            # Generate parameter sweep visualization with grid layout
             self._generate_parameter_sweep_plot(df, scheduler_name or 'default')
     
     def _generate_parameter_sweep_plot(self, df, scheduler_name):
-        """Generate parameter sweep visualization"""
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
-        fig.suptitle(f'Parameter Sweep Results for {scheduler_name}', fontsize=16)
+        """Generate parameter sweep visualization with grid layout for each parameter configuration"""
         
-        # 1. Heatmap for bandwidth
-        bandwidth_pivot = df.pivot(index='threads', columns='array_size_gb', values='bandwidth_mbps')
-        sns.heatmap(bandwidth_pivot, annot=True, fmt='.0f', cmap='viridis', ax=ax1)
-        ax1.set_title('Memory Bandwidth (MB/s)')
-        ax1.set_xlabel('Array Size (GB)')
-        ax1.set_ylabel('Thread Count')
+        # Create main figure with subplots in a grid layout
+        # We'll create a 3x2 grid for better visualization
+        fig = plt.figure(figsize=(18, 16))
+        fig.suptitle(f'Parameter Sweep Results for {scheduler_name}', fontsize=18, y=0.995)
         
-        # 2. Line plot for different array sizes
-        array_sizes = sorted(df['array_size_gb'].unique())
-        for size in array_sizes:
-            subset = df[df['array_size_gb'] == size]
+        # Create a GridSpec for flexible subplot arrangement
+        gs = fig.add_gridspec(3, 2, hspace=0.3, wspace=0.25)
+        
+        # 1. Main heatmap - bandwidth for threads vs read_ratio
+        ax1 = fig.add_subplot(gs[0, :])  # Top row, spans both columns
+        bandwidth_pivot = df.pivot(index='threads', columns='read_ratio', values='bandwidth_mbps')
+        sns.heatmap(bandwidth_pivot, annot=True, fmt='.0f', cmap='viridis', ax=ax1, cbar_kws={'label': 'MB/s'})
+        ax1.set_title('Memory Bandwidth Heatmap (MB/s)', fontsize=14, pad=10)
+        ax1.set_xlabel('Read Ratio', fontsize=12)
+        ax1.set_ylabel('Thread Count', fontsize=12)
+        
+        # 2. Line plot - bandwidth vs threads for different read ratios
+        ax2 = fig.add_subplot(gs[1, 0])
+        read_ratios = sorted(df['read_ratio'].unique())
+        colors = plt.cm.coolwarm(np.linspace(0, 1, len(read_ratios)))
+        for i, ratio in enumerate(read_ratios):
+            subset = df[df['read_ratio'] == ratio]
             ax2.plot(subset['threads'], subset['bandwidth_mbps'], 
-                    marker='o', label=f'{size} GB')
-        ax2.set_xlabel('Thread Count')
-        ax2.set_ylabel('Bandwidth (MB/s)')
-        ax2.set_title('Bandwidth vs Thread Count')
-        ax2.legend()
+                    marker='o', label=f'Read={ratio:.2f}', color=colors[i], linewidth=2)
+        ax2.set_xlabel('Thread Count', fontsize=11)
+        ax2.set_ylabel('Bandwidth (MB/s)', fontsize=11)
+        ax2.set_title('Bandwidth vs Thread Count', fontsize=12)
+        ax2.legend(loc='best', fontsize=9)
         ax2.grid(True, alpha=0.3)
+        ax2.set_xscale('log', base=2)
         
-        # 3. Line plot for different thread counts
+        # 3. Line plot - bandwidth vs read ratio for different thread counts
+        ax3 = fig.add_subplot(gs[1, 1])
         thread_counts = sorted(df['threads'].unique())
-        for threads in thread_counts:
+        colors = plt.cm.plasma(np.linspace(0, 0.9, len(thread_counts)))
+        for i, threads in enumerate(thread_counts):
             subset = df[df['threads'] == threads]
-            ax3.plot(subset['array_size_gb'], subset['bandwidth_mbps'], 
-                    marker='s', label=f'{threads} threads')
-        ax3.set_xlabel('Array Size (GB)')
-        ax3.set_ylabel('Bandwidth (MB/s)')
-        ax3.set_title('Bandwidth vs Array Size')
-        ax3.legend()
+            ax3.plot(subset['read_ratio'], subset['bandwidth_mbps'], 
+                    marker='s', label=f'{threads}T', color=colors[i], linewidth=2)
+        ax3.set_xlabel('Read Ratio', fontsize=11)
+        ax3.set_ylabel('Bandwidth (MB/s)', fontsize=11)
+        ax3.set_title('Bandwidth vs Read Ratio', fontsize=12)
+        ax3.legend(loc='best', fontsize=9, ncol=2)
         ax3.grid(True, alpha=0.3)
         
-        # 4. Efficiency plot (bandwidth per thread)
+        # 4. Efficiency heatmap - bandwidth per thread
+        ax4 = fig.add_subplot(gs[2, 0])
         df['bandwidth_per_thread'] = df['bandwidth_mbps'] / df['threads']
-        efficiency_pivot = df.pivot(index='threads', columns='array_size_gb', 
-                                   values='bandwidth_per_thread')
-        sns.heatmap(efficiency_pivot, annot=True, fmt='.0f', cmap='plasma', ax=ax4)
-        ax4.set_title('Bandwidth Efficiency (MB/s per thread)')
-        ax4.set_xlabel('Array Size (GB)')
-        ax4.set_ylabel('Thread Count')
+        efficiency_pivot = df.pivot(index='threads', columns='read_ratio', values='bandwidth_per_thread')
+        sns.heatmap(efficiency_pivot, annot=True, fmt='.0f', cmap='plasma', ax=ax4, cbar_kws={'label': 'MB/s per thread'})
+        ax4.set_title('Bandwidth Efficiency (MB/s per thread)', fontsize=12)
+        ax4.set_xlabel('Read Ratio', fontsize=11)
+        ax4.set_ylabel('Thread Count', fontsize=11)
+        
+        # 5. 3D surface plot for bandwidth
+        ax5 = fig.add_subplot(gs[2, 1], projection='3d')
+        threads_mesh, ratios_mesh = np.meshgrid(
+            sorted(df['threads'].unique()),
+            sorted(df['read_ratio'].unique())
+        )
+        bandwidth_mesh = np.zeros_like(threads_mesh, dtype=float)
+        
+        for i, ratio in enumerate(sorted(df['read_ratio'].unique())):
+            for j, threads in enumerate(sorted(df['threads'].unique())):
+                val = df[(df['read_ratio'] == ratio) & (df['threads'] == threads)]['bandwidth_mbps']
+                if not val.empty:
+                    bandwidth_mesh[i, j] = val.values[0]
+        
+        surf = ax5.plot_surface(threads_mesh, ratios_mesh, bandwidth_mesh, 
+                                cmap='viridis', alpha=0.8, edgecolor='none')
+        ax5.set_xlabel('Threads', fontsize=10)
+        ax5.set_ylabel('Read Ratio', fontsize=10)
+        ax5.set_zlabel('Bandwidth (MB/s)', fontsize=10)
+        ax5.set_title('3D Bandwidth Surface', fontsize=12)
+        ax5.view_init(elev=25, azim=45)
+        fig.colorbar(surf, ax=ax5, shrink=0.5, aspect=5)
         
         plt.tight_layout()
         
@@ -476,6 +469,9 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
         figure_path = os.path.join(self.results_dir, f"parameter_sweep_{scheduler_name}.png")
         plt.savefig(figure_path, dpi=300, bbox_inches='tight')
         print(f"Parameter sweep figure saved to {figure_path}")
+        
+        # Also generate individual parameter configuration figures
+        self._generate_individual_config_plots(df, scheduler_name)
 
 
 def main():
