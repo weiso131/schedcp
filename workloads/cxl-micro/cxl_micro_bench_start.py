@@ -330,8 +330,8 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             thread_counts: List of thread counts to test
             read_ratios: List of read ratios to test (0.0-1.0)
         """
-        thread_counts = thread_counts or [1, 2, 4, 8, 16, 32]
-        read_ratios = read_ratios or [0.0, 0.25, 0.5, 0.75, 1.0]
+        thread_counts = thread_counts or [1, 8, 64, 128]
+        read_ratios = read_ratios or [0.25, 0.5, 0.75]
         
         # Keep array size fixed at 1GB for consistency
         array_size = int(1 * 1024**3)
@@ -384,84 +384,85 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             self._generate_parameter_sweep_plot(df, scheduler_name or 'default')
     
     def _generate_parameter_sweep_plot(self, df, scheduler_name):
-        """Generate parameter sweep visualization with grid layout for each parameter configuration"""
+        """Generate parameter sweep visualization with grid of bar plots for each configuration"""
         
-        # Create main figure with subplots in a grid layout
-        # We'll create a 3x2 grid for better visualization
-        fig = plt.figure(figsize=(18, 16))
-        fig.suptitle(f'Parameter Sweep Results for {scheduler_name}', fontsize=18, y=0.995)
-        
-        # Create a GridSpec for flexible subplot arrangement
-        gs = fig.add_gridspec(3, 2, hspace=0.3, wspace=0.25)
-        
-        # 1. Main heatmap - bandwidth for threads vs read_ratio
-        ax1 = fig.add_subplot(gs[0, :])  # Top row, spans both columns
-        bandwidth_pivot = df.pivot(index='threads', columns='read_ratio', values='bandwidth_mbps')
-        sns.heatmap(bandwidth_pivot, annot=True, fmt='.0f', cmap='viridis', ax=ax1, cbar_kws={'label': 'MB/s'})
-        ax1.set_title('Memory Bandwidth Heatmap (MB/s)', fontsize=14, pad=10)
-        ax1.set_xlabel('Read Ratio', fontsize=12)
-        ax1.set_ylabel('Thread Count', fontsize=12)
-        
-        # 2. Line plot - bandwidth vs threads for different read ratios
-        ax2 = fig.add_subplot(gs[1, 0])
-        read_ratios = sorted(df['read_ratio'].unique())
-        colors = plt.cm.coolwarm(np.linspace(0, 1, len(read_ratios)))
-        for i, ratio in enumerate(read_ratios):
-            subset = df[df['read_ratio'] == ratio]
-            ax2.plot(subset['threads'], subset['bandwidth_mbps'], 
-                    marker='o', label=f'Read={ratio:.2f}', color=colors[i], linewidth=2)
-        ax2.set_xlabel('Thread Count', fontsize=11)
-        ax2.set_ylabel('Bandwidth (MB/s)', fontsize=11)
-        ax2.set_title('Bandwidth vs Thread Count', fontsize=12)
-        ax2.legend(loc='best', fontsize=9)
-        ax2.grid(True, alpha=0.3)
-        ax2.set_xscale('log', base=2)
-        
-        # 3. Line plot - bandwidth vs read ratio for different thread counts
-        ax3 = fig.add_subplot(gs[1, 1])
+        # Get unique thread counts and read ratios
         thread_counts = sorted(df['threads'].unique())
-        colors = plt.cm.plasma(np.linspace(0, 0.9, len(thread_counts)))
-        for i, threads in enumerate(thread_counts):
-            subset = df[df['threads'] == threads]
-            ax3.plot(subset['read_ratio'], subset['bandwidth_mbps'], 
-                    marker='s', label=f'{threads}T', color=colors[i], linewidth=2)
-        ax3.set_xlabel('Read Ratio', fontsize=11)
-        ax3.set_ylabel('Bandwidth (MB/s)', fontsize=11)
-        ax3.set_title('Bandwidth vs Read Ratio', fontsize=12)
-        ax3.legend(loc='best', fontsize=9, ncol=2)
-        ax3.grid(True, alpha=0.3)
+        read_ratios = sorted(df['read_ratio'].unique())
         
-        # 4. Efficiency heatmap - bandwidth per thread
-        ax4 = fig.add_subplot(gs[2, 0])
-        df['bandwidth_per_thread'] = df['bandwidth_mbps'] / df['threads']
-        efficiency_pivot = df.pivot(index='threads', columns='read_ratio', values='bandwidth_per_thread')
-        sns.heatmap(efficiency_pivot, annot=True, fmt='.0f', cmap='plasma', ax=ax4, cbar_kws={'label': 'MB/s per thread'})
-        ax4.set_title('Bandwidth Efficiency (MB/s per thread)', fontsize=12)
-        ax4.set_xlabel('Read Ratio', fontsize=11)
-        ax4.set_ylabel('Thread Count', fontsize=11)
+        # Calculate grid dimensions
+        n_threads = len(thread_counts)
+        n_ratios = len(read_ratios)
         
-        # 5. 3D surface plot for bandwidth
-        ax5 = fig.add_subplot(gs[2, 1], projection='3d')
-        threads_mesh, ratios_mesh = np.meshgrid(
-            sorted(df['threads'].unique()),
-            sorted(df['read_ratio'].unique())
-        )
-        bandwidth_mesh = np.zeros_like(threads_mesh, dtype=float)
+        # Create figure with subplots grid
+        fig, axes = plt.subplots(n_ratios, n_threads, figsize=(4*n_threads, 3*n_ratios))
+        fig.suptitle(f'Parameter Sweep: {scheduler_name} - Bandwidth (MB/s) for Each Configuration', 
+                     fontsize=16, y=1.02)
         
-        for i, ratio in enumerate(sorted(df['read_ratio'].unique())):
-            for j, threads in enumerate(sorted(df['threads'].unique())):
-                val = df[(df['read_ratio'] == ratio) & (df['threads'] == threads)]['bandwidth_mbps']
-                if not val.empty:
-                    bandwidth_mesh[i, j] = val.values[0]
+        # Ensure axes is always 2D array for consistent indexing
+        if n_ratios == 1:
+            axes = axes.reshape(1, -1)
+        if n_threads == 1:
+            axes = axes.reshape(-1, 1)
         
-        surf = ax5.plot_surface(threads_mesh, ratios_mesh, bandwidth_mesh, 
-                                cmap='viridis', alpha=0.8, edgecolor='none')
-        ax5.set_xlabel('Threads', fontsize=10)
-        ax5.set_ylabel('Read Ratio', fontsize=10)
-        ax5.set_zlabel('Bandwidth (MB/s)', fontsize=10)
-        ax5.set_title('3D Bandwidth Surface', fontsize=12)
-        ax5.view_init(elev=25, azim=45)
-        fig.colorbar(surf, ax=ax5, shrink=0.5, aspect=5)
+        # Color for bars
+        bar_color = 'skyblue'
+        
+        # Create a bar plot for each thread count and read ratio combination
+        for i, read_ratio in enumerate(read_ratios):
+            for j, threads in enumerate(thread_counts):
+                ax = axes[i, j]
+                
+                # Get data for this specific configuration
+                config_data = df[(df['threads'] == threads) & (df['read_ratio'] == read_ratio)]
+                
+                if not config_data.empty:
+                    bandwidth = config_data['bandwidth_mbps'].values[0]
+                    
+                    # Create bar plot
+                    bar = ax.bar([0], [bandwidth], color=bar_color, alpha=0.8, width=0.6)
+                    
+                    # Add value label on bar
+                    ax.text(0, bandwidth, f'{bandwidth:.0f}', 
+                           ha='center', va='bottom', fontsize=9)
+                    
+                    # Set title for each subplot
+                    ax.set_title(f'T={threads}, R={read_ratio:.2f}', fontsize=10)
+                    
+                    # Set y-axis label only for leftmost column
+                    if j == 0:
+                        ax.set_ylabel('Bandwidth (MB/s)', fontsize=9)
+                    
+                    # Remove x-axis labels and ticks
+                    ax.set_xticks([])
+                    ax.set_xlim(-0.5, 0.5)
+                    
+                    # Add grid
+                    ax.grid(True, alpha=0.3, axis='y')
+                    
+                    # Set y-axis limits for consistency across all subplots
+                    max_bandwidth = df['bandwidth_mbps'].max()
+                    ax.set_ylim(0, max_bandwidth * 1.15)
+                else:
+                    # If no data, show empty plot with message
+                    ax.text(0.5, 0.5, 'No Data', 
+                           ha='center', va='center', transform=ax.transAxes)
+                    ax.set_title(f'T={threads}, R={read_ratio:.2f}', fontsize=10)
+                    ax.set_xticks([])
+                    ax.set_yticks([])
+        
+        # Add labels for the grid
+        # Add column header
+        for j, threads in enumerate(thread_counts):
+            axes[0, j].text(0.5, 1.15, f'{threads} Threads', 
+                          transform=axes[0, j].transAxes,
+                          ha='center', fontsize=11, weight='bold')
+        
+        # Add row header
+        for i, read_ratio in enumerate(read_ratios):
+            axes[i, 0].text(-0.3, 0.5, f'Read\nRatio\n{read_ratio:.2f}', 
+                          transform=axes[i, 0].transAxes,
+                          ha='center', va='center', fontsize=11, weight='bold')
         
         plt.tight_layout()
         
@@ -469,9 +470,6 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
         figure_path = os.path.join(self.results_dir, f"parameter_sweep_{scheduler_name}.png")
         plt.savefig(figure_path, dpi=300, bbox_inches='tight')
         print(f"Parameter sweep figure saved to {figure_path}")
-        
-        # Also generate individual parameter configuration figures
-        self._generate_individual_config_plots(df, scheduler_name)
 
 
 def main():

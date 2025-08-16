@@ -27,7 +27,6 @@ datasets/
 *.bin
 
 # Generated documentation
-*.pdf
 *.html.gz.hpp
 *.html.hpp
 

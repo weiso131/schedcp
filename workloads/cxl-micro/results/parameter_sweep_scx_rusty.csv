@@ -1,0 +1,13 @@
+scheduler,threads,read_ratio,bandwidth_mbps,execution_time,array_size_gb
+scx_rusty,1,0.25,4372.51,0,1.0
+scx_rusty,1,0.5,4289.61,0,1.0
+scx_rusty,1,0.75,4476.64,0,1.0
+scx_rusty,8,0.25,28263.7,0,1.0
+scx_rusty,8,0.5,36396.7,0,1.0
+scx_rusty,8,0.75,56156.3,0,1.0
+scx_rusty,64,0.25,225902.0,0,1.0
+scx_rusty,64,0.5,219424.0,0,1.0
+scx_rusty,64,0.75,250485.0,0,1.0
+scx_rusty,128,0.25,213634.0,0,1.0
+scx_rusty,128,0.5,220403.0,0,1.0
+scx_rusty,128,0.75,204895.0,0,1.0
