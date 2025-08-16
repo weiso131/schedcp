@@ -55,6 +55,7 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             "iterations": 10,
             "threads": 8,
             "timeout": 300,
+            "read_ratio": 0.5,  # 50% readers, 50% writers
         }
         
         # Environment setup
@@ -71,12 +72,14 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
     
     def _build_double_bandwidth_command(self) -> list:
         """Build double_bandwidth command with current parameters"""
-        return [
+        cmd = [
             self.double_bandwidth_path,
-            str(self.test_params["array_size"]),
-            str(self.test_params["iterations"]),
-            str(self.test_params["threads"])
+            "--buffer-size", str(self.test_params["array_size"]),
+            "--threads", str(self.test_params["threads"]),
+            "--duration", "10",  # Use fixed duration for consistent testing
+            "--read-ratio", str(self.test_params["read_ratio"])
         ]
+        return cmd
     
     def _parse_bandwidth_output(self, output: str) -> dict:
         """Parse double_bandwidth output to extract performance metrics"""
@@ -149,9 +152,9 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             Dictionary containing benchmark results
         """
         print(f"Running double_bandwidth with scheduler: {scheduler_name or 'default'}")
-        print(f"Parameters: array_size={self.test_params['array_size']}, "
-              f"iterations={self.test_params['iterations']}, "
-              f"threads={self.test_params['threads']}")
+        print(f"Parameters: buffer_size={self.test_params['array_size']}, "
+              f"threads={self.test_params['threads']}, "
+              f"read_ratio={self.test_params['read_ratio']}")
         
         # Build command
         cmd = self._build_double_bandwidth_command()
@@ -201,6 +204,7 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
         metrics["exit_code"] = exit_code
         metrics["array_size"] = self.test_params["array_size"]
         metrics["threads"] = self.test_params["threads"]
+        metrics["read_ratio"] = self.test_params["read_ratio"]
         metrics["iterations"] = self.test_params["iterations"]
         
         return metrics
@@ -354,6 +358,7 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
                 print(f"  Execution Time:  {result.get('execution_time', 0):8.2f} seconds")
             print(f"  Array Size:      {result.get('array_size', 0) / (1024**3):8.2f} GB")
             print(f"  Threads:         {result.get('threads', 0):8d}")
+            print(f"  Read Ratio:      {result.get('read_ratio', 0):8.2f}")
     
     def run_parameter_sweep(self, scheduler_name: str = None, 
                            thread_counts: list = None, array_sizes: list = None):
@@ -400,7 +405,8 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
                         'threads': threads,
                         'array_size_gb': array_size / (1024**3),
                         'bandwidth_mbps': result.get('bandwidth_mbps', 0),
-                        'execution_time': result.get('execution_time', 0)
+                        'execution_time': result.get('execution_time', 0),
+                        'read_ratio': result.get('read_ratio', 0)
                     })
                     print(f"  Bandwidth: {result.get('bandwidth_mbps', 0):.2f} MB/s")
                 else:
@@ -488,6 +494,8 @@ def main():
                        help="Array size in bytes (default 1GB)")
     parser.add_argument("--iterations", type=int, default=3, 
                        help="Number of iterations per test")
+    parser.add_argument("--read-ratio", type=float, default=0.5,
+                       help="Ratio of readers (0.0-1.0, default: 0.5)")
     parser.add_argument("--timeout", type=int, default=30000, 
                        help="Timeout in seconds")
     parser.add_argument("--parameter-sweep", action="store_true",
@@ -500,12 +508,18 @@ def main():
     # Create tester instance
     tester = CXLMicroBenchmarkTester(args.double_bandwidth_path, args.results_dir)
     
+    # Validate read_ratio
+    if args.read_ratio < 0.0 or args.read_ratio > 1.0:
+        print("Error: read-ratio must be between 0.0 and 1.0")
+        sys.exit(1)
+    
     # Update test parameters
     tester.set_test_params(
         threads=args.threads,
         array_size=args.array_size,
         iterations=args.iterations,
-        timeout=args.timeout
+        timeout=args.timeout,
+        read_ratio=args.read_ratio
     )
     
     # Check if binary exists
