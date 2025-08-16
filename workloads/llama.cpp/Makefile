@@ -95,8 +95,7 @@ bench-schedulers: build download-models $(DATASET_DIR) $(RESULTS_DIR)
 	fi
 	@python sharegpt_llama_server_eval.py \
 		--num-samples 20 \
-		--max-concurrent 4 \
-		--production-only \
+		--max-concurrent 64 \
 		--server-logs
 
 # Custom benchmark with specific parameters
@@ -141,9 +140,9 @@ SHAREGPT_BENCH := $(DATASET_DIR)/sharegpt_benchmark.json
 
 # Benchmark parameters
 SAMPLES_QUICK := 30
-SAMPLES_FULL := 1000
+SAMPLES_FULL := 100
 CONCURRENT_QUICK := 4
-CONCURRENT_FULL := 64
+CONCURRENT_FULL := 128
 
 help:
 	@echo "Available targets:"

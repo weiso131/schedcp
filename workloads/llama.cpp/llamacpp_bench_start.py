@@ -485,7 +485,7 @@ def main():
                        help="Directory to store results")
     parser.add_argument("--production-only", action="store_true", 
                        help="Test only production schedulers")
-    parser.add_argument("--threads", type=int, default=8, 
+    parser.add_argument("--threads", type=int, default=128, 
                        help="Number of threads for testing")
     parser.add_argument("--batch-size", type=int, default=512, 
                        help="Batch size for testing")

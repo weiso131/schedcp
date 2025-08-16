@@ -14,8 +14,8 @@ import time
 from pathlib import Path
 
 # Configuration
-LLAMA_BENCH_PATH = "/home/yunwei37/ai-os/workloads/llama.cpp/cpu_bin/llama-bench"
-MODEL_PATH = "/home/yunwei37/.cache/llama.cpp/ggml-org_gemma-3-1b-it-GGUF_gemma-3-1b-it-Q4_K_M.gguf"
+LLAMA_BENCH_PATH = "/root/yunwei37/ai-os/workloads/llama.cpp/build/bin/llama-bench"
+MODEL_PATH = "/root/.cache/llama.cpp/ggml-org_gemma-3-1b-it-GGUF_gemma-3-1b-it-Q4_K_M.gguf"
 
 # Test parameters
 THREAD_COUNTS = [1, 2, 4, 8, 16]
