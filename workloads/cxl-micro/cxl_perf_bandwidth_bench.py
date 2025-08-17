@@ -109,130 +109,112 @@ class PerfBandwidthCalculator:
     @classmethod
     def calculate_all_bandwidths(cls, perf_data: Dict[str, float]) -> Dict[str, float]:
         """
-        Calculate all bandwidth metrics from perf counter data.
+        Calculate bandwidth or instruction rates for all perf counters.
         
         Args:
             perf_data: Dictionary with perf counter values and wall_time
             
         Returns:
-            Dictionary with calculated bandwidth metrics
+            Dictionary with calculated metrics (bandwidth for cache-line events, rates for others)
         """
         if 'wall_time' not in perf_data:
             raise ValueError("Wall time not found in perf data")
         
         wall_time = perf_data['wall_time']
-        bandwidth_metrics = {}
+        metrics = {}
         
-        # Method 1: L3 Cache Analysis
+        # Basic performance counters (rates)
+        if 'instructions' in perf_data:
+            metrics['instructions_rate'] = perf_data['instructions'] / wall_time
+        if 'cycles' in perf_data:
+            metrics['cycles_rate'] = perf_data['cycles'] / wall_time
+        
+        # Cache counters (bandwidth - cache line level)
         if 'cache-references' in perf_data:
-            bandwidth_metrics['cache_references_bw'] = cls.calculate_bandwidth_from_counter(
+            metrics['cache_references_bandwidth_mbps'] = cls.calculate_bandwidth_from_counter(
                 perf_data['cache-references'], wall_time
             )
-        
         if 'cache-misses' in perf_data:
-            bandwidth_metrics['cache_misses_bw'] = cls.calculate_bandwidth_from_counter(
+            metrics['cache_misses_bandwidth_mbps'] = cls.calculate_bandwidth_from_counter(
                 perf_data['cache-misses'], wall_time
             )
+        if 'longest_lat_cache.miss' in perf_data:
+            metrics['longest_lat_cache_miss_bandwidth_mbps'] = cls.calculate_bandwidth_from_counter(
+                perf_data['longest_lat_cache.miss'], wall_time
+            )
         
-        # Method 2: L3 Hit/Miss Rates (instruction-level analysis, not bandwidth)
-        # Note: These measure individual load instructions, not cache line transfers
+        # Memory instruction counters (bandwidth - assuming each instruction touches a cache line)
+        if 'mem_inst_retired.all_loads' in perf_data:
+            metrics['mem_loads_bandwidth_mbps'] = cls.calculate_bandwidth_from_counter(
+                perf_data['mem_inst_retired.all_loads'], wall_time
+            )
+        if 'mem_inst_retired.all_stores' in perf_data:
+            metrics['mem_stores_bandwidth_mbps'] = cls.calculate_bandwidth_from_counter(
+                perf_data['mem_inst_retired.all_stores'], wall_time
+            )
+        
+        # L3 hit/miss counters (instruction rates)
         if 'mem_load_retired.l3_hit' in perf_data:
-            bandwidth_metrics['l3_hit_rate_ops'] = perf_data['mem_load_retired.l3_hit'] / wall_time
-        
+            metrics['l3_hit_instructions_rate'] = perf_data['mem_load_retired.l3_hit'] / wall_time
         if 'mem_load_retired.l3_miss' in perf_data:
-            bandwidth_metrics['l3_miss_rate_ops'] = perf_data['mem_load_retired.l3_miss'] / wall_time
+            metrics['l3_miss_instructions_rate'] = perf_data['mem_load_retired.l3_miss'] / wall_time
         
-        # Method 3: L3 Miss Destination Analysis (instruction rates, not bandwidth)
-        # Note: These counters measure individual load instructions, not cache lines
-        # So we calculate instruction rates (ops/sec) instead of bandwidth
+        # L3 miss destination counters (instruction rates)
         if 'mem_load_l3_miss_retired.local_dram' in perf_data:
-            bandwidth_metrics['l3_miss_local_dram_rate'] = perf_data['mem_load_l3_miss_retired.local_dram'] / wall_time
-        
+            metrics['l3_miss_local_dram_instructions_rate'] = perf_data['mem_load_l3_miss_retired.local_dram'] / wall_time
         if 'mem_load_l3_miss_retired.remote_dram' in perf_data:
-            bandwidth_metrics['l3_miss_remote_dram_rate'] = perf_data['mem_load_l3_miss_retired.remote_dram'] / wall_time
-        
+            metrics['l3_miss_remote_dram_instructions_rate'] = perf_data['mem_load_l3_miss_retired.remote_dram'] / wall_time
         if 'mem_load_l3_miss_retired.remote_fwd' in perf_data:
-            bandwidth_metrics['l3_miss_remote_fwd_rate'] = perf_data['mem_load_l3_miss_retired.remote_fwd'] / wall_time
-        
+            metrics['l3_miss_remote_fwd_instructions_rate'] = perf_data['mem_load_l3_miss_retired.remote_fwd'] / wall_time
         if 'mem_load_l3_miss_retired.remote_hitm' in perf_data:
-            bandwidth_metrics['l3_miss_remote_hitm_rate'] = perf_data['mem_load_l3_miss_retired.remote_hitm'] / wall_time
+            metrics['l3_miss_remote_hitm_instructions_rate'] = perf_data['mem_load_l3_miss_retired.remote_hitm'] / wall_time
         
-        # Method 4: Offcore L3 Miss Traffic (cache line level)
+        # Offcore request counters (bandwidth - cache line level)
         if 'offcore_requests.l3_miss_demand_data_rd' in perf_data:
-            bandwidth_metrics['offcore_l3_miss_data_rd_bw'] = cls.calculate_bandwidth_from_counter(
+            metrics['offcore_l3_miss_data_rd_bandwidth_mbps'] = cls.calculate_bandwidth_from_counter(
                 perf_data['offcore_requests.l3_miss_demand_data_rd'], wall_time
             )
-        
         if 'offcore_requests.demand_data_rd' in perf_data:
-            bandwidth_metrics['offcore_data_read_bw'] = cls.calculate_bandwidth_from_counter(
+            metrics['offcore_data_read_bandwidth_mbps'] = cls.calculate_bandwidth_from_counter(
                 perf_data['offcore_requests.demand_data_rd'], wall_time
             )
-        
         if 'offcore_requests.demand_rfo' in perf_data:
-            bandwidth_metrics['offcore_rfo_bw'] = cls.calculate_bandwidth_from_counter(
+            metrics['offcore_rfo_bandwidth_mbps'] = cls.calculate_bandwidth_from_counter(
                 perf_data['offcore_requests.demand_rfo'], wall_time
             )
         
-        # Method 5: Memory Controller Bandwidth (actual DRAM)
+        # Memory controller counters (bandwidth - cache line level)
         if 'uncore_imc/cas_count_read/' in perf_data:
-            bandwidth_metrics['dram_read_bw'] = cls.calculate_bandwidth_from_counter(
+            metrics['dram_read_bandwidth_mbps'] = cls.calculate_bandwidth_from_counter(
                 perf_data['uncore_imc/cas_count_read/'], wall_time
             )
-        
         if 'uncore_imc/cas_count_write/' in perf_data:
-            bandwidth_metrics['dram_write_bw'] = cls.calculate_bandwidth_from_counter(
+            metrics['dram_write_bandwidth_mbps'] = cls.calculate_bandwidth_from_counter(
                 perf_data['uncore_imc/cas_count_write/'], wall_time
             )
         
-        # Method 6: Memory Instructions for Context
-        if 'mem_inst_retired.all_loads' in perf_data and 'mem_inst_retired.all_stores' in perf_data:
-            total_mem_ops = perf_data['mem_inst_retired.all_loads'] + perf_data['mem_inst_retired.all_stores']
-            bandwidth_metrics['memory_instructions_bw'] = cls.calculate_bandwidth_from_counter(
-                total_mem_ops, wall_time
-            )
+        # Memory stall counters (rates)
+        if 'cycle_activity.stalls_l3_miss' in perf_data:
+            metrics['stalls_l3_miss_cycles_rate'] = perf_data['cycle_activity.stalls_l3_miss'] / wall_time
+        if 'memory_activity.stalls_l3_miss' in perf_data:
+            metrics['memory_stalls_l3_miss_cycles_rate'] = perf_data['memory_activity.stalls_l3_miss'] / wall_time
         
-        # Calculate efficiency metrics
+        # Derived metrics
+        if 'instructions' in perf_data and 'cycles' in perf_data:
+            metrics['instructions_per_cycle'] = perf_data['instructions'] / perf_data['cycles']
+        
         if 'cache-references' in perf_data and 'cache-misses' in perf_data:
-            bandwidth_metrics['cache_miss_rate'] = (perf_data['cache-misses'] / perf_data['cache-references']) * 100
+            metrics['cache_miss_rate_pct'] = (perf_data['cache-misses'] / perf_data['cache-references']) * 100
         
-        # Precise L3 Hit/Miss Rates
         if 'mem_load_retired.l3_hit' in perf_data and 'mem_load_retired.l3_miss' in perf_data:
             l3_hits = perf_data['mem_load_retired.l3_hit']
             l3_misses = perf_data['mem_load_retired.l3_miss']
             total_l3_accesses = l3_hits + l3_misses
             if total_l3_accesses > 0:
-                bandwidth_metrics['l3_hit_rate'] = (l3_hits / total_l3_accesses) * 100
-                bandwidth_metrics['l3_miss_rate_precise'] = (l3_misses / total_l3_accesses) * 100
+                metrics['l3_hit_rate_pct'] = (l3_hits / total_l3_accesses) * 100
+                metrics['l3_miss_rate_pct'] = (l3_misses / total_l3_accesses) * 100
         
-        # L3 Miss Destination Breakdown
-        if 'mem_load_l3_miss_retired.local_dram' in perf_data:
-            local_dram = perf_data['mem_load_l3_miss_retired.local_dram']
-            remote_dram = perf_data.get('mem_load_l3_miss_retired.remote_dram', 0)
-            remote_fwd = perf_data.get('mem_load_l3_miss_retired.remote_fwd', 0)
-            remote_hitm = perf_data.get('mem_load_l3_miss_retired.remote_hitm', 0)
-            
-            total_l3_miss_loads = local_dram + remote_dram + remote_fwd + remote_hitm
-            if total_l3_miss_loads > 0:
-                bandwidth_metrics['l3_miss_local_dram_pct'] = (local_dram / total_l3_miss_loads) * 100
-                bandwidth_metrics['l3_miss_remote_dram_pct'] = (remote_dram / total_l3_miss_loads) * 100
-                bandwidth_metrics['l3_miss_remote_fwd_pct'] = (remote_fwd / total_l3_miss_loads) * 100
-                bandwidth_metrics['l3_miss_remote_hitm_pct'] = (remote_hitm / total_l3_miss_loads) * 100
-        
-        # Overall L3 Miss Rate (instruction-based)
-        if 'mem_inst_retired.all_loads' in perf_data and 'mem_load_l3_miss_retired.local_dram' in perf_data:
-            total_loads = perf_data['mem_inst_retired.all_loads']
-            l3_misses = perf_data['mem_load_l3_miss_retired.local_dram']
-            if 'mem_load_l3_miss_retired.remote_dram' in perf_data:
-                l3_misses += perf_data['mem_load_l3_miss_retired.remote_dram']
-            bandwidth_metrics['l3_miss_rate'] = (l3_misses / total_loads) * 100
-        
-        if 'instructions' in perf_data and 'cycles' in perf_data:
-            bandwidth_metrics['instructions_per_cycle'] = perf_data['instructions'] / perf_data['cycles']
-        
-        if 'cycle_activity.stalls_total' in perf_data and 'cycles' in perf_data:
-            bandwidth_metrics['cycle_stall_rate'] = (perf_data['cycle_activity.stalls_total'] / perf_data['cycles']) * 100
-        
-        return bandwidth_metrics
+        return metrics
 
 
 class CXLPerfBandwidthTester:
@@ -406,7 +388,7 @@ class CXLPerfBandwidthTester:
         print(f"Results saved to {results_file}")
     
     def print_raw_data(self, results: Dict):
-        """Print raw performance data and results with calculation details"""
+        """Print raw performance data and calculated metrics"""
         print("\n" + "="*80)
         print("RAW DATA OUTPUT")
         print("="*80)
@@ -419,171 +401,60 @@ class CXLPerfBandwidthTester:
                 print(f"\nRAW STDERR:\n{results['raw_stderr']}")
             return
         
-        # Print calculation methodology first
+        # Print calculation methodology
         print("CALCULATION METHODOLOGY:")
         print("-" * 40)
-        print("Cache Line Size: 64 bytes")
-        print("Bandwidth Formula: (counter_value * cache_line_size) / wall_time / MB")
-        print("Where MB = 1024 * 1024 bytes")
+        print("Bandwidth (MB/s) = (counter_value * 64 bytes) / wall_time / 1048576")
+        print("Rate (events/s) = counter_value / wall_time")
         print()
         
-        # Show calculation process if perf data exists
+        # Show all calculated metrics if perf data exists
         if "perf_counters" in results and "perf_bandwidths" in results:
             perf_counters = results["perf_counters"]
-            perf_bw = results["perf_bandwidths"]
+            metrics = results["perf_bandwidths"]
             wall_time = perf_counters.get("wall_time", 0)
             
-            print("CALCULATION PROCESS:")
+            print("PERFORMANCE METRICS:")
             print("-" * 40)
             print(f"Wall Time: {wall_time:.6f} seconds")
             print()
             
-            # Show calculations for L3 and DRAM focused metrics (bandwidth only)
-            calculations = [
-                ("Cache References BW", "cache-references", "cache_references_bw"),
-                ("Cache Misses BW", "cache-misses", "cache_misses_bw"), 
-                ("Offcore Data Read BW", "offcore_requests.demand_data_rd", "offcore_data_read_bw"),
-                ("Offcore RFO BW", "offcore_requests.demand_rfo", "offcore_rfo_bw"),
-                ("Offcore L3 Miss Data Read BW", "offcore_requests.l3_miss_demand_data_rd", "offcore_l3_miss_data_rd_bw"),
-                ("DRAM Read BW", "uncore_imc/cas_count_read/", "dram_read_bw"),
-                ("DRAM Write BW", "uncore_imc/cas_count_write/", "dram_write_bw")
-            ]
+            # Group metrics by type with proper units
+            bandwidth_metrics = {k: v for k, v in metrics.items() if k.endswith('_bandwidth_mbps')}
+            instruction_rate_metrics = {k: v for k, v in metrics.items() if 'instructions_rate' in k}
+            cycle_rate_metrics = {k: v for k, v in metrics.items() if 'cycles_rate' in k}
+            percentage_metrics = {k: v for k, v in metrics.items() if k.endswith('_pct')}
+            other_metrics = {k: v for k, v in metrics.items() 
+                           if not any(x in k for x in ['_bandwidth_mbps', 'instructions_rate', 'cycles_rate', '_pct'])}
             
-            for name, counter_key, bw_key in calculations:
-                if counter_key in perf_counters and bw_key in perf_bw:
-                    counter_val = perf_counters[counter_key]
-                    calculated_bw = perf_bw[bw_key]
-                    print(f"{name}:")
-                    print(f"  Counter Value: {counter_val:,.0f}")
-                    print(f"  Calculation: ({counter_val:,.0f} * 64) / {wall_time:.6f} / 1048576")
-                    print(f"  Result: {calculated_bw:.2f} MB/s")
-                    print()
-            
-            # L3 Hit/Miss Instruction Rates
-            print("L3 HIT/MISS INSTRUCTION RATES:")
-            print("-" * 40)
-            
-            l3_instruction_rates = [
-                ("L3 Hit Rate", "mem_load_retired.l3_hit", "l3_hit_rate_ops"),
-                ("L3 Miss Rate", "mem_load_retired.l3_miss", "l3_miss_rate_ops")
-            ]
-            
-            for name, counter_key, rate_key in l3_instruction_rates:
-                if counter_key in perf_counters and rate_key in perf_bw:
-                    counter_val = perf_counters[counter_key]
-                    rate = perf_bw[rate_key]
-                    print(f"{name}:")
-                    print(f"  Counter Value: {counter_val:,.0f} load instructions")
-                    print(f"  Calculation: {counter_val:,.0f} / {wall_time:.6f}")
-                    print(f"  Result: {rate:,.0f} loads/sec")
-                    print()
-            
-            # L3 Miss Destination Rates (instruction-based, not bandwidth)
-            print("L3 MISS DESTINATION RATES (Load Instructions/sec):")
-            print("-" * 40)
-            
-            instruction_rates = [
-                ("Local DRAM Load Rate", "mem_load_l3_miss_retired.local_dram", "l3_miss_local_dram_rate"),
-                ("Remote DRAM Load Rate", "mem_load_l3_miss_retired.remote_dram", "l3_miss_remote_dram_rate"),
-                ("Remote Forward Rate", "mem_load_l3_miss_retired.remote_fwd", "l3_miss_remote_fwd_rate"),
-                ("Remote HitM Rate", "mem_load_l3_miss_retired.remote_hitm", "l3_miss_remote_hitm_rate")
-            ]
-            
-            for name, counter_key, rate_key in instruction_rates:
-                if counter_key in perf_counters and rate_key in perf_bw:
-                    counter_val = perf_counters[counter_key]
-                    rate = perf_bw[rate_key]
-                    print(f"{name}:")
-                    print(f"  Counter Value: {counter_val:,.0f} load instructions")
-                    print(f"  Calculation: {counter_val:,.0f} / {wall_time:.6f}")
-                    print(f"  Result: {rate:,.0f} loads/sec")
-                    print()
-            
-            # Show memory instructions calculation
-            if "mem_inst_retired.all_loads" in perf_counters and "mem_inst_retired.all_stores" in perf_counters:
-                loads = perf_counters["mem_inst_retired.all_loads"]
-                stores = perf_counters["mem_inst_retired.all_stores"] 
-                total_mem_ops = loads + stores
-                mem_bw = perf_bw.get("memory_instructions_bw", 0)
-                print("Memory Instructions BW:")
-                print(f"  All Loads: {loads:,.0f}")
-                print(f"  All Stores: {stores:,.0f}")
-                print(f"  Total Mem Ops: {total_mem_ops:,.0f}")
-                print(f"  Calculation: ({total_mem_ops:,.0f} * 64) / {wall_time:.6f} / 1048576")
-                print(f"  Result: {mem_bw:.2f} MB/s")
+            if bandwidth_metrics:
+                print("BANDWIDTH METRICS (MB/s):")
+                for name, value in sorted(bandwidth_metrics.items()):
+                    print(f"  {name:<45}: {value:>10.2f}")
                 print()
             
-            # Show efficiency calculations
-            print("EFFICIENCY CALCULATIONS:")
-            print("-" * 40)
-            
-            if "cache-references" in perf_counters and "cache-misses" in perf_counters:
-                cache_refs = perf_counters["cache-references"]
-                cache_misses = perf_counters["cache-misses"]
-                miss_rate = perf_bw.get("cache_miss_rate", 0)
-                print(f"Cache Miss Rate:")
-                print(f"  Cache Misses: {cache_misses:,.0f}")
-                print(f"  Cache References: {cache_refs:,.0f}")
-                print(f"  Calculation: ({cache_misses:,.0f} / {cache_refs:,.0f}) * 100")
-                print(f"  Result: {miss_rate:.2f}%")
+            if instruction_rate_metrics:
+                print("INSTRUCTION RATE METRICS (instructions/sec):")
+                for name, value in sorted(instruction_rate_metrics.items()):
+                    print(f"  {name:<45}: {value:>12,.0f}")
                 print()
             
-            # Precise L3 Hit/Miss Analysis
-            if "mem_load_retired.l3_hit" in perf_counters and "mem_load_retired.l3_miss" in perf_counters:
-                l3_hits = perf_counters["mem_load_retired.l3_hit"]
-                l3_misses = perf_counters["mem_load_retired.l3_miss"]
-                total_l3_accesses = l3_hits + l3_misses
-                l3_hit_rate = perf_bw.get("l3_hit_rate", 0)
-                l3_miss_rate_precise = perf_bw.get("l3_miss_rate_precise", 0)
-                print(f"Precise L3 Cache Analysis:")
-                print(f"  L3 Hits: {l3_hits:,.0f}")
-                print(f"  L3 Misses: {l3_misses:,.0f}")
-                print(f"  Total L3 Accesses: {total_l3_accesses:,.0f}")
-                print(f"  L3 Hit Rate: ({l3_hits:,.0f} / {total_l3_accesses:,.0f}) * 100 = {l3_hit_rate:.2f}%")
-                print(f"  L3 Miss Rate: ({l3_misses:,.0f} / {total_l3_accesses:,.0f}) * 100 = {l3_miss_rate_precise:.2f}%")
+            if cycle_rate_metrics:
+                print("CYCLE RATE METRICS (cycles/sec):")
+                for name, value in sorted(cycle_rate_metrics.items()):
+                    print(f"  {name:<45}: {value:>12,.0f}")
                 print()
             
-            # L3 Miss Destination Breakdown (Load Instructions)
-            if "mem_load_l3_miss_retired.local_dram" in perf_counters:
-                local_dram = perf_counters["mem_load_l3_miss_retired.local_dram"]
-                remote_dram = perf_counters.get("mem_load_l3_miss_retired.remote_dram", 0)
-                remote_fwd = perf_counters.get("mem_load_l3_miss_retired.remote_fwd", 0)
-                remote_hitm = perf_counters.get("mem_load_l3_miss_retired.remote_hitm", 0)
-                total_l3_miss_loads = local_dram + remote_dram + remote_fwd + remote_hitm
-                
-                local_rate = perf_bw.get('l3_miss_local_dram_rate', 0)
-                remote_dram_rate = perf_bw.get('l3_miss_remote_dram_rate', 0)
-                remote_fwd_rate = perf_bw.get('l3_miss_remote_fwd_rate', 0)
-                remote_hitm_rate = perf_bw.get('l3_miss_remote_hitm_rate', 0)
-                
-                print(f"L3 Miss Destination Analysis (Load Instructions):")
-                print(f"  Local DRAM: {local_dram:,.0f} loads ({perf_bw.get('l3_miss_local_dram_pct', 0):.1f}%) - {local_rate:,.0f} loads/sec")
-                print(f"  Remote DRAM: {remote_dram:,.0f} loads ({perf_bw.get('l3_miss_remote_dram_pct', 0):.1f}%) - {remote_dram_rate:,.0f} loads/sec")
-                print(f"  Remote Forward: {remote_fwd:,.0f} loads ({perf_bw.get('l3_miss_remote_fwd_pct', 0):.1f}%) - {remote_fwd_rate:,.0f} loads/sec")
-                print(f"  Remote HitM: {remote_hitm:,.0f} loads ({perf_bw.get('l3_miss_remote_hitm_pct', 0):.1f}%) - {remote_hitm_rate:,.0f} loads/sec")
-                print(f"  Total L3 Miss Loads: {total_l3_miss_loads:,.0f}")
+            if percentage_metrics:
+                print("PERCENTAGE METRICS (%):")
+                for name, value in sorted(percentage_metrics.items()):
+                    print(f"  {name:<45}: {value:>10.2f}")
                 print()
             
-            if "instructions" in perf_counters and "cycles" in perf_counters:
-                instructions = perf_counters["instructions"]
-                cycles = perf_counters["cycles"]
-                ipc = perf_bw.get("instructions_per_cycle", 0)
-                print(f"Instructions Per Cycle (IPC):")
-                print(f"  Instructions: {instructions:,.0f}")
-                print(f"  Cycles: {cycles:,.0f}")
-                print(f"  Calculation: {instructions:,.0f} / {cycles:,.0f}")
-                print(f"  Result: {ipc:.6f}")
-                print()
-            
-            if "cycle_activity.stalls_total" in perf_counters and "cycles" in perf_counters:
-                stalls = perf_counters["cycle_activity.stalls_total"]
-                cycles = perf_counters["cycles"]
-                stall_rate = perf_bw.get("cycle_stall_rate", 0)
-                print(f"Cycle Stall Rate:")
-                print(f"  Stalls Total: {stalls:,.0f}")
-                print(f"  Cycles: {cycles:,.0f}")
-                print(f"  Calculation: ({stalls:,.0f} / {cycles:,.0f}) * 100")
-                print(f"  Result: {stall_rate:.2f}%")
+            if other_metrics:
+                print("OTHER METRICS:")
+                for name, value in sorted(other_metrics.items()):
+                    print(f"  {name:<45}: {value:>10.6f}")
                 print()
         
         # Print complete JSON results
@@ -618,26 +489,25 @@ class CXLPerfBandwidthTester:
         if "perf_bandwidths" in results and not "error" in results["perf_bandwidths"]:
             perf_bw = results["perf_bandwidths"]
             print(f"\nPERF BANDWIDTH METRICS:")
-            print(f"  Cache Refs:      {perf_bw.get('cache_references_bw', 0):8.1f} MB/s")
-            print(f"  Cache Misses:    {perf_bw.get('cache_misses_bw', 0):8.1f} MB/s")
-            print(f"  Offcore All:     {perf_bw.get('offcore_all_requests_bw', 0):8.1f} MB/s")
-            print(f"  Offcore Data Rd: {perf_bw.get('offcore_data_read_bw', 0):8.1f} MB/s")
-            print(f"  Offcore RFO:     {perf_bw.get('offcore_rfo_bw', 0):8.1f} MB/s")
-            print(f"  DRAM Read:       {perf_bw.get('dram_read_bw', 0):8.1f} MB/s")
-            print(f"  DRAM Write:      {perf_bw.get('dram_write_bw', 0):8.1f} MB/s")
-            print(f"  Local DRAM:      {perf_bw.get('local_dram_bw', 0):8.1f} MB/s")
-            print(f"  Remote DRAM:     {perf_bw.get('remote_dram_bw', 0):8.1f} MB/s")
+            print(f"  Cache Refs:      {perf_bw.get('cache_references_bandwidth_mbps', 0):8.1f} MB/s")
+            print(f"  Cache Misses:    {perf_bw.get('cache_misses_bandwidth_mbps', 0):8.1f} MB/s")
+            print(f"  Offcore Data Rd: {perf_bw.get('offcore_data_read_bandwidth_mbps', 0):8.1f} MB/s")
+            print(f"  Offcore RFO:     {perf_bw.get('offcore_rfo_bandwidth_mbps', 0):8.1f} MB/s")
+            print(f"  DRAM Read:       {perf_bw.get('dram_read_bandwidth_mbps', 0):8.1f} MB/s")
+            print(f"  DRAM Write:      {perf_bw.get('dram_write_bandwidth_mbps', 0):8.1f} MB/s")
+            print(f"  Mem Loads:       {perf_bw.get('mem_loads_bandwidth_mbps', 0):8.1f} MB/s")
+            print(f"  Mem Stores:      {perf_bw.get('mem_stores_bandwidth_mbps', 0):8.1f} MB/s")
             
             print(f"\nEFFICIENCY METRICS:")
-            print(f"  Cache Miss Rate: {perf_bw.get('cache_miss_rate', 0):8.1f} %")
-            print(f"  L3 Miss Rate:    {perf_bw.get('l3_miss_rate', 0):8.1f} %")
+            print(f"  Cache Miss Rate: {perf_bw.get('cache_miss_rate_pct', 0):8.1f} %")
+            print(f"  L3 Hit Rate:     {perf_bw.get('l3_hit_rate_pct', 0):8.1f} %")
+            print(f"  L3 Miss Rate:    {perf_bw.get('l3_miss_rate_pct', 0):8.1f} %")
             print(f"  IPC:             {perf_bw.get('instructions_per_cycle', 0):8.3f}")
-            print(f"  Stall Rate:      {perf_bw.get('cycle_stall_rate', 0):8.1f} %")
             
             # Validation: Compare app bandwidth with cache references
             if "application" in results and "bandwidth_mbps" in results["application"]:
                 app_bw = results["application"]["bandwidth_mbps"]
-                cache_ref_bw = perf_bw.get('cache_references_bw', 0)
+                cache_ref_bw = perf_bw.get('cache_references_bandwidth_mbps', 0)
                 if cache_ref_bw > 0:
                     correlation = cache_ref_bw / app_bw
                     print(f"\nVALIDATION:")
@@ -652,9 +522,9 @@ def main():
                        help="Path to double_bandwidth binary")
     parser.add_argument("--results-dir", default="results", 
                        help="Directory to store results")
-    parser.add_argument("--threads", type=int, default=4, 
+    parser.add_argument("--threads", type=int, default=16, 
                        help="Number of threads for testing")
-    parser.add_argument("--buffer-size", type=int, default=1*1024*1024*1024, 
+    parser.add_argument("--buffer-size", type=int, default=32*1024*1024*1024, 
                        help="Buffer size in bytes (default 256GB)")
     parser.add_argument("--duration", type=int, default=10, 
                        help="Test duration in seconds")
