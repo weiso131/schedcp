@@ -27,7 +27,7 @@
 // Default parameters
 constexpr size_t DEFAULT_BUFFER_SIZE = 1 * 1024 * 1024 * 1024UL; // 1GB
 constexpr size_t DEFAULT_BLOCK_SIZE = 4096;                      // 4KB
-constexpr int DEFAULT_DURATION = 20;                             // seconds
+constexpr int DEFAULT_DURATION = 10;                             // seconds
 constexpr int DEFAULT_NUM_THREADS = 500;    // total threads
 constexpr float DEFAULT_READ_RATIO = 0.5;   // 50% readers, 50% writers
 constexpr size_t DEFAULT_MAX_BANDWIDTH = 0; // 0 means unlimited (MB/s)
@@ -48,6 +48,7 @@ struct BenchmarkConfig {
   size_t cpu_workload_size = 0;      // CPU workload size in bytes (default: 0)
   int numa_node = DEFAULT_NUMA_NODE; // NUMA node to bind to
   bool enable_numa = true;           // Enable NUMA binding
+  bool json_output = true;          // Output results in JSON format
 };
 
 void print_usage(const char *prog_name) {
@@ -73,6 +74,7 @@ void print_usage(const char *prog_name) {
       << "  -N, --numa-node=NODE      Bind threads to a specific NUMA node "
          "(default: 1)\n"
       << "  -n, --no-numa             Disable NUMA binding\n"
+      << "  -j, --json                Output results in JSON format\n"
       << "  -h, --help                Show this help message\n";
 }
 
@@ -92,11 +94,12 @@ BenchmarkConfig parse_args(int argc, char *argv[]) {
       {"cpu-workload", required_argument, 0, 'w'},
       {"numa-node", optional_argument, 0, 'N'},
       {"no-numa", no_argument, 0, 'n'},
+      {"json", no_argument, 0, 'j'},
       {"help", no_argument, 0, 'h'},
       {0, 0, 0, 0}};
 
   int opt, option_index = 0;
-  while ((opt = getopt_long(argc, argv, "b:s:t:d:r:B:D:mchw:N:n", long_options,
+  while ((opt = getopt_long(argc, argv, "b:s:t:d:r:B:D:mchw:N:nj", long_options,
                             &option_index)) != -1) {
     switch (opt) {
     case 'b':
@@ -139,6 +142,9 @@ BenchmarkConfig parse_args(int argc, char *argv[]) {
     case 'n':
       config.enable_numa = false;
       break;
+    case 'j':
+      config.json_output = true;
+      break;
     case 'h':
       print_usage(argv[0]);
       exit(0);
@@ -171,8 +177,10 @@ int main(int argc, char *argv[]) {
                   << std::endl;
         return 1;
       }
-      std::cout << "NUMA initialized successfully. Available nodes: 0-"
-                << max_node << std::endl;
+      if (!config.json_output) {
+        std::cout << "NUMA initialized successfully. Available nodes: 0-"
+                  << max_node << std::endl;
+      }
     }
   }
 
@@ -197,45 +205,47 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  std::cout << "=== CXL Double Bandwidth Microbenchmark ===" << std::endl;
-  std::cout << "Buffer size: " << config.buffer_size << " bytes" << std::endl;
-  std::cout << "Block size: " << config.block_size << " bytes" << std::endl;
-  std::cout << "Duration: " << config.duration << " seconds" << std::endl;
-  std::cout << "Total threads: " << config.num_threads << std::endl;
-  std::cout << "Read ratio: " << config.read_ratio << " (" << num_readers
-            << " readers, " << num_writers << " writers)" << std::endl;
+  if (!config.json_output) {
+    std::cout << "=== CXL Double Bandwidth Microbenchmark ===" << std::endl;
+    std::cout << "Buffer size: " << config.buffer_size << " bytes" << std::endl;
+    std::cout << "Block size: " << config.block_size << " bytes" << std::endl;
+    std::cout << "Duration: " << config.duration << " seconds" << std::endl;
+    std::cout << "Total threads: " << config.num_threads << std::endl;
+    std::cout << "Read ratio: " << config.read_ratio << " (" << num_readers
+              << " readers, " << num_writers << " writers)" << std::endl;
 
-  if (config.max_bandwidth_mbps > 0) {
-    size_t read_bandwidth =
-        static_cast<size_t>(config.max_bandwidth_mbps * config.read_ratio);
-    size_t write_bandwidth = config.max_bandwidth_mbps - read_bandwidth;
-    std::cout << "Bandwidth limit: " << config.max_bandwidth_mbps
-              << " MB/s total "
-              << "(" << read_bandwidth << " MB/s read, " << write_bandwidth
-              << " MB/s write)" << std::endl;
-  } else {
-    std::cout << "Bandwidth limit: Unlimited" << std::endl;
+    if (config.max_bandwidth_mbps > 0) {
+      size_t read_bandwidth =
+          static_cast<size_t>(config.max_bandwidth_mbps * config.read_ratio);
+      size_t write_bandwidth = config.max_bandwidth_mbps - read_bandwidth;
+      std::cout << "Bandwidth limit: " << config.max_bandwidth_mbps
+                << " MB/s total "
+                << "(" << read_bandwidth << " MB/s read, " << write_bandwidth
+                << " MB/s write)" << std::endl;
+    } else {
+      std::cout << "Bandwidth limit: Unlimited" << std::endl;
+    }
+
+    if (!config.device_path.empty()) {
+      std::cout << "Device: " << config.device_path << std::endl;
+      std::cout << "Access method: " << (config.use_mmap ? "mmap" : "read/write")
+                << std::endl;
+      std::cout << "Memory type: "
+                << (config.is_cxl_mem ? "CXL memory" : "Regular device")
+                << std::endl;
+    } else {
+      std::cout << "Using system memory for testing" << std::endl;
+    }
+
+    if (config.enable_numa) {
+      std::cout << "NUMA binding: Enabled, binding threads to node " << config.numa_node
+                << std::endl;
+    } else {
+      std::cout << "NUMA binding: Disabled" << std::endl;
+    }
+
+    std::cout << "\nStarting benchmark..." << std::endl;
   }
-
-  if (!config.device_path.empty()) {
-    std::cout << "Device: " << config.device_path << std::endl;
-    std::cout << "Access method: " << (config.use_mmap ? "mmap" : "read/write")
-              << std::endl;
-    std::cout << "Memory type: "
-              << (config.is_cxl_mem ? "CXL memory" : "Regular device")
-              << std::endl;
-  } else {
-    std::cout << "Using system memory for testing" << std::endl;
-  }
-
-  if (config.enable_numa) {
-    std::cout << "NUMA binding: Enabled, binding threads to node " << config.numa_node
-              << std::endl;
-  } else {
-    std::cout << "NUMA binding: Disabled" << std::endl;
-  }
-
-  std::cout << "\nStarting benchmark..." << std::endl;
 
   // Prepare threads and resources
   std::vector<std::thread> threads;
@@ -372,36 +382,70 @@ int main(int argc, char *argv[]) {
       total_write_ops += thread_stats[num_readers + i].operations;
     }
 
-    // Print results
-    std::cout << "\n=== Results ===" << std::endl;
-    std::cout << "Test duration: " << elapsed_seconds << " seconds"
-              << std::endl;
-
+    // Calculate metrics
+    double read_bandwidth_mbps = 0.0;
+    double read_iops = 0.0;
+    double write_bandwidth_mbps = 0.0;
+    double write_iops = 0.0;
+    
     if (num_readers > 0) {
-      double read_bandwidth_mbps =
-          (total_read_bytes / (1024.0 * 1024.0)) / elapsed_seconds;
-      double read_iops = total_read_ops / elapsed_seconds;
-      std::cout << "Read bandwidth: " << read_bandwidth_mbps << " MB/s"
-                << std::endl;
-      std::cout << "Read IOPS: " << read_iops << " ops/s" << std::endl;
+      read_bandwidth_mbps = (total_read_bytes / (1024.0 * 1024.0)) / elapsed_seconds;
+      read_iops = total_read_ops / elapsed_seconds;
     }
-
+    
     if (num_writers > 0) {
-      double write_bandwidth_mbps =
-          (total_write_bytes / (1024.0 * 1024.0)) / elapsed_seconds;
-      double write_iops = total_write_ops / elapsed_seconds;
-      std::cout << "Write bandwidth: " << write_bandwidth_mbps << " MB/s"
-                << std::endl;
-      std::cout << "Write IOPS: " << write_iops << " ops/s" << std::endl;
+      write_bandwidth_mbps = (total_write_bytes / (1024.0 * 1024.0)) / elapsed_seconds;
+      write_iops = total_write_ops / elapsed_seconds;
     }
-
+    
     double total_bandwidth_mbps =
         ((total_read_bytes + total_write_bytes) / (1024.0 * 1024.0)) /
         elapsed_seconds;
     double total_iops = (total_read_ops + total_write_ops) / elapsed_seconds;
-    std::cout << "Total bandwidth: " << total_bandwidth_mbps << " MB/s"
-              << std::endl;
-    std::cout << "Total IOPS: " << total_iops << " ops/s" << std::endl;
+
+    // Output results
+    if (config.json_output) {
+      std::cout << "{\n";
+      std::cout << "  \"test_duration\": " << elapsed_seconds << ",\n";
+      std::cout << "  \"buffer_size\": " << config.buffer_size << ",\n";
+      std::cout << "  \"block_size\": " << config.block_size << ",\n";
+      std::cout << "  \"num_threads\": " << config.num_threads << ",\n";
+      std::cout << "  \"read_ratio\": " << config.read_ratio << ",\n";
+      std::cout << "  \"num_readers\": " << num_readers << ",\n";
+      std::cout << "  \"num_writers\": " << num_writers << ",\n";
+      std::cout << "  \"read_bandwidth_mbps\": " << read_bandwidth_mbps << ",\n";
+      std::cout << "  \"read_iops\": " << read_iops << ",\n";
+      std::cout << "  \"write_bandwidth_mbps\": " << write_bandwidth_mbps << ",\n";
+      std::cout << "  \"write_iops\": " << write_iops << ",\n";
+      std::cout << "  \"total_bandwidth_mbps\": " << total_bandwidth_mbps << ",\n";
+      std::cout << "  \"total_iops\": " << total_iops << ",\n";
+      std::cout << "  \"total_read_bytes\": " << total_read_bytes << ",\n";
+      std::cout << "  \"total_write_bytes\": " << total_write_bytes << ",\n";
+      std::cout << "  \"total_read_ops\": " << total_read_ops << ",\n";
+      std::cout << "  \"total_write_ops\": " << total_write_ops << ",\n";
+      std::cout << "  \"numa_node\": " << config.numa_node << ",\n";
+      std::cout << "  \"enable_numa\": " << (config.enable_numa ? "true" : "false") << ",\n";
+      std::cout << "  \"device_path\": \"" << config.device_path << "\",\n";
+      std::cout << "  \"use_mmap\": " << (config.use_mmap ? "true" : "false") << ",\n";
+      std::cout << "  \"is_cxl_mem\": " << (config.is_cxl_mem ? "true" : "false") << "\n";
+      std::cout << "}" << std::endl;
+    } else {
+      std::cout << "\n=== Results ===" << std::endl;
+      std::cout << "Test duration: " << elapsed_seconds << " seconds" << std::endl;
+      
+      if (num_readers > 0) {
+        std::cout << "Read bandwidth: " << read_bandwidth_mbps << " MB/s" << std::endl;
+        std::cout << "Read IOPS: " << read_iops << " ops/s" << std::endl;
+      }
+      
+      if (num_writers > 0) {
+        std::cout << "Write bandwidth: " << write_bandwidth_mbps << " MB/s" << std::endl;
+        std::cout << "Write IOPS: " << write_iops << " ops/s" << std::endl;
+      }
+      
+      std::cout << "Total bandwidth: " << total_bandwidth_mbps << " MB/s" << std::endl;
+      std::cout << "Total IOPS: " << total_iops << " ops/s" << std::endl;
+    }
 
   } catch (const std::exception &e) {
     std::cerr << "Error: " << e.what() << std::endl;

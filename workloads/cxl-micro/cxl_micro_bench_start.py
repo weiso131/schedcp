@@ -77,66 +77,62 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             "--buffer-size", str(self.test_params["array_size"]),
             "--threads", str(self.test_params["threads"]),
             "--duration", "10",  # Use fixed duration for consistent testing
-            "--read-ratio", str(self.test_params["read_ratio"])
+            "--read-ratio", str(self.test_params["read_ratio"]),
+            "--json"  # Use JSON output for easier parsing
         ]
         return cmd
     
     def _parse_bandwidth_output(self, output: str) -> dict:
-        """Parse double_bandwidth output to extract performance metrics"""
+        """Parse double_bandwidth JSON output to extract performance metrics"""
         try:
-            metrics = {}
-            
-            # Parse output for bandwidth measurements
-            # Looking for patterns like:
-            # "Bandwidth: X MB/s"
-            # "Time: Y seconds"
-            # "Throughput: Z GB/s"
-            
-            bandwidth_pattern = r"Total Bandwidth[:\s]+(\d+\.?\d*)\s*(MB/s|GB/s)"
-            time_pattern = r"Time[:\s]+(\d+\.?\d*)\s*(s|seconds|ms)"
-            throughput_pattern = r"Throughput[:\s]+(\d+\.?\d*)\s*(MB/s|GB/s)"
-            
-            # Find bandwidth
-            bandwidth_match = re.search(bandwidth_pattern, output, re.IGNORECASE)
-            if bandwidth_match:
-                value = float(bandwidth_match.group(1))
-                unit = bandwidth_match.group(2).upper()
-                # Convert to MB/s for consistency
-                if "GB" in unit:
-                    value *= 1024
-                metrics["bandwidth_mbps"] = value
-            
-            # Find time
-            time_match = re.search(time_pattern, output, re.IGNORECASE)
-            if time_match:
-                value = float(time_match.group(1))
-                unit = time_match.group(2).lower()
-                # Convert to seconds
-                if "ms" in unit:
-                    value /= 1000
-                metrics["execution_time"] = value
-            
-            # Find throughput
-            throughput_match = re.search(throughput_pattern, output, re.IGNORECASE)
-            if throughput_match:
-                value = float(throughput_match.group(1))
-                unit = throughput_match.group(2).upper()
-                # Convert to MB/s for consistency
-                if "GB" in unit:
-                    value *= 1024
-                metrics["throughput_mbps"] = value
-            
-            # If we couldn't parse specific metrics, try to extract any numbers
-            if not metrics:
-                # Look for any numeric values in the output
-                numbers = re.findall(r'\d+\.?\d*', output)
-                if numbers:
-                    # Assume the largest number is bandwidth
-                    metrics["bandwidth_mbps"] = max(float(n) for n in numbers)
-                    metrics["parse_warning"] = "Generic number parsing used"
-            
-            metrics["raw_output"] = output
-            return metrics
+            # First try to parse as JSON
+            try:
+                metrics = json.loads(output.strip())
+                # Rename some fields for compatibility with existing code
+                if "total_bandwidth_mbps" in metrics:
+                    metrics["bandwidth_mbps"] = metrics["total_bandwidth_mbps"]
+                if "test_duration" in metrics:
+                    metrics["execution_time"] = metrics["test_duration"]
+                metrics["raw_output"] = output
+                return metrics
+            except json.JSONDecodeError:
+                # Fall back to regex parsing for backward compatibility
+                metrics = {}
+                
+                # Parse output for bandwidth measurements
+                bandwidth_pattern = r"Total [Bb]andwidth[:\s]+(\d+\.?\d*)\s*(MB/s|GB/s)"
+                time_pattern = r"Test duration[:\s]+(\d+\.?\d*)\s*(s|seconds|ms)"
+                
+                # Find bandwidth
+                bandwidth_match = re.search(bandwidth_pattern, output, re.IGNORECASE)
+                if bandwidth_match:
+                    value = float(bandwidth_match.group(1))
+                    unit = bandwidth_match.group(2).upper()
+                    # Convert to MB/s for consistency
+                    if "GB" in unit:
+                        value *= 1024
+                    metrics["bandwidth_mbps"] = value
+                
+                # Find time
+                time_match = re.search(time_pattern, output, re.IGNORECASE)
+                if time_match:
+                    value = float(time_match.group(1))
+                    unit = time_match.group(2).lower()
+                    # Convert to seconds
+                    if "ms" in unit:
+                        value /= 1000
+                    metrics["execution_time"] = value
+                
+                # If we couldn't parse specific metrics, try to extract any numbers
+                if not metrics:
+                    numbers = re.findall(r'\d+\.?\d*', output)
+                    if numbers:
+                        # Assume the largest number is bandwidth
+                        metrics["bandwidth_mbps"] = max(float(n) for n in numbers)
+                        metrics["parse_warning"] = "Generic number parsing used"
+                
+                metrics["raw_output"] = output
+                return metrics
             
         except Exception as e:
             return {"error": str(e), "raw_output": output}
@@ -516,10 +512,10 @@ def main():
                        help="Directory to store results")
     parser.add_argument("--production-only", action="store_true", 
                        help="Test only production schedulers", default=False)
-    parser.add_argument("--threads", type=int, default=8, 
+    parser.add_argument("--threads", type=int, default=128, 
                        help="Number of threads for testing")
-    parser.add_argument("--array-size", type=int, default=1073741824, 
-                       help="Array size in bytes (default 1GB)")
+    parser.add_argument("--array-size", type=int, default=256*1024*1024*1024, 
+                       help="Array size in bytes (default 256GB)")
     parser.add_argument("--iterations", type=int, default=3, 
                        help="Number of iterations per test")
     parser.add_argument("--read-ratio", type=float, default=0.5,

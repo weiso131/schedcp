@@ -109,11 +109,7 @@ inline void reader_thread(void *buffer, size_t buffer_size, size_t block_size,
     }
   }
 
-  std::cout << "Reader thread started with ID: " << thread_id
-            << " (TID: " << gettid() << ")"
-            << (enable_numa ? " [NUMA node " + std::to_string(numa_node) + "]"
-                            : "")
-            << std::endl;
+  // Thread started silently
 
   while (!stop_flag.load(std::memory_order_relaxed)) {
     if (rate_limiter) {
@@ -158,11 +154,7 @@ inline void writer_thread(void *buffer, size_t buffer_size, size_t block_size,
     }
   }
 
-  std::cout << "Writer thread started with ID: " << thread_id
-            << " (TID: " << gettid() << ")"
-            << (enable_numa ? " [NUMA node " + std::to_string(numa_node) + "]"
-                            : "")
-            << std::endl;
+  // Thread started silently
 
   while (!stop_flag.load(std::memory_order_relaxed)) {
     if (rate_limiter) {
@@ -207,11 +199,7 @@ inline void device_reader_thread(int fd, size_t file_size, size_t block_size,
     }
   }
 
-  std::cout << "Device reader thread started with ID: " << thread_id
-            << " (TID: " << gettid() << ")"
-            << (enable_numa ? " [NUMA node " + std::to_string(numa_node) + "]"
-                            : "")
-            << std::endl;
+  // Thread started silently
 
   while (!stop_flag.load(std::memory_order_relaxed)) {
     if (rate_limiter) {
@@ -252,11 +240,7 @@ inline void device_writer_thread(int fd, size_t file_size, size_t block_size,
     }
   }
 
-  std::cout << "Device writer thread started with ID: " << thread_id
-            << " (TID: " << gettid() << ")"
-            << (enable_numa ? " [NUMA node " + std::to_string(numa_node) + "]"
-                            : "")
-            << std::endl;
+  // Thread started silently
 
   while (!stop_flag.load(std::memory_order_relaxed)) {
     if (rate_limiter) {
@@ -296,11 +280,7 @@ inline void mmap_reader_thread(void *mapped_area, size_t file_size, size_t block
     }
   }
 
-  std::cout << "MMAP reader thread started with ID: " << thread_id
-            << " (TID: " << gettid() << ")"
-            << (enable_numa ? " [NUMA node " + std::to_string(numa_node) + "]"
-                            : "")
-            << std::endl;
+  // Thread started silently
 
   while (!stop_flag.load(std::memory_order_relaxed)) {
     if (rate_limiter) {
@@ -335,11 +315,7 @@ inline void mmap_writer_thread(void *mapped_area, size_t file_size, size_t block
     }
   }
 
-  std::cout << "MMAP writer thread started with ID: " << thread_id
-            << " (TID: " << gettid() << ")"
-            << (enable_numa ? " [NUMA node " + std::to_string(numa_node) + "]"
-                            : "")
-            << std::endl;
+  // Thread started silently
 
   while (!stop_flag.load(std::memory_order_relaxed)) {
     if (rate_limiter) {
