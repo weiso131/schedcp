@@ -110,6 +110,15 @@ class RedisBenchmark:
         # Generate configuration file
         config_path = self.generate_config()
         
+        # Print configuration being used
+        print(f"Redis configuration:")
+        if self.config_options:
+            for key, value in self.config_options.items():
+                print(f"  {key}: {value}")
+        else:
+            print("  Using default Redis configuration")
+        print(f"  Config file: {config_path}")
+        
         cmd = [self.redis_server, config_path]
         
         self.redis_process = subprocess.Popen(
@@ -203,6 +212,9 @@ class RedisBenchmark:
         """Run a specific benchmark test"""
         print(f"Running {test_name} benchmark...")
         
+        # Print benchmark parameters
+        print(f"Benchmark command: {self.redis_benchmark} {' '.join(command_args)}")
+        
         start_time = time.time()
         
         # Run benchmark
@@ -210,6 +222,8 @@ class RedisBenchmark:
         result = subprocess.run(cmd, capture_output=True, text=True)
         
         end_time = time.time()
+        
+        print(f"Benchmark result: {result.stdout}")
         
         # Parse CSV output if present
         parsed_metrics = None
@@ -364,8 +378,24 @@ class RedisBenchmark:
                     "args": ["-t", "hset"] + base_args
                 },
                 {
-                    "name": "mixed_workload",
-                    "args": base_args  # No specific test, runs all
+                    "name": "LRANGE_100_operations",
+                    "args": ["-t", "lrange_100"] + base_args
+                },
+                {
+                    "name": "LRANGE_300_operations",
+                    "args": ["-t", "lrange_300"] + base_args
+                },
+                {
+                    "name": "LRANGE_500_operations",
+                    "args": ["-t", "lrange_500"] + base_args
+                },
+                {
+                    "name": "LRANGE_600_operations",
+                    "args": ["-t", "lrange_600"] + base_args
+                },
+                {
+                    "name": "MSET_operations",
+                    "args": ["-t", "mset"] + base_args
                 }
             ]
         

@@ -576,9 +576,9 @@ def main():
                        help="Test only production schedulers")
     parser.add_argument("--clients", type=int, default=50, 
                        help="Number of Redis clients")
-    parser.add_argument("--requests", type=int, default=1000000, 
+    parser.add_argument("--requests", type=int, default=1000, 
                        help="Number of requests per test")
-    parser.add_argument("--data-size", type=int, default=1024,
+    parser.add_argument("--data-size", type=int, default=1,
                        help="Data size in bytes")
     parser.add_argument("--pipeline", type=int, default=16,
                        help="Pipeline requests")

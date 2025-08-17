@@ -338,14 +338,11 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             schedulers = ['default'] + self.runner.get_available_schedulers(production_only)
         elif 'default' not in schedulers:
             schedulers = ['default'] + schedulers
-        
-        # Keep array size fixed at 1GB for consistency
-        array_size = int(1 * 1024**3)
-        
+                
         print(f"Running parameter sweep for schedulers: {schedulers}")
         print(f"Thread counts: {thread_counts}")
         print(f"Read ratios: {read_ratios}")
-        print(f"Fixed array size: {array_size/(1024**3):.1f} GB")
+        print(f"Fixed array size: {self.test_params['array_size']/(1024**3):.1f} GB")
         
         all_results = []
         total_tests = len(schedulers) * len(thread_counts) * len(read_ratios)
@@ -524,11 +521,11 @@ def main():
                        help="Test only production schedulers", default=False)
     parser.add_argument("--threads", type=int, default=128, 
                        help="Number of threads for testing")
-    parser.add_argument("--array-size", type=int, default=1*1024*1024*1024, 
+    parser.add_argument("--array-size", type=int, default=256*1024*1024*1024, 
                        help="Array size in bytes (default 256GB)")
-    parser.add_argument("--duration", type=int, default=1, 
+    parser.add_argument("--duration", type=int, default=20, 
                        help="Duration in seconds (default 1)")
-    parser.add_argument("--iterations", type=int, default=1, 
+    parser.add_argument("--iterations", type=int, default=3, 
                        help="Number of iterations per test")
     parser.add_argument("--read-ratio", type=float, default=0.5,
                        help="Ratio of readers (0.0-1.0, default: 0.5)")
