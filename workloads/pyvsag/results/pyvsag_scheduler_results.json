@@ -1,0 +1,135 @@
+{
+  "default": {
+    "build_time": 25.494455814361572,
+    "recall": 0.94,
+    "avg_query_time_ms": 0.24679684638977054,
+    "p95_query_time_ms": 0.30781030654907227,
+    "p99_query_time_ms": 0.3359913825988769,
+    "total_search_time": 0.2477428913116455,
+    "qps": 4036.4427600954277,
+    "num_queries": 1000,
+    "total_results": 10000,
+    "scheduler": "default",
+    "exit_code": 0
+  },
+  "scx_bpfland": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpf13qgsoz.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpf13qgsoz.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpf13qgsoz.py)\n",
+    "scheduler": "scx_bpfland",
+    "exit_code": 0
+  },
+  "scx_central": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmph33h_xqm.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmph33h_xqm.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmph33h_xqm.py)\n",
+    "scheduler": "scx_central",
+    "exit_code": 0
+  },
+  "scx_chaos": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpka4w5m04.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpka4w5m04.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpka4w5m04.py)\n",
+    "scheduler": "scx_chaos",
+    "exit_code": 0
+  },
+  "scx_flash": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp694p5c4g.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp694p5c4g.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp694p5c4g.py)\n",
+    "scheduler": "scx_flash",
+    "exit_code": 0
+  },
+  "scx_flatcg": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpvzeexuak.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpvzeexuak.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpvzeexuak.py)\n",
+    "scheduler": "scx_flatcg",
+    "exit_code": 0
+  },
+  "scx_lavd": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpp8a9ljh0.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpp8a9ljh0.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpp8a9ljh0.py)\n",
+    "scheduler": "scx_lavd",
+    "exit_code": 0
+  },
+  "scx_layered": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp67f0e0ic.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp67f0e0ic.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp67f0e0ic.py)\n",
+    "scheduler": "scx_layered",
+    "exit_code": 0
+  },
+  "scx_mitosis": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp28cbx6xo.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp28cbx6xo.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp28cbx6xo.py)\n",
+    "scheduler": "scx_mitosis",
+    "exit_code": 0
+  },
+  "scx_nest": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpz83izojo.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpz83izojo.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpz83izojo.py)\n",
+    "scheduler": "scx_nest",
+    "exit_code": 0
+  },
+  "scx_p2dq": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmptr0ekrpv.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmptr0ekrpv.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmptr0ekrpv.py)\n",
+    "scheduler": "scx_p2dq",
+    "exit_code": 0
+  },
+  "scx_pair": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmphd3sx2yo.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmphd3sx2yo.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmphd3sx2yo.py)\n",
+    "scheduler": "scx_pair",
+    "exit_code": 0
+  },
+  "scx_prev": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpk98bwq_9.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpk98bwq_9.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpk98bwq_9.py)\n",
+    "scheduler": "scx_prev",
+    "exit_code": 0
+  },
+  "scx_qmap": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpsubjmvoy.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpsubjmvoy.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpsubjmvoy.py)\n",
+    "scheduler": "scx_qmap",
+    "exit_code": 0
+  },
+  "scx_rlfifo": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp1y2a2vti.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp1y2a2vti.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp1y2a2vti.py)\n",
+    "scheduler": "scx_rlfifo",
+    "exit_code": 0
+  },
+  "scx_rustland": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmph1z8o9oe.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmph1z8o9oe.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmph1z8o9oe.py)\n",
+    "scheduler": "scx_rustland",
+    "exit_code": 0
+  },
+  "scx_rusty": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpapalzsxs.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpapalzsxs.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpapalzsxs.py)\n",
+    "scheduler": "scx_rusty",
+    "exit_code": 0
+  },
+  "scx_sdt": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp8v89ztcw.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp8v89ztcw.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp8v89ztcw.py)\n",
+    "scheduler": "scx_sdt",
+    "exit_code": 0
+  },
+  "scx_simple": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpcw6a3aia.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpcw6a3aia.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpcw6a3aia.py)\n",
+    "scheduler": "scx_simple",
+    "exit_code": 0
+  },
+  "scx_tickless": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpfjr6p58h.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpfjr6p58h.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpfjr6p58h.py)\n",
+    "scheduler": "scx_tickless",
+    "exit_code": 0
+  },
+  "scx_userland": {
+    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp3olgoit4.py)",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp3olgoit4.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp3olgoit4.py)\n",
+    "scheduler": "scx_userland",
+    "exit_code": 0
+  }
+}

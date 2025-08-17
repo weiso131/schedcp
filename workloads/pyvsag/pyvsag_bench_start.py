@@ -272,6 +272,7 @@ import sys
 import os
 import json
 import traceback
+import time
 
 # Add the scheduler module to the path
 sys.path.insert(0, '{os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}')
@@ -279,11 +280,128 @@ sys.path.insert(0, '{os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 try:
     import pyvsag
     import numpy as np
-    from {__name__} import PyVSAGBenchmarkTester
+    
+    # Import the class directly by recreating it here
+    from scheduler import SchedulerRunner, SchedulerBenchmark
+    
+    class PyVSAGBenchmarkTester(SchedulerBenchmark):
+        def __init__(self, results_dir="results", scheduler_runner=None):
+            super().__init__(scheduler_runner)
+            self.results_dir = results_dir
+            os.makedirs(self.results_dir, exist_ok=True)
+            self.test_params = {json.dumps(self.test_params)}
+        
+        def _generate_test_data(self):
+            dim = self.test_params["dim"]
+            num_elements = self.test_params["num_elements"]
+            num_queries = self.test_params["num_queries"]
+            
+            np.random.seed(42)
+            data = np.random.random((num_elements, dim)).astype(np.float32)
+            ids = list(range(num_elements))
+            queries = np.random.random((num_queries, dim)).astype(np.float32)
+            
+            return data, ids, queries
+        
+        def _build_index(self, data, ids):
+            dim = self.test_params["dim"]
+            num_elements = self.test_params["num_elements"]
+            
+            index_params = json.dumps({{
+                "dtype": "float32",
+                "metric_type": self.test_params["metric_type"],
+                "dim": dim,
+                "hnsw": {{
+                    "max_degree": self.test_params["max_degree"],
+                    "ef_construction": self.test_params["ef_construction"]
+                }}
+            }})
+            
+            index = pyvsag.Index(self.test_params["index_type"], index_params)
+            
+            build_start = time.time()
+            index.build(vectors=data, ids=ids, num_elements=num_elements, dim=dim)
+            build_time = time.time() - build_start
+            
+            return index, build_time
+        
+        def _run_search_benchmark(self, index, queries):
+            k = self.test_params["k"]
+            search_params = json.dumps({{
+                "hnsw": {{"ef_search": self.test_params["ef_search"]}}
+            }})
+            
+            search_times = []
+            total_results = 0
+            
+            # Warmup
+            for i in range(min(10, len(queries))):
+                index.knn_search(vector=queries[i], k=k, parameters=search_params)
+            
+            # Actual benchmark
+            start_time = time.time()
+            for query in queries:
+                query_start = time.time()
+                ids, distances = index.knn_search(vector=query, k=k, parameters=search_params)
+                query_time = time.time() - query_start
+                
+                search_times.append(query_time)
+                total_results += len(ids)
+            
+            total_time = time.time() - start_time
+            
+            # Calculate metrics
+            avg_query_time = np.mean(search_times)
+            p95_query_time = np.percentile(search_times, 95)
+            p99_query_time = np.percentile(search_times, 99)
+            qps = len(queries) / total_time
+            
+            return {{
+                "avg_query_time_ms": avg_query_time * 1000,
+                "p95_query_time_ms": p95_query_time * 1000,
+                "p99_query_time_ms": p99_query_time * 1000,
+                "total_search_time": total_time,
+                "qps": qps,
+                "num_queries": len(queries),
+                "total_results": total_results
+            }}
+        
+        def _calculate_recall(self, index, data, ids, queries, ground_truth=None):
+            k = self.test_params["k"]
+            search_params = json.dumps({{
+                "hnsw": {{"ef_search": self.test_params["ef_search"]}}
+            }})
+            
+            if ground_truth is None:
+                # Simple recall test: search for vectors that are in the index
+                correct = 0
+                test_size = min(100, len(queries), len(data))
+                
+                for i in range(test_size):
+                    # Use actual data point as query to ensure we can find it
+                    query_vector = data[i]
+                    found_ids, _ = index.knn_search(vector=query_vector, k=k, parameters=search_params)
+                    if ids[i] in found_ids:
+                        correct += 1
+                
+                recall = correct / test_size
+            else:
+                # Use provided ground truth
+                correct = 0
+                for i, query in enumerate(queries):
+                    found_ids, _ = index.knn_search(vector=query, k=k, parameters=search_params)
+                    if i < len(ground_truth):
+                        true_neighbors = set(ground_truth[i][:k])
+                        found_neighbors = set(found_ids)
+                        intersection = len(true_neighbors.intersection(found_neighbors))
+                        correct += intersection / k
+                
+                recall = correct / len(queries)
+            
+            return recall
     
     # Create tester with same parameters
     tester = PyVSAGBenchmarkTester()
-    tester.set_test_params(**{self.test_params})
     
     # Generate test data
     data, ids, queries = tester._generate_test_data()
