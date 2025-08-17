@@ -323,7 +323,7 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
     def run_parameter_sweep_multi_schedulers(self, schedulers: list = None,
                                             thread_counts: list = None, 
                                             read_ratios: list = None,
-                                            production_only: bool = True):
+                                            production_only: bool = False):
         """
         Run parameter sweep for multiple schedulers and generate comparison plots.
         
@@ -333,8 +333,8 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             read_ratios: List of read ratios to test (0.0-1.0)
             production_only: Only test production-ready schedulers if schedulers is None
         """
-        thread_counts = thread_counts or [4, 16, 64, 128]
-        read_ratios = read_ratios or [0.25, 0.5, 0.75]
+        thread_counts = thread_counts or [4, 8, 16, 64, 96, 128, 160]
+        read_ratios = read_ratios or [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
         
         # Get schedulers to test
         if schedulers is None:
@@ -515,7 +515,7 @@ def main():
     parser.add_argument("--results-dir", default="results", 
                        help="Directory to store results")
     parser.add_argument("--production-only", action="store_true", 
-                       help="Test only production schedulers")
+                       help="Test only production schedulers", default=False)
     parser.add_argument("--threads", type=int, default=8, 
                        help="Number of threads for testing")
     parser.add_argument("--array-size", type=int, default=1073741824, 
