@@ -11,9 +11,7 @@ import json
 import time
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
-from pathlib import Path
 import argparse
 
 # Add the scheduler module to the path
@@ -503,9 +501,9 @@ class RedisBenchmarkTester(SchedulerBenchmark):
         
         # Create stacked bar chart
         width = 0.6
-        p1 = ax.bar(scheduler_names, throughput_scores, width, label='Throughput Score (60%)', alpha=0.8)
-        p2 = ax.bar(scheduler_names, latency_scores, width, bottom=throughput_scores, 
-                   label='Latency Score (40%)', alpha=0.8)
+        ax.bar(scheduler_names, throughput_scores, width, label='Throughput Score (60%)', alpha=0.8)
+        ax.bar(scheduler_names, latency_scores, width, bottom=throughput_scores, 
+               label='Latency Score (40%)', alpha=0.8)
         
         ax.set_xlabel('Scheduler')
         ax.set_ylabel('Normalized Performance Score')
@@ -515,7 +513,7 @@ class RedisBenchmarkTester(SchedulerBenchmark):
         ax.grid(True, alpha=0.3)
         
         # Add total score labels
-        for i, (score, name) in enumerate(zip(performance_scores, scheduler_names)):
+        for i, score in enumerate(performance_scores):
             ax.text(i, score + 0.05, f'{score:.2f}', ha='center', va='bottom', fontweight='bold')
         
         plt.tight_layout()
@@ -564,6 +562,176 @@ class RedisBenchmarkTester(SchedulerBenchmark):
                 print(f"  Tests Completed: {summary.get('successful_tests', 0)}")
                 print(f"  Total Duration:  {summary.get('total_duration', 0):8.2f} seconds")
 
+    def run_parameter_sweep_multi_schedulers(self, schedulers: list = None,
+                                            data_sizes: list = None,
+                                            production_only: bool = False):
+        """
+        Run data size parameter sweep for multiple schedulers and generate comparison plots.
+        
+        Args:
+            schedulers: List of scheduler names to test (None for all + default)
+            data_sizes: List of data sizes to test (in bytes)
+            production_only: Only test production-ready schedulers if schedulers is None
+        """
+        data_sizes = data_sizes or [1, 16, 64, 256, 1024, 4096]  # bytes
+        
+        # Get schedulers to test
+        if schedulers is None:
+            schedulers = ['default'] + self.runner.get_available_schedulers(production_only)
+        elif 'default' not in schedulers:
+            schedulers = ['default'] + schedulers
+                
+        print(f"Running data size parameter sweep for schedulers: {schedulers}")
+        print(f"Data sizes: {data_sizes} bytes")
+        
+        all_results = []
+        total_tests = len(schedulers) * len(data_sizes)
+        test_count = 0
+        
+        for scheduler_name in schedulers:
+            print(f"\n{'='*50}")
+            print(f"Testing scheduler: {scheduler_name}")
+            print(f"{'='*50}")
+            
+            for data_size in data_sizes:
+                test_count += 1
+                print(f"\nTest {test_count}/{total_tests}: "
+                      f"scheduler={scheduler_name}, data_size={data_size}B")
+                
+                # Update test parameters
+                self.set_test_params(
+                    data_size=data_size,
+                    requests=self.test_params["requests"],
+                    timeout=self.test_params["timeout"]
+                )
+                
+                # Run benchmark
+                scheduler_to_test = None if scheduler_name == 'default' else scheduler_name
+                result = self.run_redis_benchmark(scheduler_to_test)
+                
+                if "error" not in result:
+                    # Extract metrics from the result
+                    metrics = self.extract_metrics_from_results(result)
+                    
+                    # Add each test result as a separate row
+                    for i, test_name in enumerate(metrics["test_names"]):
+                        all_results.append({
+                            'scheduler': scheduler_name,
+                            'data_size': data_size,
+                            'test_name': test_name,
+                            'throughput_rps': metrics["throughput_rps"][i] if i < len(metrics["throughput_rps"]) else 0,
+                            'latency_avg': metrics["latency_avg"][i] if i < len(metrics["latency_avg"]) else 0,
+                            'latency_p50': metrics["latency_p50"][i] if i < len(metrics["latency_p50"]) else 0,
+                            'latency_p95': metrics["latency_p95"][i] if i < len(metrics["latency_p95"]) else 0,
+                            'latency_p99': metrics["latency_p99"][i] if i < len(metrics["latency_p99"]) else 0,
+                            'requests': self.test_params["requests"],
+                            'clients': self.test_params["clients"],
+                            'pipeline': self.test_params["pipeline"]
+                        })
+                    
+                    # Calculate average throughput for this configuration
+                    avg_throughput = np.mean([t for t in metrics["throughput_rps"] if t > 0]) if metrics["throughput_rps"] else 0
+                    print(f"  Avg Throughput: {avg_throughput:.0f} req/s")
+                else:
+                    print(f"  Failed: {result['error']}")
+                    # Add failure record
+                    all_results.append({
+                        'scheduler': scheduler_name,
+                        'data_size': data_size,
+                        'test_name': 'failed',
+                        'throughput_rps': 0,
+                        'latency_avg': 0,
+                        'latency_p50': 0,
+                        'latency_p95': 0,
+                        'latency_p99': 0,
+                        'requests': self.test_params["requests"],
+                        'clients': self.test_params["clients"],
+                        'pipeline': self.test_params["pipeline"]
+                    })
+                
+                time.sleep(2)  # Brief pause between tests
+        
+        if all_results:
+            # Save results
+            df = pd.DataFrame(all_results)
+            results_file = os.path.join(self.results_dir, "redis_data_size_sweep.csv")
+            df.to_csv(results_file, index=False)
+            print(f"\nData size parameter sweep results saved to {results_file}")
+            
+            # Generate visualization
+            self._plot_data_size_sweep(df)
+    
+    def _plot_data_size_sweep(self, df):
+        """Plot performance vs data size for each scheduler"""
+        data_sizes = sorted(df['data_size'].unique())
+        schedulers = sorted(df['scheduler'].unique())
+        
+        # Color palette for different schedulers
+        colors = plt.cm.tab10(np.linspace(0, 1, len(schedulers)))
+        scheduler_colors = {sched: colors[i] for i, sched in enumerate(schedulers)}
+        
+        # Create dual plot
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+        fig.suptitle('Redis Performance vs Data Size', fontsize=16)
+        
+        # Plot throughput and latency for each scheduler
+        for scheduler in schedulers:
+            sched_data = df[df['scheduler'] == scheduler]
+            color = scheduler_colors[scheduler]
+            
+            # Aggregate data by data size
+            avg_throughput = []
+            avg_latency = []
+            
+            for data_size in data_sizes:
+                size_data = sched_data[sched_data['data_size'] == data_size]
+                
+                # Average throughput for this data size
+                avg_tput = size_data['throughput_rps'].mean() if not size_data.empty else 0
+                avg_throughput.append(avg_tput)
+                
+                # Average latency (prefer P95, fallback to average)
+                if not size_data.empty:
+                    latency_values = size_data['latency_p95']
+                    if latency_values.sum() == 0:
+                        latency_values = size_data['latency_avg']
+                    avg_lat = latency_values.mean() if latency_values.sum() > 0 else 0
+                else:
+                    avg_lat = 0
+                avg_latency.append(avg_lat)
+            
+            # Plot throughput
+            ax1.plot(data_sizes, avg_throughput, 'o-', 
+                    color=color, label=scheduler, linewidth=2, markersize=6)
+            
+            # Plot latency  
+            ax2.plot(data_sizes, avg_latency, 'o-',
+                    color=color, label=scheduler, linewidth=2, markersize=6)
+        
+        # Configure throughput plot
+        ax1.set_xlabel('Data Size (bytes)')
+        ax1.set_ylabel('Average Throughput (req/s)')
+        ax1.set_title('Throughput vs Data Size')
+        ax1.set_xscale('log')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
+        
+        # Configure latency plot
+        ax2.set_xlabel('Data Size (bytes)')
+        ax2.set_ylabel('Average P95 Latency (ms)')
+        ax2.set_title('P95 Latency vs Data Size')
+        ax2.set_xscale('log')
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        
+        # Save figure
+        figure_path = os.path.join(self.results_dir, "redis_data_size_sweep.png")
+        plt.savefig(figure_path, dpi=300, bbox_inches='tight')
+        print(f"Data size sweep figure saved to {figure_path}")
+        plt.close()
+
 
 def main():
     """Main function for Redis scheduler testing"""
@@ -576,7 +744,7 @@ def main():
                        help="Test only production schedulers")
     parser.add_argument("--clients", type=int, default=50, 
                        help="Number of Redis clients")
-    parser.add_argument("--requests", type=int, default=1000, 
+    parser.add_argument("--requests", type=int, default=1000000, 
                        help="Number of requests per test")
     parser.add_argument("--data-size", type=int, default=1,
                        help="Data size in bytes")
@@ -592,6 +760,8 @@ def main():
                        help="Timeout in seconds")
     parser.add_argument("--scheduler", type=str, default=None,
                        help="Test specific scheduler only")
+    parser.add_argument("--parameter-sweep", action="store_true",
+                       help="Run parameter sweep comparing all schedulers with different data sizes")
     
     args = parser.parse_args()
     
@@ -621,16 +791,26 @@ def main():
         print("Please ensure Redis is built in the specified directory")
         sys.exit(1)
     
-    if args.scheduler:
-        print(f"Testing scheduler: {args.scheduler}")
-        result = tester.run_redis_benchmark(args.scheduler)
-        results = {args.scheduler: result}
+    if args.parameter_sweep:
+        print("Running data size parameter sweep...")
+        schedulers = None
+        if args.scheduler:
+            schedulers = [args.scheduler]
+        tester.run_parameter_sweep_multi_schedulers(
+            schedulers=schedulers,
+            production_only=args.production_only
+        )
     else:
-        print("Starting Redis scheduler performance tests...")
-        results = tester.run_all_redis_benchmarks(production_only=args.production_only)
-    
-    # Generate figures
-    tester.generate_performance_figures(results)
+        if args.scheduler:
+            print(f"Testing scheduler: {args.scheduler}")
+            result = tester.run_redis_benchmark(args.scheduler)
+            results = {args.scheduler: result}
+        else:
+            print("Starting Redis scheduler performance tests...")
+            results = tester.run_all_redis_benchmarks(production_only=args.production_only)
+        
+        # Generate figures
+        tester.generate_performance_figures(results)
     
     print("\nTesting complete!")
 

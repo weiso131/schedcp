@@ -1,135 +1,117 @@
 {
   "default": {
-    "build_time": 25.494455814361572,
-    "recall": 0.94,
-    "avg_query_time_ms": 0.24679684638977054,
-    "p95_query_time_ms": 0.30781030654907227,
-    "p99_query_time_ms": 0.3359913825988769,
-    "total_search_time": 0.2477428913116455,
-    "qps": 4036.4427600954277,
-    "num_queries": 1000,
-    "total_results": 10000,
+    "build_time": 0.11792612075805664,
+    "recall": 1.0,
+    "avg_query_time_ms": 0.09695053100585938,
+    "p95_query_time_ms": 0.10037422180175781,
+    "p99_query_time_ms": 0.10467767715454102,
+    "total_search_time": 0.009743452072143555,
+    "qps": 10263.302909437933,
+    "num_queries": 100,
+    "total_results": 1000,
     "scheduler": "default",
     "exit_code": 0
   },
   "scx_bpfland": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpf13qgsoz.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpf13qgsoz.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpf13qgsoz.py)\n",
-    "scheduler": "scx_bpfland",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_bpfland: Scheduler failed to start: 17:24:37 \u001b[0m\u001b[34m[INFO] \u001b[0mNUMA nodes: 2\n17:24:37 \u001b[0m\u001b[34m[INFO] \u001b[0mscx_bpfland 1.0.13-gd082d1fb x86_64-unknown-linux-gnu/debug SMT off\n17:24:38 \u001b[0m\u001b[34m[INFO] \u001b[0mscheduler flags: 0x16\n17:24:38 \u001b[0m\u001b[34m[INFO] \u001b[0mprimary CPU domain = 0x3fffff,ffffffff,ffffffff\n17:24:38 \u001b[0m\u001b[34m[INFO] \u001b[0mcpufreq performance level: max\n17:24:38 \u001b[0m\u001b[34m[INFO] \u001b[0mL3 cache ID 0: sibling CPUs: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42]\n17:24:38 \u001b[0m\u001b[34m[INFO] \u001b[0mL3 cache ID 1: sibling CPUs: [43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85]\nError: another sched_ext scheduler is already running\n",
+    "exit_code": 0,
+    "scheduler": "scx_bpfland"
   },
   "scx_central": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmph33h_xqm.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmph33h_xqm.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmph33h_xqm.py)\n",
-    "scheduler": "scx_central",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_central: Scheduler failed to start: libbpf: struct_ops central_ops: member priv not found in kernel, skipping it as it's set to zero\n[SCX_BUG] ../scheds/c/scx_central.c:116 (Device or resource busy)\nFailed to attach struct_ops\n",
+    "exit_code": 0,
+    "scheduler": "scx_central"
   },
   "scx_chaos": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpka4w5m04.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpka4w5m04.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpka4w5m04.py)\n",
-    "scheduler": "scx_chaos",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_chaos: Scheduler failed to start: 17:24:45 \u001b[0m\u001b[34m[INFO] \u001b[0mRunning scx_chaos (build ID: 1.0.16-gd082d1fb x86_64-unknown-linux-gnu/debug)\n17:24:45 \u001b[0m\u001b[34m[INFO] \u001b[0mBuilder { traits: [], verbose: 0, kprobe_random_delays: None, p2dq_opts: SchedulerOpts { disable_kthreads_local: false, autoslice: false, interactive_ratio: 10, deadline: false, eager_load_balance: false, freq_control: false, greedy_idle_disable: true, interactive_sticky: false, interactive_fifo: false, dispatch_pick2_disable: false, dispatch_lb_busy: 75, dispatch_lb_interactive: true, keep_running: false, interactive_dsq: true, wakeup_lb_busy: 0, wakeup_llc_migrations: false, select_idle_in_enqueue: false, idle_resume_us: None, max_dsq_pick2: false, min_slice_us: 100, lb_slack_factor: 5, min_llc_runs_pick2: 1, dsq_time_slices: [], dsq_shift: 4, min_nr_queued_pick2: 0, dumb_queues: 3, init_dsq_index: 0 }, requires_ppid: None }\n17:24:46 \u001b[0m\u001b[34m[INFO] \u001b[0mDSQ[0] slice_ns 100000\n17:24:46 \u001b[0m\u001b[34m[INFO] \u001b[0mDSQ[1] slice_ns 3200000\n17:24:46 \u001b[0m\u001b[34m[INFO] \u001b[0mDSQ[2] slice_ns 6400000\n17:24:46 \u001b[0m\u001b[34m[INFO] \u001b[0mlibbpf: struct_ops chaos: member priv not found in kernel, skipping it as it's set to zero\n\nError: another sched_ext scheduler is already running\n",
+    "exit_code": 0,
+    "scheduler": "scx_chaos"
   },
   "scx_flash": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp694p5c4g.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp694p5c4g.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp694p5c4g.py)\n",
-    "scheduler": "scx_flash",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_flash: Scheduler failed to start: 17:24:50 \u001b[0m\u001b[34m[INFO] \u001b[0mscx_flash 1.0.11-gd082d1fb x86_64-unknown-linux-gnu/debug SMT off\n17:24:50 \u001b[0m\u001b[34m[INFO] \u001b[0mscheduler options: /root/yunwei37/ai-os/scheduler/sche_bin/scx_flash\n17:24:50 \u001b[0m\u001b[34m[INFO] \u001b[0mSetting idle QoS to 32 us\n17:24:50 \u001b[0m\u001b[34m[INFO] \u001b[0mNUMA nodes: 2\n17:24:50 \u001b[0m\u001b[34m[INFO] \u001b[0mscheduler flags: 0x16\n17:24:50 \u001b[0m\u001b[34m[INFO] \u001b[0mprimary CPU domain = 0x3fffff,ffffffff,ffffffff\n17:24:50 \u001b[0m\u001b[34m[INFO] \u001b[0mcpufreq performance level: max\n17:24:50 \u001b[0m\u001b[34m[INFO] \u001b[0mL3 cache ID 0: sibling CPUs: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42]\n17:24:50 \u001b[0m\u001b[34m[INFO] \u001b[0mL3 cache ID 1: sibling CPUs: [43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85]\nError: another sched_ext scheduler is already running\n",
+    "exit_code": 0,
+    "scheduler": "scx_flash"
   },
   "scx_flatcg": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpvzeexuak.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpvzeexuak.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpvzeexuak.py)\n",
-    "scheduler": "scx_flatcg",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_flatcg: Scheduler failed to start: libbpf: struct_ops flatcg_ops: member priv not found in kernel, skipping it as it's set to zero\n[SCX_BUG] ../scheds/c/scx_flatcg.c:179 (Device or resource busy)\nFailed to attach struct_ops\n",
+    "exit_code": 0,
+    "scheduler": "scx_flatcg"
   },
   "scx_lavd": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpp8a9ljh0.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpp8a9ljh0.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpp8a9ljh0.py)\n",
-    "scheduler": "scx_lavd",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_lavd: Scheduler failed to start: 17:24:57 \u001b[0m\u001b[34m[INFO] \u001b[0mAutopilot mode is enabled.\n17:24:57 \u001b[0m\u001b[34m[INFO] \u001b[0mEnergy model won't be used for CPU preference order.\n17:24:57 \u001b[0m\u001b[34m[INFO] \u001b[0mOpts {\n    autopilot: true,\n    autopower: false,\n    performance: false,\n    powersave: false,\n    balanced: false,\n    slice_max_us: 5000,\n    slice_min_us: 500,\n    preempt_shift: 6,\n    cpu_pref_order: \"\",\n    no_use_em: true,\n    no_futex_boost: false,\n    no_preemption: false,\n    no_wake_sync: false,\n    no_core_compaction: false,\n    no_freq_scaling: false,\n    stats: None,\n    monitor: None,\n    monitor_sched_samples: None,\n    verbose: 0,\n    version: false,\n    help_stats: false,\n}\n17:24:58 \u001b[0m\u001b[34m[INFO] \u001b[0mcapacity bound:  1024 (1.1627907%)\n  primary CPUs:  [0]\n  overflow CPUs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85]\n17:24:58 \u001b[0m\u001b[34m[INFO] \u001b[0mcapacity bound:  88064 (100%)\n  primary CPUs:  [0]\n  overflow CPUs: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85]\nError: another sched_ext scheduler is already running\n",
+    "exit_code": 0,
+    "scheduler": "scx_lavd"
   },
   "scx_layered": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp67f0e0ic.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp67f0e0ic.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp67f0e0ic.py)\n",
+    "error": "No module named 'scheduler'",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpkl_ju7_j.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_layered",
     "exit_code": 0
   },
   "scx_mitosis": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp28cbx6xo.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp28cbx6xo.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp28cbx6xo.py)\n",
-    "scheduler": "scx_mitosis",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_mitosis: Scheduler failed to start: 17:25:07 \u001b[0m\u001b[34m[INFO] \u001b[0mlibbpf: struct_ops mitosis: member priv not found in kernel, skipping it as it's set to zero\n\nError: another sched_ext scheduler is already running\n",
+    "exit_code": 0,
+    "scheduler": "scx_mitosis"
   },
   "scx_nest": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpz83izojo.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpz83izojo.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpz83izojo.py)\n",
-    "scheduler": "scx_nest",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_nest: Scheduler failed to start: libbpf: struct_ops nest_ops: member priv not found in kernel, skipping it as it's set to zero\n[SCX_BUG] ../scheds/c/scx_nest.c:206 (Device or resource busy)\nFailed to attach struct_ops\n",
+    "exit_code": 0,
+    "scheduler": "scx_nest"
   },
   "scx_p2dq": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmptr0ekrpv.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmptr0ekrpv.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmptr0ekrpv.py)\n",
-    "scheduler": "scx_p2dq",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_p2dq: Scheduler failed to start: 17:25:14 \u001b[0m\u001b[34m[INFO] \u001b[0mRunning scx_p2dq (build ID: 1.0.18-gd082d1fb x86_64-unknown-linux-gnu/debug)\n17:25:14 \u001b[0m\u001b[34m[INFO] \u001b[0mDSQ[0] slice_ns 100000\n17:25:14 \u001b[0m\u001b[34m[INFO] \u001b[0mDSQ[1] slice_ns 3200000\n17:25:14 \u001b[0m\u001b[34m[INFO] \u001b[0mDSQ[2] slice_ns 6400000\n17:25:14 \u001b[0m\u001b[34m[INFO] \u001b[0mKernel does not support queued wakeup optimization.\n17:25:15 \u001b[0m\u001b[34m[INFO] \u001b[0mlibbpf: struct_ops p2dq: member priv not found in kernel, skipping it as it's set to zero\n\nError: another sched_ext scheduler is already running\n",
+    "exit_code": 0,
+    "scheduler": "scx_p2dq"
   },
   "scx_pair": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmphd3sx2yo.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmphd3sx2yo.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmphd3sx2yo.py)\n",
+    "error": "No module named 'scheduler'",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpdi9q2_ma.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_pair",
     "exit_code": 0
   },
   "scx_prev": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpk98bwq_9.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpk98bwq_9.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpk98bwq_9.py)\n",
-    "scheduler": "scx_prev",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_prev: Scheduler failed to start: libbpf: struct_ops prev_ops: member priv not found in kernel, skipping it as it's set to zero\n[SCX_BUG] ../scheds/c/scx_prev.c:95 (Device or resource busy)\nFailed to attach struct_ops\n",
+    "exit_code": 0,
+    "scheduler": "scx_prev"
   },
   "scx_qmap": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpsubjmvoy.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpsubjmvoy.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpsubjmvoy.py)\n",
-    "scheduler": "scx_qmap",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_qmap: Scheduler failed to start: libbpf: struct_ops qmap_ops: member priv not found in kernel, skipping it as it's set to zero\n[SCX_BUG] ../scheds/c/scx_qmap.c:119 (Device or resource busy)\nFailed to attach struct_ops\n",
+    "exit_code": 0,
+    "scheduler": "scx_qmap"
   },
   "scx_rlfifo": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp1y2a2vti.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp1y2a2vti.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp1y2a2vti.py)\n",
-    "scheduler": "scx_rlfifo",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_rlfifo: Scheduler failed to start: Error: another sched_ext scheduler is already running\n",
+    "exit_code": 0,
+    "scheduler": "scx_rlfifo"
   },
   "scx_rustland": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmph1z8o9oe.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmph1z8o9oe.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmph1z8o9oe.py)\n",
-    "scheduler": "scx_rustland",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_rustland: Scheduler failed to start: Error: another sched_ext scheduler is already running\n",
+    "exit_code": 0,
+    "scheduler": "scx_rustland"
   },
   "scx_rusty": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpapalzsxs.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpapalzsxs.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpapalzsxs.py)\n",
-    "scheduler": "scx_rusty",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_rusty: Scheduler failed to start: 17:25:39 \u001b[0m\u001b[34m[INFO] \u001b[0mRunning scx_rusty (build ID: 1.0.13-gd082d1fb x86_64-unknown-linux-gnu/debug)\n17:25:39 \u001b[0m\u001b[34m[INFO] \u001b[0mNODE[00] mask= 000000,000007ff,ffffffff\n17:25:39 \u001b[0m\u001b[34m[INFO] \u001b[0m DOM[00] mask= 000000,000007ff,ffffffff\n17:25:39 \u001b[0m\u001b[34m[INFO] \u001b[0mNODE[01] mask= 3fffff,fffff800,00000000\n17:25:39 \u001b[0m\u001b[34m[INFO] \u001b[0m DOM[01] mask= 3fffff,fffff800,00000000\n17:25:39 \u001b[0m\u001b[34m[INFO] \u001b[0mNODE[02] mask= 000000,00000000,00000000\n17:25:39 \u001b[0m\u001b[34m[INFO] \u001b[0mNODE[03] mask= 000000,00000000,00000000\n17:25:39 \u001b[0m\u001b[34m[INFO] \u001b[0mlibbpf: struct_ops rusty: member priv not found in kernel, skipping it as it's set to zero\n\nError: another sched_ext scheduler is already running\n",
+    "exit_code": 0,
+    "scheduler": "scx_rusty"
   },
   "scx_sdt": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp8v89ztcw.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp8v89ztcw.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp8v89ztcw.py)\n",
-    "scheduler": "scx_sdt",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_sdt: Scheduler failed to start: libbpf: struct_ops sdt_ops: member priv not found in kernel, skipping it as it's set to zero\n[SCX_BUG] ../scheds/c/scx_sdt.c:66 (Device or resource busy)\nFailed to attach struct_ops\n",
+    "exit_code": 0,
+    "scheduler": "scx_sdt"
   },
   "scx_simple": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpcw6a3aia.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpcw6a3aia.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpcw6a3aia.py)\n",
-    "scheduler": "scx_simple",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_simple: Scheduler failed to start: libbpf: struct_ops simple_ops: member priv not found in kernel, skipping it as it's set to zero\n[SCX_BUG] ../scheds/c/scx_simple.c:91 (Device or resource busy)\nFailed to attach struct_ops\n",
+    "exit_code": 0,
+    "scheduler": "scx_simple"
   },
   "scx_tickless": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpfjr6p58h.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpfjr6p58h.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmpfjr6p58h.py)\n",
-    "scheduler": "scx_tickless",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_tickless: Scheduler failed to start: 17:25:51 \u001b[0m\u001b[34m[INFO] \u001b[0mscx_tickless 1.0.4-gd082d1fb x86_64-unknown-linux-gnu/debug SMT off\n17:25:51 \u001b[0m\u001b[33m[WARN] \u001b[0mnohz_full is not enabled in the kernel\n17:25:51 \u001b[0m\u001b[34m[INFO] \u001b[0mprimary CPU domain = 0x000000,00000000,00000001\nError: another sched_ext scheduler is already running\n",
+    "exit_code": 0,
+    "scheduler": "scx_tickless"
   },
   "scx_userland": {
-    "error": "cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp3olgoit4.py)",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp3olgoit4.py\", line 13, in <module>\n    from __main__ import PyVSAGBenchmarkTester\nImportError: cannot import name 'PyVSAGBenchmarkTester' from '__main__' (/tmp/tmp3olgoit4.py)\n",
-    "scheduler": "scx_userland",
-    "exit_code": 0
+    "error": "Failed to start scheduler scx_userland: Scheduler failed to start: libbpf: struct_ops userland_ops: member priv not found in kernel, skipping it as it's set to zero\n[SCX_BUG] ../scheds/c/scx_userland.c:417 (Device or resource busy)\nFailed to attach struct_ops\n",
+    "exit_code": 0,
+    "scheduler": "scx_userland"
   }
 }
