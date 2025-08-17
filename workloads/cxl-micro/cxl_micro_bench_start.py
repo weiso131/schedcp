@@ -52,10 +52,11 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
         # Default test parameters
         self.test_params = {
             "array_size": 1073741824,  # 1GB default
-            "iterations": 10,
-            "threads": 8,
+            "iterations": 1,
+            "threads": 128,
             "timeout": 300,
             "read_ratio": 0.5,  # 50% readers, 50% writers
+            "duration": 1,
         }
         
         # Environment setup
@@ -76,7 +77,7 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             self.double_bandwidth_path,
             "--buffer-size", str(self.test_params["array_size"]),
             "--threads", str(self.test_params["threads"]),
-            "--duration", "10",  # Use fixed duration for consistent testing
+            "--duration", str(self.test_params["duration"]),  # Use fixed duration for consistent testing
             "--read-ratio", str(self.test_params["read_ratio"]),
             "--json"  # Use JSON output for easier parsing
         ]
@@ -329,8 +330,8 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             read_ratios: List of read ratios to test (0.0-1.0)
             production_only: Only test production-ready schedulers if schedulers is None
         """
-        thread_counts = thread_counts or [4, 8, 16, 64, 96, 128, 160]
-        read_ratios = read_ratios or [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
+        thread_counts = thread_counts or [4, 16, 64, 96, 128, 172]
+        read_ratios = read_ratios or [0, 0.05, 0.15, 0.25, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.75, 0.85, 0.95, 1]
         
         # Get schedulers to test
         if schedulers is None:
@@ -361,8 +362,15 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
                     print(f"\nTest {test_count}/{total_tests}: "
                           f"scheduler={scheduler_name}, threads={threads}, read_ratio={read_ratio:.2f}")
                     
-                    # Update test parameters
-                    self.set_test_params(threads=threads, array_size=array_size, read_ratio=read_ratio)
+                    # Update test parameters (preserve other settings like timeout, iterations)
+                    self.set_test_params(
+                        threads=threads, 
+                        array_size=self.test_params["array_size"], 
+                        read_ratio=read_ratio,
+                        duration=self.test_params["duration"],
+                        timeout=self.test_params["timeout"],
+                        iterations=self.test_params["iterations"]
+                    )
                     
                     # Run benchmark
                     scheduler_to_test = None if scheduler_name == 'default' else scheduler_name
@@ -375,7 +383,8 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
                             'read_ratio': read_ratio,
                             'bandwidth_mbps': result.get('bandwidth_mbps', 0),
                             'execution_time': result.get('execution_time', 0),
-                            'array_size_gb': array_size / (1024**3)
+                            'array_size_gb': array_size / (1024**3),
+                            'duration': self.test_params["duration"]
                         })
                         print(f"  Bandwidth: {result.get('bandwidth_mbps', 0):.2f} MB/s")
                     else:
@@ -386,7 +395,8 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
                             'read_ratio': read_ratio,
                             'bandwidth_mbps': 0,
                             'execution_time': 0,
-                            'array_size_gb': array_size / (1024**3)
+                            'array_size_gb': array_size / (1024**3),
+                            'duration': self.test_params["duration"]
                         })
                     
                     time.sleep(1)  # Brief pause between tests
@@ -514,9 +524,11 @@ def main():
                        help="Test only production schedulers", default=False)
     parser.add_argument("--threads", type=int, default=128, 
                        help="Number of threads for testing")
-    parser.add_argument("--array-size", type=int, default=256*1024*1024*1024, 
+    parser.add_argument("--array-size", type=int, default=1*1024*1024*1024, 
                        help="Array size in bytes (default 256GB)")
-    parser.add_argument("--iterations", type=int, default=3, 
+    parser.add_argument("--duration", type=int, default=1, 
+                       help="Duration in seconds (default 1)")
+    parser.add_argument("--iterations", type=int, default=1, 
                        help="Number of iterations per test")
     parser.add_argument("--read-ratio", type=float, default=0.5,
                        help="Ratio of readers (0.0-1.0, default: 0.5)")
@@ -541,6 +553,7 @@ def main():
     tester.set_test_params(
         threads=args.threads,
         array_size=args.array_size,
+        duration=args.duration,
         iterations=args.iterations,
         timeout=args.timeout,
         read_ratio=args.read_ratio

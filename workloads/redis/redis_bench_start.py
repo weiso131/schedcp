@@ -56,7 +56,6 @@ class RedisBenchmarkTester(SchedulerBenchmark):
             "data_size": 3,
             "pipeline": 1,
             "keyspace": None,
-            "tests": "set,get,incr,lpush,lpop",
             "timeout": 300,
         }
         
@@ -97,9 +96,10 @@ class RedisBenchmarkTester(SchedulerBenchmark):
             Dictionary containing benchmark results
         """
         print(f"Running Redis benchmark with scheduler: {scheduler_name or 'default'}")
+        tests_display = self.test_params.get('tests') or 'all default tests'
         print(f"Parameters: clients={self.test_params['clients']}, "
               f"requests={self.test_params['requests']}, "
-              f"tests={self.test_params['tests']}")
+              f"tests={tests_display}")
         
         try:
             # Create Redis benchmark instance with current configuration
@@ -582,7 +582,7 @@ def main():
                        help="Data size in bytes")
     parser.add_argument("--pipeline", type=int, default=16,
                        help="Pipeline requests")
-    parser.add_argument("--tests", default="set,get,incr,lpush,lpop",
+    parser.add_argument("--tests", default=None,
                        help="Comma-separated list of tests to run")
     parser.add_argument("--io-threads", type=int, default=64,
                        help="Redis I/O threads")

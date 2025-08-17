@@ -1,7 +1,7 @@
 {
   "scheduler": {
     "name": "scx_rustland",
-    "production_ready": false,
+    "production_ready": true,
     "description": "A user-space scheduler written in Rust that prioritizes interactive workloads. Scheduling decisions are made entirely in user-space using a deadline-based algorithm (vruntime + exec_runtime). Tasks are stored in a BTreeSet and dispatched from lowest to highest deadline, favoring latency-sensitive tasks that frequently sleep.",
     "use_cases": [
       "gaming",
