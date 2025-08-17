@@ -21,6 +21,7 @@
 #include <thread>
 #include <unistd.h>
 #include <vector>
+#include <random>
 
 // Forward declarations for types used in thread functions
 struct ThreadStats {
@@ -95,9 +96,14 @@ inline pid_t gettid() {
 inline void reader_thread(void *buffer, size_t buffer_size, size_t block_size,
                    std::atomic<bool> &stop_flag, ThreadStats &stats,
                    RateLimiter *rate_limiter, int thread_id,
-                   size_t cpu_workload_size, int numa_node, bool enable_numa) {
+                   size_t cpu_workload_size, int numa_node, bool enable_numa, bool random_access) {
   std::vector<char> local_buffer(block_size);
   size_t offset = 0;
+  
+  // Random number generator for random access pattern
+  std::random_device rd;
+  std::mt19937 gen(rd() + thread_id); // Seed with random device + thread_id for uniqueness
+  std::uniform_int_distribution<size_t> dis(0, (buffer_size - block_size) / block_size - 1);
 
   stats.thread_id = thread_id;
 
@@ -119,7 +125,11 @@ inline void reader_thread(void *buffer, size_t buffer_size, size_t block_size,
     std::memcpy(local_buffer.data(), static_cast<char *>(buffer) + offset,
                 block_size);
 
-    offset = (offset + block_size) % (buffer_size - block_size);
+    if (random_access) {
+      offset = dis(gen) * block_size;
+    } else {
+      offset = (offset + block_size) % (buffer_size - block_size);
+    }
 
     stats.bytes_processed += block_size;
     stats.operations++;
@@ -140,9 +150,14 @@ inline void reader_thread(void *buffer, size_t buffer_size, size_t block_size,
 inline void writer_thread(void *buffer, size_t buffer_size, size_t block_size,
                    std::atomic<bool> &stop_flag, ThreadStats &stats,
                    RateLimiter *rate_limiter, int thread_id,
-                   size_t cpu_workload_size, int numa_node, bool enable_numa) {
+                   size_t cpu_workload_size, int numa_node, bool enable_numa, bool random_access) {
   std::vector<char> local_buffer(block_size, 'W');
   size_t offset = 0;
+  
+  // Random number generator for random access pattern
+  std::random_device rd;
+  std::mt19937 gen(rd() + thread_id); // Seed with random device + thread_id for uniqueness
+  std::uniform_int_distribution<size_t> dis(0, (buffer_size - block_size) / block_size - 1);
 
   stats.thread_id = thread_id;
 
@@ -164,7 +179,11 @@ inline void writer_thread(void *buffer, size_t buffer_size, size_t block_size,
     std::memcpy(static_cast<char *>(buffer) + offset, local_buffer.data(),
                 block_size);
 
-    offset = (offset + block_size) % (buffer_size - block_size);
+    if (random_access) {
+      offset = dis(gen) * block_size;
+    } else {
+      offset = (offset + block_size) % (buffer_size - block_size);
+    }
 
     stats.bytes_processed += block_size;
     stats.operations++;
@@ -185,9 +204,14 @@ inline void writer_thread(void *buffer, size_t buffer_size, size_t block_size,
 inline void device_reader_thread(int fd, size_t file_size, size_t block_size,
                           std::atomic<bool> &stop_flag, ThreadStats &stats,
                           RateLimiter *rate_limiter, int thread_id,
-                          int numa_node, bool enable_numa) {
+                          int numa_node, bool enable_numa, bool random_access) {
   std::vector<char> local_buffer(block_size);
   size_t offset = 0;
+  
+  // Random number generator for random access pattern
+  std::random_device rd;
+  std::mt19937 gen(rd() + thread_id); // Seed with random device + thread_id for uniqueness
+  std::uniform_int_distribution<size_t> dis(0, (file_size - block_size) / block_size - 1);
 
   stats.thread_id = thread_id;
 
@@ -215,7 +239,11 @@ inline void device_reader_thread(int fd, size_t file_size, size_t block_size,
       break;
     }
 
-    offset = (offset + block_size) % (file_size - block_size);
+    if (random_access) {
+      offset = dis(gen) * block_size;
+    } else {
+      offset = (offset + block_size) % (file_size - block_size);
+    }
 
     stats.bytes_processed += bytes_read;
     stats.operations++;
@@ -226,9 +254,14 @@ inline void device_reader_thread(int fd, size_t file_size, size_t block_size,
 inline void device_writer_thread(int fd, size_t file_size, size_t block_size,
                           std::atomic<bool> &stop_flag, ThreadStats &stats,
                           RateLimiter *rate_limiter, int thread_id,
-                          int numa_node, bool enable_numa) {
+                          int numa_node, bool enable_numa, bool random_access) {
   std::vector<char> local_buffer(block_size, 'W');
   size_t offset = 0;
+  
+  // Random number generator for random access pattern
+  std::random_device rd;
+  std::mt19937 gen(rd() + thread_id); // Seed with random device + thread_id for uniqueness
+  std::uniform_int_distribution<size_t> dis(0, (file_size - block_size) / block_size - 1);
 
   stats.thread_id = thread_id;
 
@@ -255,7 +288,11 @@ inline void device_writer_thread(int fd, size_t file_size, size_t block_size,
       break;
     }
 
-    offset = (offset + block_size) % (file_size - block_size);
+    if (random_access) {
+      offset = dis(gen) * block_size;
+    } else {
+      offset = (offset + block_size) % (file_size - block_size);
+    }
 
     stats.bytes_processed += bytes_written;
     stats.operations++;
@@ -266,9 +303,14 @@ inline void device_writer_thread(int fd, size_t file_size, size_t block_size,
 inline void mmap_reader_thread(void *mapped_area, size_t file_size, size_t block_size,
                         std::atomic<bool> &stop_flag, ThreadStats &stats,
                         RateLimiter *rate_limiter, int thread_id, int numa_node,
-                        bool enable_numa) {
+                        bool enable_numa, bool random_access) {
   std::vector<char> local_buffer(block_size);
   size_t offset = 0;
+  
+  // Random number generator for random access pattern
+  std::random_device rd;
+  std::mt19937 gen(rd() + thread_id); // Seed with random device + thread_id for uniqueness
+  std::uniform_int_distribution<size_t> dis(0, (file_size - block_size) / block_size - 1);
 
   stats.thread_id = thread_id;
 
@@ -290,7 +332,11 @@ inline void mmap_reader_thread(void *mapped_area, size_t file_size, size_t block
     std::memcpy(local_buffer.data(), static_cast<char *>(mapped_area) + offset,
                 block_size);
 
-    offset = (offset + block_size) % (file_size - block_size);
+    if (random_access) {
+      offset = dis(gen) * block_size;
+    } else {
+      offset = (offset + block_size) % (file_size - block_size);
+    }
 
     stats.bytes_processed += block_size;
     stats.operations++;
@@ -301,9 +347,14 @@ inline void mmap_reader_thread(void *mapped_area, size_t file_size, size_t block
 inline void mmap_writer_thread(void *mapped_area, size_t file_size, size_t block_size,
                         std::atomic<bool> &stop_flag, ThreadStats &stats,
                         RateLimiter *rate_limiter, int thread_id, int numa_node,
-                        bool enable_numa) {
+                        bool enable_numa, bool random_access) {
   std::vector<char> local_buffer(block_size, 'W');
   size_t offset = 0;
+  
+  // Random number generator for random access pattern
+  std::random_device rd;
+  std::mt19937 gen(rd() + thread_id); // Seed with random device + thread_id for uniqueness
+  std::uniform_int_distribution<size_t> dis(0, (file_size - block_size) / block_size - 1);
 
   stats.thread_id = thread_id;
 
@@ -325,7 +376,11 @@ inline void mmap_writer_thread(void *mapped_area, size_t file_size, size_t block
     std::memcpy(static_cast<char *>(mapped_area) + offset, local_buffer.data(),
                 block_size);
 
-    offset = (offset + block_size) % (file_size - block_size);
+    if (random_access) {
+      offset = dis(gen) * block_size;
+    } else {
+      offset = (offset + block_size) % (file_size - block_size);
+    }
 
     stats.bytes_processed += block_size;
     stats.operations++;

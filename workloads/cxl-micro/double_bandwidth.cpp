@@ -27,7 +27,7 @@
 // Default parameters
 constexpr size_t DEFAULT_BUFFER_SIZE = 1 * 1024 * 1024 * 1024UL; // 1GB
 constexpr size_t DEFAULT_BLOCK_SIZE = 4096;                      // 4KB
-constexpr int DEFAULT_DURATION = 10;                             // seconds
+constexpr int DEFAULT_DURATION = 30;                             // seconds
 constexpr int DEFAULT_NUM_THREADS = 500;    // total threads
 constexpr float DEFAULT_READ_RATIO = 0.5;   // 50% readers, 50% writers
 constexpr size_t DEFAULT_MAX_BANDWIDTH = 0; // 0 means unlimited (MB/s)
@@ -49,6 +49,7 @@ struct BenchmarkConfig {
   int numa_node = DEFAULT_NUMA_NODE; // NUMA node to bind to
   bool enable_numa = true;           // Enable NUMA binding
   bool json_output = true;          // Output results in JSON format
+  bool random_access = true;         // Random access pattern (default: true)
 };
 
 void print_usage(const char *prog_name) {
@@ -74,6 +75,8 @@ void print_usage(const char *prog_name) {
       << "  -N, --numa-node=NODE      Bind threads to a specific NUMA node "
          "(default: 1)\n"
       << "  -n, --no-numa             Disable NUMA binding\n"
+      << "  -R, --random              Use random access pattern (default)\n"
+      << "  -S, --sequential          Use sequential access pattern\n"
       << "  -j, --json                Output results in JSON format\n"
       << "  -h, --help                Show this help message\n";
 }
@@ -94,12 +97,14 @@ BenchmarkConfig parse_args(int argc, char *argv[]) {
       {"cpu-workload", required_argument, 0, 'w'},
       {"numa-node", optional_argument, 0, 'N'},
       {"no-numa", no_argument, 0, 'n'},
+      {"random", no_argument, 0, 'R'},
+      {"sequential", no_argument, 0, 'S'},
       {"json", no_argument, 0, 'j'},
       {"help", no_argument, 0, 'h'},
       {0, 0, 0, 0}};
 
   int opt, option_index = 0;
-  while ((opt = getopt_long(argc, argv, "b:s:t:d:r:B:D:mchw:N:nj", long_options,
+  while ((opt = getopt_long(argc, argv, "b:s:t:d:r:B:D:mchw:N:nRSj", long_options,
                             &option_index)) != -1) {
     switch (opt) {
     case 'b':
@@ -141,6 +146,12 @@ BenchmarkConfig parse_args(int argc, char *argv[]) {
       break;
     case 'n':
       config.enable_numa = false;
+      break;
+    case 'R':
+      config.random_access = true;
+      break;
+    case 'S':
+      config.random_access = false;
       break;
     case 'j':
       config.json_output = true;
@@ -244,6 +255,8 @@ int main(int argc, char *argv[]) {
       std::cout << "NUMA binding: Disabled" << std::endl;
     }
 
+    std::cout << "Access pattern: " << (config.random_access ? "Random" : "Sequential") << std::endl;
+
     std::cout << "\nStarting benchmark..." << std::endl;
   }
 
@@ -276,7 +289,7 @@ int main(int argc, char *argv[]) {
                              config.block_size, std::ref(stop_flag),
                              std::ref(thread_stats[i]), read_limiter.get(),
                              reader_id, config.cpu_workload_size,
-                             config.numa_node, config.enable_numa);
+                             config.numa_node, config.enable_numa, config.random_access);
       }
 
       // 为写线程分配奇数ID (1, 3, 5...)
@@ -286,7 +299,7 @@ int main(int argc, char *argv[]) {
             writer_thread, buffer, config.buffer_size, config.block_size,
             std::ref(stop_flag), std::ref(thread_stats[num_readers + i]),
             write_limiter.get(), writer_id, config.cpu_workload_size,
-            config.numa_node, config.enable_numa);
+            config.numa_node, config.enable_numa, config.random_access);
       }
     } else {
       // Open the device
@@ -316,7 +329,7 @@ int main(int argc, char *argv[]) {
                                config.buffer_size, config.block_size,
                                std::ref(stop_flag), std::ref(thread_stats[i]),
                                read_limiter.get(), reader_id, config.numa_node,
-                               config.enable_numa);
+                               config.enable_numa, config.random_access);
         }
 
         // 为写线程分配奇数ID
@@ -326,7 +339,7 @@ int main(int argc, char *argv[]) {
               mmap_writer_thread, mapped_area, config.buffer_size,
               config.block_size, std::ref(stop_flag),
               std::ref(thread_stats[num_readers + i]), write_limiter.get(),
-              writer_id, config.numa_node, config.enable_numa);
+              writer_id, config.numa_node, config.enable_numa, config.random_access);
         }
       } else {
         // Use read/write for device access
@@ -336,7 +349,7 @@ int main(int argc, char *argv[]) {
           threads.emplace_back(device_reader_thread, fd, config.buffer_size,
                                config.block_size, std::ref(stop_flag),
                                std::ref(thread_stats[i]), read_limiter.get(),
-                               reader_id, config.numa_node, config.enable_numa);
+                               reader_id, config.numa_node, config.enable_numa, config.random_access);
         }
 
         // 为写线程分配奇数ID
@@ -346,7 +359,7 @@ int main(int argc, char *argv[]) {
                                config.block_size, std::ref(stop_flag),
                                std::ref(thread_stats[num_readers + i]),
                                write_limiter.get(), writer_id, config.numa_node,
-                               config.enable_numa);
+                               config.enable_numa, config.random_access);
         }
       }
     }
@@ -427,7 +440,8 @@ int main(int argc, char *argv[]) {
       std::cout << "  \"enable_numa\": " << (config.enable_numa ? "true" : "false") << ",\n";
       std::cout << "  \"device_path\": \"" << config.device_path << "\",\n";
       std::cout << "  \"use_mmap\": " << (config.use_mmap ? "true" : "false") << ",\n";
-      std::cout << "  \"is_cxl_mem\": " << (config.is_cxl_mem ? "true" : "false") << "\n";
+      std::cout << "  \"is_cxl_mem\": " << (config.is_cxl_mem ? "true" : "false") << ",\n";
+      std::cout << "  \"random_access\": " << (config.random_access ? "true" : "false") << "\n";
       std::cout << "}" << std::endl;
     } else {
       std::cout << "\n=== Results ===" << std::endl;

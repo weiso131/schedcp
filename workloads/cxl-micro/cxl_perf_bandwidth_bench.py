@@ -12,6 +12,7 @@ import json
 import time
 import argparse
 import re
+import pandas as pd
 from typing import Dict, List
 
 
@@ -380,6 +381,199 @@ class CXLPerfBandwidthTester:
         
         return results
     
+    def run_parameter_sweep(self, 
+                           thread_counts: List[int] = None,
+                           read_ratios: List[float] = None, 
+                           buffer_sizes: List[int] = None) -> List[Dict]:
+        """
+        Run parameter sweep with different combinations of threads, read ratios, and buffer sizes.
+        
+        Args:
+            thread_counts: List of thread counts to test
+            read_ratios: List of read ratios to test (0.0-1.0)
+            buffer_sizes: List of buffer sizes to test (in bytes)
+            
+        Returns:
+            List of dictionaries containing results for each parameter combination
+        """
+        # Default parameter ranges
+        thread_counts = thread_counts or [4, 8, 16, 32, 64, 128]
+        read_ratios = read_ratios or [0.0, 0.25, 0.5, 0.75, 1.0]
+        buffer_sizes = buffer_sizes or [
+            1 * 1024**3,    # 1GB
+            4 * 1024**3,    # 4GB  
+            8 * 1024**3,    # 8GB
+            32 * 1024**3,   # 32GB
+            64 * 1024**3,   # 64GB
+        ]
+        
+        print(f"Running parameter sweep:")
+        print(f"  Thread counts: {thread_counts}")
+        print(f"  Read ratios: {read_ratios}")
+        print(f"  Buffer sizes: {[f'{size/(1024**3):.0f}GB' for size in buffer_sizes]}")
+        
+        all_results = []
+        total_tests = len(thread_counts) * len(read_ratios) * len(buffer_sizes)
+        test_count = 0
+        
+        for buffer_size in buffer_sizes:
+            for threads in thread_counts:
+                for read_ratio in read_ratios:
+                    test_count += 1
+                    print(f"\nTest {test_count}/{total_tests}: "
+                          f"buffer_size={buffer_size/(1024**3):.1f}GB, "
+                          f"threads={threads}, read_ratio={read_ratio:.2f}")
+                    
+                    # Update test parameters
+                    self.set_test_params(
+                        threads=threads,
+                        buffer_size=buffer_size,
+                        read_ratio=read_ratio
+                    )
+                    
+                    # Run benchmark
+                    result = self.run_perf_bandwidth_benchmark()
+                    
+                    if "error" not in result:
+                        # Extract key metrics
+                        app_metrics = result.get('application', {})
+                        perf_metrics = result.get('perf_bandwidths', {})
+                        
+                        sweep_result = {
+                            'buffer_size_gb': buffer_size / (1024**3),
+                            'buffer_size_bytes': buffer_size,
+                            'threads': threads,
+                            'read_ratio': read_ratio,
+                            'duration': self.test_params['duration'],
+                            
+                            # Application metrics
+                            'app_total_bandwidth_mbps': app_metrics.get('bandwidth_mbps', 0),
+                            'app_read_bandwidth_mbps': app_metrics.get('read_bandwidth_mbps', 0),
+                            'app_write_bandwidth_mbps': app_metrics.get('write_bandwidth_mbps', 0),
+                            'app_total_iops': app_metrics.get('total_iops', 0),
+                            'app_execution_time': app_metrics.get('execution_time', 0),
+                            
+                            # Key perf bandwidth metrics
+                            'perf_cache_references_bandwidth_mbps': perf_metrics.get('cache_references_bandwidth_mbps', 0),
+                            'perf_cache_misses_bandwidth_mbps': perf_metrics.get('cache_misses_bandwidth_mbps', 0),
+                            'perf_dram_read_bandwidth_mbps': perf_metrics.get('dram_read_bandwidth_mbps', 0),
+                            'perf_dram_write_bandwidth_mbps': perf_metrics.get('dram_write_bandwidth_mbps', 0),
+                            'perf_mem_loads_bandwidth_mbps': perf_metrics.get('mem_loads_bandwidth_mbps', 0),
+                            'perf_mem_stores_bandwidth_mbps': perf_metrics.get('mem_stores_bandwidth_mbps', 0),
+                            'perf_offcore_data_read_bandwidth_mbps': perf_metrics.get('offcore_data_read_bandwidth_mbps', 0),
+                            'perf_offcore_rfo_bandwidth_mbps': perf_metrics.get('offcore_rfo_bandwidth_mbps', 0),
+                            
+                            # Key efficiency metrics
+                            'perf_cache_miss_rate_pct': perf_metrics.get('cache_miss_rate_pct', 0),
+                            'perf_l3_hit_rate_pct': perf_metrics.get('l3_hit_rate_pct', 0),
+                            'perf_l3_miss_rate_pct': perf_metrics.get('l3_miss_rate_pct', 0),
+                            'perf_instructions_per_cycle': perf_metrics.get('instructions_per_cycle', 0),
+                            
+                            # Status
+                            'status': 'success'
+                        }
+                        
+                        all_results.append(sweep_result)
+                        print(f"  App Bandwidth: {app_metrics.get('bandwidth_mbps', 0):.1f} MB/s, "
+                              f"Cache Refs: {perf_metrics.get('cache_references_bandwidth_mbps', 0):.1f} MB/s")
+                    else:
+                        print(f"  Failed: {result.get('error', 'Unknown error')}")
+                        # Add failed result with zeros
+                        failed_result = {
+                            'buffer_size_gb': buffer_size / (1024**3),
+                            'buffer_size_bytes': buffer_size,
+                            'threads': threads,
+                            'read_ratio': read_ratio,
+                            'duration': self.test_params['duration'],
+                            'status': 'failed',
+                            'error': result.get('error', 'Unknown error')
+                        }
+                        # Add all metric fields with 0 values
+                        for key in ['app_total_bandwidth_mbps', 'app_read_bandwidth_mbps', 'app_write_bandwidth_mbps', 
+                                   'app_total_iops', 'app_execution_time', 'perf_cache_references_bandwidth_mbps',
+                                   'perf_cache_misses_bandwidth_mbps', 'perf_dram_read_bandwidth_mbps', 
+                                   'perf_dram_write_bandwidth_mbps', 'perf_mem_loads_bandwidth_mbps',
+                                   'perf_mem_stores_bandwidth_mbps', 'perf_offcore_data_read_bandwidth_mbps',
+                                   'perf_offcore_rfo_bandwidth_mbps', 'perf_cache_miss_rate_pct',
+                                   'perf_l3_hit_rate_pct', 'perf_l3_miss_rate_pct', 'perf_instructions_per_cycle']:
+                            failed_result[key] = 0
+                        all_results.append(failed_result)
+                    
+                    # Brief pause between tests
+                    time.sleep(1)
+        
+        return all_results
+    
+    def save_parameter_sweep_results(self, results: List[Dict]):
+        """Save parameter sweep results to CSV and JSON files"""
+        if not results:
+            print("No results to save")
+            return
+        
+        # Save to CSV
+        df = pd.DataFrame(results)
+        csv_file = os.path.join(self.results_dir, "cxl_perf_parameter_sweep.csv")
+        df.to_csv(csv_file, index=False)
+        print(f"Parameter sweep results saved to CSV: {csv_file}")
+        
+        # Also save to JSON for compatibility
+        json_file = os.path.join(self.results_dir, "cxl_perf_parameter_sweep.json")
+        with open(json_file, 'w') as f:
+            json.dump(results, f, indent=2)
+        print(f"Parameter sweep results saved to JSON: {json_file}")
+        
+        # Print summary statistics
+        self.print_parameter_sweep_summary(df)
+    
+    def print_parameter_sweep_summary(self, df: pd.DataFrame):
+        """Print summary statistics for parameter sweep results"""
+        print("\n" + "="*80)
+        print("CXL PERF BANDWIDTH PARAMETER SWEEP SUMMARY")
+        print("="*80)
+        
+        successful_results = df[df['status'] == 'success']
+        if successful_results.empty:
+            print("No successful test results found!")
+            return
+        
+        print(f"\nSuccessful tests: {len(successful_results)}/{len(df)}")
+        
+        # Best performing configurations
+        print("\nTOP 5 CONFIGURATIONS BY APPLICATION BANDWIDTH:")
+        print("-" * 60)
+        top_app_bw = successful_results.nlargest(5, 'app_total_bandwidth_mbps')
+        for _, row in top_app_bw.iterrows():
+            print(f"  {row['buffer_size_gb']:4.0f}GB, {row['threads']:3d} threads, "
+                  f"ratio {row['read_ratio']:4.2f}: {row['app_total_bandwidth_mbps']:8.1f} MB/s")
+        
+        print("\nTOP 5 CONFIGURATIONS BY CACHE REFERENCES BANDWIDTH:")
+        print("-" * 60)
+        top_cache_bw = successful_results.nlargest(5, 'perf_cache_references_bandwidth_mbps')
+        for _, row in top_cache_bw.iterrows():
+            print(f"  {row['buffer_size_gb']:4.0f}GB, {row['threads']:3d} threads, "
+                  f"ratio {row['read_ratio']:4.2f}: {row['perf_cache_references_bandwidth_mbps']:8.1f} MB/s")
+        
+        # Summary statistics
+        print(f"\nSUMMARY STATISTICS:")
+        print("-" * 40)
+        print(f"Application Bandwidth (MB/s):")
+        print(f"  Mean:    {successful_results['app_total_bandwidth_mbps'].mean():8.1f}")
+        print(f"  Median:  {successful_results['app_total_bandwidth_mbps'].median():8.1f}")
+        print(f"  Max:     {successful_results['app_total_bandwidth_mbps'].max():8.1f}")
+        print(f"  Min:     {successful_results['app_total_bandwidth_mbps'].min():8.1f}")
+        
+        print(f"\nCache References Bandwidth (MB/s):")
+        print(f"  Mean:    {successful_results['perf_cache_references_bandwidth_mbps'].mean():8.1f}")
+        print(f"  Median:  {successful_results['perf_cache_references_bandwidth_mbps'].median():8.1f}")
+        print(f"  Max:     {successful_results['perf_cache_references_bandwidth_mbps'].max():8.1f}")
+        print(f"  Min:     {successful_results['perf_cache_references_bandwidth_mbps'].min():8.1f}")
+        
+        print(f"\nCache Miss Rate (%):")
+        print(f"  Mean:    {successful_results['perf_cache_miss_rate_pct'].mean():8.2f}")
+        print(f"  Median:  {successful_results['perf_cache_miss_rate_pct'].median():8.2f}")
+        print(f"  Max:     {successful_results['perf_cache_miss_rate_pct'].max():8.2f}")
+        print(f"  Min:     {successful_results['perf_cache_miss_rate_pct'].min():8.2f}")
+
     def save_results(self, results: Dict):
         """Save results to JSON file"""
         results_file = os.path.join(self.results_dir, "cxl_perf_bandwidth_results.json")
@@ -522,11 +716,11 @@ def main():
                        help="Path to double_bandwidth binary")
     parser.add_argument("--results-dir", default="results", 
                        help="Directory to store results")
-    parser.add_argument("--threads", type=int, default=16, 
+    parser.add_argument("--threads", type=int, default=128, 
                        help="Number of threads for testing")
-    parser.add_argument("--buffer-size", type=int, default=32*1024*1024*1024, 
+    parser.add_argument("--buffer-size", type=int, default=64*1024*1024*1024, 
                        help="Buffer size in bytes (default 256GB)")
-    parser.add_argument("--duration", type=int, default=10, 
+    parser.add_argument("--duration", type=int, default=30, 
                        help="Test duration in seconds")
     parser.add_argument("--read-ratio", type=float, default=0.5,
                        help="Ratio of readers (0.0-1.0, default: 0.5)")
@@ -534,6 +728,8 @@ def main():
                        help="Timeout in seconds")
     parser.add_argument("--raw", action="store_true", default=True,
                        help="Print raw data output instead of summary")
+    parser.add_argument("--parameter-sweep", action="store_true", 
+                       help="Run parameter sweep across threads, read ratios, and buffer sizes")
     
     args = parser.parse_args()
     
@@ -566,21 +762,33 @@ def main():
         print("Error: Cannot run 'sudo perf'. Make sure perf is installed and you have sudo access.")
         sys.exit(1)
     
-    print("Starting CXL perf bandwidth analysis...")
-    print(f"Perf counters: {', '.join(tester.perf_calc.PERF_COUNTERS)}")
-    
-    # Run the benchmark
-    results = tester.run_perf_bandwidth_benchmark()
-    
-    # Save and display results
-    tester.save_results(results)
-    
-    if args.raw:
-        tester.print_raw_data(results)
+    if args.parameter_sweep:
+        print("Starting CXL perf bandwidth parameter sweep...")
+        print(f"Perf counters: {', '.join(tester.perf_calc.PERF_COUNTERS)}")
+        
+        # Run parameter sweep with default ranges
+        sweep_results = tester.run_parameter_sweep()
+        
+        # Save sweep results  
+        tester.save_parameter_sweep_results(sweep_results)
+        
+        print("\nParameter sweep complete!")
     else:
-        tester.print_detailed_summary(results)
-    
-    print("\nTesting complete!")
+        print("Starting CXL perf bandwidth analysis...")
+        print(f"Perf counters: {', '.join(tester.perf_calc.PERF_COUNTERS)}")
+        
+        # Run the benchmark
+        results = tester.run_perf_bandwidth_benchmark()
+        
+        # Save and display results
+        tester.save_results(results)
+        
+        if args.raw:
+            tester.print_raw_data(results)
+        else:
+            tester.print_detailed_summary(results)
+        
+        print("\nTesting complete!")
 
 
 if __name__ == "__main__":
