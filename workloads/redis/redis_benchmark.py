@@ -321,7 +321,7 @@ class RedisBenchmark:
             return None
         
         # Build base arguments
-        base_args = ["-n", str(requests), "-c", str(clients), "-P", str(pipeline), "--csv"]
+        base_args = ["-c", str(clients), "-P", str(pipeline), "--csv"]
         
         if data_size != 3:
             base_args.extend(["-d", str(data_size)])
@@ -344,58 +344,58 @@ class RedisBenchmark:
             for test in test_list:
                 benchmarks.append({
                     "name": f"{test.upper()}_operations",
-                    "args": ["-t", test] + base_args
+                    "args": ["-t", test] + base_args + ["-n", str(requests)]
                 })
         else:
             # Use default comprehensive test suite
             benchmarks = [
                 {
                     "name": "SET_operations",
-                    "args": ["-t", "set"] + base_args
+                    "args": ["-t", "set"] + base_args + ["-n", str(requests)]
                 },
                 {
                     "name": "GET_operations", 
-                    "args": ["-t", "get"] + base_args
+                    "args": ["-t", "get"] + base_args + ["-n", str(requests)]
                 },
                 {
                     "name": "INCR_operations",
-                    "args": ["-t", "incr"] + base_args
+                    "args": ["-t", "incr"] + base_args + ["-n", str(requests)]
                 },
                 {
                     "name": "LPUSH_operations",
-                    "args": ["-t", "lpush"] + base_args
+                    "args": ["-t", "lpush"] + base_args + ["-n", str(requests)]
                 },
                 {
                     "name": "LPOP_operations",
-                    "args": ["-t", "lpop"] + base_args
+                    "args": ["-t", "lpop"] + base_args + ["-n", str(requests)]
                 },
                 {
                     "name": "SADD_operations",
-                    "args": ["-t", "sadd"] + base_args
+                    "args": ["-t", "sadd"] + base_args + ["-n", str(requests)]
                 },
                 {
                     "name": "HSET_operations",
-                    "args": ["-t", "hset"] + base_args
+                    "args": ["-t", "hset"] + base_args + ["-n", str(requests)]
                 },
                 {
                     "name": "LRANGE_100_operations",
-                    "args": ["-t", "lrange_100"] + base_args
+                    "args": ["-t", "lrange_100"] + base_args + ["-n", str(requests / 10)]
                 },
                 {
                     "name": "LRANGE_300_operations",
-                    "args": ["-t", "lrange_300"] + base_args
+                    "args": ["-t", "lrange_300"] + base_args + ["-n", str(requests / 10)]
                 },
                 {
                     "name": "LRANGE_500_operations",
-                    "args": ["-t", "lrange_500"] + base_args
+                    "args": ["-t", "lrange_500"] + base_args + ["-n", str(requests / 20)]
                 },
                 {
                     "name": "LRANGE_600_operations",
-                    "args": ["-t", "lrange_600"] + base_args
+                    "args": ["-t", "lrange_600"] + base_args + ["-n", str(requests / 20)]
                 },
                 {
                     "name": "MSET_operations",
-                    "args": ["-t", "mset"] + base_args
+                    "args": ["-t", "mset"] + base_args + ["-n", str(requests)]
                 }
             ]
         
@@ -412,7 +412,9 @@ class RedisBenchmark:
                 
                 results.append(result)
                 time.sleep(1)  # Brief pause between tests
-                
+        except Exception as e:
+            print(f"Error during benchmark: {e}")
+            return None
         finally:
             self.stop_redis()
         

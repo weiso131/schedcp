@@ -1,5 +1,7 @@
 # Redis Performance Measurement Guide
 
+numactl --interleave=0,1,2  
+
 ## Overview
 
 This guide provides comprehensive information on measuring Redis performance, including built-in tools, benchmarking methodologies, key metrics, and best practices for performance evaluation.

@@ -173,6 +173,7 @@ class RedisBenchmarkTester(SchedulerBenchmark):
                     }
                     
                 except Exception as e:
+                    print(f"Error during benchmark: {e}")
                     self.runner.stop_scheduler()
                     return {
                         "scheduler": scheduler_name,
