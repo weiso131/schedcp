@@ -1,6 +1,6 @@
 # Redis Performance Measurement Guide
 
-numactl --interleave=0,1,2  
+numactl --interleave=0,1,2   python redis_bench_start.py --parameter-sweep > redis_test.log
 
 ## Overview
 

@@ -1,0 +1,366 @@
+[
+  {
+    "test_name": "SET_operations",
+    "command": "redis-src/src/redis-benchmark -t set -c 50 -P 1 --csv -n 100000",
+    "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"SET\",\"76394.20\",\"0.357\",\"0.112\",\"0.351\",\"0.423\",\"0.479\",\"6.687\"\n",
+    "stderr": "",
+    "return_code": 0,
+    "duration": 1.3174247741699219,
+    "parsed_metrics": [
+      {
+        "test": "SET",
+        "rps": 76394.2,
+        "avg_latency_ms": 0.357,
+        "min_latency_ms": 0.112,
+        "p50_latency_ms": 0.351,
+        "p95_latency_ms": 0.423,
+        "p99_latency_ms": 0.479,
+        "max_latency_ms": 6.687
+      }
+    ],
+    "timestamp": "2025-08-18T03:27:28.481709",
+    "metrics": {
+      "SET": {
+        "requests_per_second": 76394.2
+      }
+    }
+  },
+  {
+    "test_name": "GET_operations",
+    "command": "redis-src/src/redis-benchmark -t get -c 50 -P 1 --csv -n 100000",
+    "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"GET\",\"77399.38\",\"0.351\",\"0.104\",\"0.351\",\"0.415\",\"0.471\",\"2.335\"\n",
+    "stderr": "",
+    "return_code": 0,
+    "duration": 1.302001953125,
+    "parsed_metrics": [
+      {
+        "test": "GET",
+        "rps": 77399.38,
+        "avg_latency_ms": 0.351,
+        "min_latency_ms": 0.104,
+        "p50_latency_ms": 0.351,
+        "p95_latency_ms": 0.415,
+        "p99_latency_ms": 0.471,
+        "max_latency_ms": 2.335
+      }
+    ],
+    "timestamp": "2025-08-18T03:27:30.784072",
+    "metrics": {
+      "GET": {
+        "requests_per_second": 77399.38
+      }
+    }
+  },
+  {
+    "test_name": "INCR_operations",
+    "command": "redis-src/src/redis-benchmark -t incr -c 50 -P 1 --csv -n 100000",
+    "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"INCR\",\"76511.09\",\"0.359\",\"0.112\",\"0.351\",\"0.407\",\"0.495\",\"12.327\"\n",
+    "stderr": "",
+    "return_code": 0,
+    "duration": 1.3158729076385498,
+    "parsed_metrics": [
+      {
+        "test": "INCR",
+        "rps": 76511.09,
+        "avg_latency_ms": 0.359,
+        "min_latency_ms": 0.112,
+        "p50_latency_ms": 0.351,
+        "p95_latency_ms": 0.407,
+        "p99_latency_ms": 0.495,
+        "max_latency_ms": 12.327
+      }
+    ],
+    "timestamp": "2025-08-18T03:27:33.100305",
+    "metrics": {
+      "INCR": {
+        "requests_per_second": 76511.09
+      }
+    }
+  },
+  {
+    "test_name": "LPUSH_operations",
+    "command": "redis-src/src/redis-benchmark -t lpush -c 50 -P 1 --csv -n 100000",
+    "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"LPUSH\",\"77760.50\",\"0.354\",\"0.128\",\"0.351\",\"0.391\",\"0.463\",\"1.791\"\n",
+    "stderr": "",
+    "return_code": 0,
+    "duration": 1.2950689792633057,
+    "parsed_metrics": [
+      {
+        "test": "LPUSH",
+        "rps": 77760.5,
+        "avg_latency_ms": 0.354,
+        "min_latency_ms": 0.128,
+        "p50_latency_ms": 0.351,
+        "p95_latency_ms": 0.391,
+        "p99_latency_ms": 0.463,
+        "max_latency_ms": 1.791
+      }
+    ],
+    "timestamp": "2025-08-18T03:27:35.395759",
+    "metrics": {
+      "LPUSH": {
+        "requests_per_second": 77760.5
+      }
+    }
+  },
+  {
+    "test_name": "LPOP_operations",
+    "command": "redis-src/src/redis-benchmark -t lpop -c 50 -P 1 --csv -n 100000",
+    "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"LPOP\",\"70274.07\",\"0.390\",\"0.088\",\"0.383\",\"0.479\",\"0.631\",\"5.639\"\n",
+    "stderr": "",
+    "return_code": 0,
+    "duration": 1.4329869747161865,
+    "parsed_metrics": [
+      {
+        "test": "LPOP",
+        "rps": 70274.07,
+        "avg_latency_ms": 0.39,
+        "min_latency_ms": 0.088,
+        "p50_latency_ms": 0.383,
+        "p95_latency_ms": 0.479,
+        "p99_latency_ms": 0.631,
+        "max_latency_ms": 5.639
+      }
+    ],
+    "timestamp": "2025-08-18T03:27:37.829115",
+    "metrics": {
+      "LPOP": {
+        "requests_per_second": 70274.07
+      }
+    }
+  },
+  {
+    "test_name": "SADD_operations",
+    "command": "redis-src/src/redis-benchmark -t sadd -c 50 -P 1 --csv -n 100000",
+    "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"SADD\",\"74404.77\",\"0.368\",\"0.080\",\"0.359\",\"0.447\",\"0.543\",\"2.031\"\n",
+    "stderr": "",
+    "return_code": 0,
+    "duration": 1.3535687923431396,
+    "parsed_metrics": [
+      {
+        "test": "SADD",
+        "rps": 74404.77,
+        "avg_latency_ms": 0.368,
+        "min_latency_ms": 0.08,
+        "p50_latency_ms": 0.359,
+        "p95_latency_ms": 0.447,
+        "p99_latency_ms": 0.543,
+        "max_latency_ms": 2.031
+      }
+    ],
+    "timestamp": "2025-08-18T03:27:40.183132",
+    "metrics": {
+      "SADD": {
+        "requests_per_second": 74404.77
+      }
+    }
+  },
+  {
+    "test_name": "HSET_operations",
+    "command": "redis-src/src/redis-benchmark -t hset -c 50 -P 1 --csv -n 100000",
+    "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"HSET\",\"75815.01\",\"0.362\",\"0.144\",\"0.351\",\"0.447\",\"0.535\",\"6.343\"\n",
+    "stderr": "",
+    "return_code": 0,
+    "duration": 1.3286409378051758,
+    "parsed_metrics": [
+      {
+        "test": "HSET",
+        "rps": 75815.01,
+        "avg_latency_ms": 0.362,
+        "min_latency_ms": 0.144,
+        "p50_latency_ms": 0.351,
+        "p95_latency_ms": 0.447,
+        "p99_latency_ms": 0.535,
+        "max_latency_ms": 6.343
+      }
+    ],
+    "timestamp": "2025-08-18T03:27:42.512175",
+    "metrics": {
+      "HSET": {
+        "requests_per_second": 75815.01
+      }
+    }
+  },
+  {
+    "test_name": "LRANGE_100_operations",
+    "command": "redis-src/src/redis-benchmark -t lrange_100 -c 50 -P 1 --csv -n 10000.0",
+    "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"LPUSH (needed to benchmark LRANGE)\",\"75187.97\",\"0.364\",\"0.080\",\"0.351\",\"0.423\",\"0.823\",\"1.831\"\n\"LRANGE_100 (first 100 elements)\",\"57471.27\",\"0.470\",\"0.192\",\"0.463\",\"0.495\",\"0.679\",\"1.751\"\n",
+    "stderr": "",
+    "return_code": 0,
+    "duration": 0.31851983070373535,
+    "parsed_metrics": [
+      {
+        "test": "LPUSH (needed to benchmark LRANGE)",
+        "rps": 75187.97,
+        "avg_latency_ms": 0.364,
+        "min_latency_ms": 0.08,
+        "p50_latency_ms": 0.351,
+        "p95_latency_ms": 0.423,
+        "p99_latency_ms": 0.823,
+        "max_latency_ms": 1.831
+      },
+      {
+        "test": "LRANGE_100 (first 100 elements)",
+        "rps": 57471.27,
+        "avg_latency_ms": 0.47,
+        "min_latency_ms": 0.192,
+        "p50_latency_ms": 0.463,
+        "p95_latency_ms": 0.495,
+        "p99_latency_ms": 0.679,
+        "max_latency_ms": 1.751
+      }
+    ],
+    "timestamp": "2025-08-18T03:27:43.831097",
+    "metrics": {
+      "LPUSH (needed to benchmark LRANGE)": {
+        "requests_per_second": 75187.97
+      },
+      "LRANGE_100 (first 100 elements)": {
+        "requests_per_second": 57471.27
+      }
+    }
+  },
+  {
+    "test_name": "LRANGE_300_operations",
+    "command": "redis-src/src/redis-benchmark -t lrange_300 -c 50 -P 1 --csv -n 10000.0",
+    "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"LPUSH (needed to benchmark LRANGE)\",\"75187.97\",\"0.365\",\"0.104\",\"0.351\",\"0.415\",\"0.815\",\"2.231\"\n\"LRANGE_300 (first 300 elements)\",\"29761.90\",\"0.876\",\"0.200\",\"0.871\",\"0.943\",\"1.527\",\"1.911\"\n",
+    "stderr": "",
+    "return_code": 0,
+    "duration": 0.4805765151977539,
+    "parsed_metrics": [
+      {
+        "test": "LPUSH (needed to benchmark LRANGE)",
+        "rps": 75187.97,
+        "avg_latency_ms": 0.365,
+        "min_latency_ms": 0.104,
+        "p50_latency_ms": 0.351,
+        "p95_latency_ms": 0.415,
+        "p99_latency_ms": 0.815,
+        "max_latency_ms": 2.231
+      },
+      {
+        "test": "LRANGE_300 (first 300 elements)",
+        "rps": 29761.9,
+        "avg_latency_ms": 0.876,
+        "min_latency_ms": 0.2,
+        "p50_latency_ms": 0.871,
+        "p95_latency_ms": 0.943,
+        "p99_latency_ms": 1.527,
+        "max_latency_ms": 1.911
+      }
+    ],
+    "timestamp": "2025-08-18T03:27:45.312119",
+    "metrics": {
+      "LPUSH (needed to benchmark LRANGE)": {
+        "requests_per_second": 75187.97
+      },
+      "LRANGE_300 (first 300 elements)": {
+        "requests_per_second": 29761.9
+      }
+    }
+  },
+  {
+    "test_name": "LRANGE_500_operations",
+    "command": "redis-src/src/redis-benchmark -t lrange_500 -c 50 -P 1 --csv -n 5000.0",
+    "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"LPUSH (needed to benchmark LRANGE)\",\"71428.57\",\"0.393\",\"0.104\",\"0.359\",\"0.567\",\"1.471\",\"2.839\"\n\"LRANGE_500 (first 500 elements)\",\"20746.89\",\"1.293\",\"0.504\",\"1.223\",\"1.615\",\"4.223\",\"5.351\"\n",
+    "stderr": "",
+    "return_code": 0,
+    "duration": 0.3231983184814453,
+    "parsed_metrics": [
+      {
+        "test": "LPUSH (needed to benchmark LRANGE)",
+        "rps": 71428.57,
+        "avg_latency_ms": 0.393,
+        "min_latency_ms": 0.104,
+        "p50_latency_ms": 0.359,
+        "p95_latency_ms": 0.567,
+        "p99_latency_ms": 1.471,
+        "max_latency_ms": 2.839
+      },
+      {
+        "test": "LRANGE_500 (first 500 elements)",
+        "rps": 20746.89,
+        "avg_latency_ms": 1.293,
+        "min_latency_ms": 0.504,
+        "p50_latency_ms": 1.223,
+        "p95_latency_ms": 1.615,
+        "p99_latency_ms": 4.223,
+        "max_latency_ms": 5.351
+      }
+    ],
+    "timestamp": "2025-08-18T03:27:46.635751",
+    "metrics": {
+      "LPUSH (needed to benchmark LRANGE)": {
+        "requests_per_second": 71428.57
+      },
+      "LRANGE_500 (first 500 elements)": {
+        "requests_per_second": 20746.89
+      }
+    }
+  },
+  {
+    "test_name": "LRANGE_600_operations",
+    "command": "redis-src/src/redis-benchmark -t lrange_600 -c 50 -P 1 --csv -n 5000.0",
+    "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"LPUSH (needed to benchmark LRANGE)\",\"71428.57\",\"0.384\",\"0.120\",\"0.359\",\"0.551\",\"1.159\",\"1.735\"\n\"LRANGE_600 (first 600 elements)\",\"17985.61\",\"1.511\",\"0.504\",\"1.399\",\"2.391\",\"4.159\",\"5.863\"\n",
+    "stderr": "",
+    "return_code": 0,
+    "duration": 0.3596065044403076,
+    "parsed_metrics": [
+      {
+        "test": "LPUSH (needed to benchmark LRANGE)",
+        "rps": 71428.57,
+        "avg_latency_ms": 0.384,
+        "min_latency_ms": 0.12,
+        "p50_latency_ms": 0.359,
+        "p95_latency_ms": 0.551,
+        "p99_latency_ms": 1.159,
+        "max_latency_ms": 1.735
+      },
+      {
+        "test": "LRANGE_600 (first 600 elements)",
+        "rps": 17985.61,
+        "avg_latency_ms": 1.511,
+        "min_latency_ms": 0.504,
+        "p50_latency_ms": 1.399,
+        "p95_latency_ms": 2.391,
+        "p99_latency_ms": 4.159,
+        "max_latency_ms": 5.863
+      }
+    ],
+    "timestamp": "2025-08-18T03:27:47.995768",
+    "metrics": {
+      "LPUSH (needed to benchmark LRANGE)": {
+        "requests_per_second": 71428.57
+      },
+      "LRANGE_600 (first 600 elements)": {
+        "requests_per_second": 17985.61
+      }
+    }
+  },
+  {
+    "test_name": "MSET_operations",
+    "command": "redis-src/src/redis-benchmark -t mset -c 50 -P 1 --csv -n 100000",
+    "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"MSET (10 keys)\",\"68352.70\",\"0.405\",\"0.128\",\"0.383\",\"0.495\",\"0.799\",\"2.847\"\n",
+    "stderr": "",
+    "return_code": 0,
+    "duration": 1.4715678691864014,
+    "parsed_metrics": [
+      {
+        "test": "MSET (10 keys)",
+        "rps": 68352.7,
+        "avg_latency_ms": 0.405,
+        "min_latency_ms": 0.128,
+        "p50_latency_ms": 0.383,
+        "p95_latency_ms": 0.495,
+        "p99_latency_ms": 0.799,
+        "max_latency_ms": 2.847
+      }
+    ],
+    "timestamp": "2025-08-18T03:27:50.467832",
+    "metrics": {
+      "MSET (10 keys)": {
+        "requests_per_second": 68352.7
+      }
+    }
+  }
+]

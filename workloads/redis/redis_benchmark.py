@@ -12,9 +12,13 @@ import io
 from datetime import datetime
 import signal
 import atexit
+import traceback
+from pathlib import Path
 
 class RedisBenchmark:
     def __init__(self, redis_dir="redis-src", results_dir="results", config_options=None):
+        print(f"[INFO] Initializing RedisBenchmark with redis_dir={redis_dir}, results_dir={results_dir}")
+        
         self.redis_dir = redis_dir
         self.results_dir = results_dir
         self.redis_cli = os.path.join(redis_dir, "src", "redis-cli")
@@ -24,39 +28,70 @@ class RedisBenchmark:
         self.config_file = None
         self.config_options = config_options or {}
         
+        print(f"[INFO] Redis configuration options: {self.config_options}")
+        
         # Check if binaries exist
-        if not all(os.path.exists(binary) for binary in [self.redis_server, self.redis_cli, self.redis_benchmark]):
+        binaries = [self.redis_server, self.redis_cli, self.redis_benchmark]
+        missing_binaries = []
+        
+        for binary in binaries:
+            if not os.path.exists(binary):
+                missing_binaries.append(binary)
+                print(f"[ERROR] Missing Redis binary: {binary}")
+        
+        if missing_binaries:
+            error_msg = f"Redis binaries not found in {redis_dir}/src/: {missing_binaries}"
+            print(f"[ERROR] {error_msg}")
+            print("[ERROR] Please run 'make build' first to compile Redis")
             print(f"Error: Redis binaries not found in {redis_dir}/src/")
             print("Please run 'make build' first to compile Redis")
             sys.exit(1)
         
-        os.makedirs(results_dir, exist_ok=True)
+        print("[INFO] All Redis binaries found successfully")
+        
+        # Validate and create results directory
+        try:
+            os.makedirs(results_dir, exist_ok=True)
+            print(f"[INFO] Results directory ensured: {results_dir}")
+        except Exception as e:
+            print(f"[ERROR] Failed to create results directory {results_dir}: {e}")
+            raise
         
         # Register cleanup on exit
         atexit.register(self.cleanup)
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
+        print("[INFO] Signal handlers and cleanup registered")
     
     def _signal_handler(self, signum, frame):
         """Handle interrupt signals gracefully"""
+        print(f"[INFO] Signal {signum} received, initiating cleanup")
         print("\nInterrupt received, cleaning up...")
         self.cleanup()
         sys.exit(0)
     
     def cleanup(self):
         """Ensure Redis is stopped on exit"""
+        print("[INFO] Starting cleanup process")
+        
         if hasattr(self, 'redis_process') and self.redis_process:
+            print("[INFO] Stopping Redis process during cleanup")
             self.stop_redis()
         
         # Clean up temporary config file
         if self.config_file and os.path.exists(self.config_file):
             try:
                 os.remove(self.config_file)
-            except:
-                pass
+                print(f"[INFO] Removed temporary config file: {self.config_file}")
+            except Exception as e:
+                print(f"[WARNING] Failed to remove config file {self.config_file}: {e}")
+        
+        print("[INFO] Cleanup completed")
         
     def generate_config(self):
         """Generate Redis configuration file"""
+        print("[INFO] Generating Redis configuration file")
+        
         config_lines = [
             "# Dynamically generated Redis configuration",
             "port 6379",
@@ -73,9 +108,18 @@ class RedisBenchmark:
         # Add custom configuration options
         for key, value in self.config_options.items():
             if key == "io_threads" and value > 1:
+                # Validate io_threads value
+                if value > 128:
+                    print(f"[WARNING] io_threads value {value} is very high, capping at 128")
+                    value = 128
+                elif value < 1:
+                    print(f"[WARNING] io_threads value {value} is invalid, setting to 1")
+                    value = 1
                 config_lines.append(f"io-threads {value}")
+                print(f"[INFO] Setting io-threads to {value}")
             elif key == "io_threads_do_reads":
                 config_lines.append(f"io-threads-do-reads {value}")
+                print(f"[INFO] Setting io-threads-do-reads to {value}")
             elif key == "threads":
                 config_lines.append(f"threads {value}")
             elif key == "maxmemory":
@@ -83,6 +127,8 @@ class RedisBenchmark:
             elif key == "maxmemory_policy":
                 config_lines.append(f"maxmemory-policy {value}")
             elif key == "hz":
+                if value > 500:
+                    print(f"[WARNING] hz value {value} is very high, may cause issues")
                 config_lines.append(f"hz {value}")
             elif key == "client_output_buffer_limit":
                 config_lines.append(f"client-output-buffer-limit normal {value}")
@@ -94,86 +140,182 @@ class RedisBenchmark:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.config_file = f"redis_config_{timestamp}.conf"
         
-        with open(self.config_file, 'w') as f:
-            f.write('\n'.join(config_lines))
-        
-        return self.config_file
+        try:
+            with open(self.config_file, 'w') as f:
+                f.write('\n'.join(config_lines))
+            
+            print(f"[INFO] Redis configuration written to: {self.config_file}")
+            print(f"[INFO] Configuration contains {len(config_lines)} lines")
+            
+            # Log key configuration options
+            if self.config_options:
+                print(f"[INFO] Custom config options applied: {list(self.config_options.keys())}")
+            
+            return self.config_file
+        except Exception as e:
+            print(f"[ERROR] Failed to write Redis configuration file: {e}")
+            raise
     
     def start_redis(self):
         """Start Redis server"""
+        print("[INFO] Attempting to start Redis server")
+        
         # First ensure no Redis is running
         self.stop_redis()
         time.sleep(1)
         
         print("Starting Redis server...")
+        print("[INFO] Starting Redis server...")
         
         # Generate configuration file
-        config_path = self.generate_config()
+        try:
+            config_path = self.generate_config()
+            print(f"[INFO] Generated Redis config file: {config_path}")
+        except Exception as e:
+            print(f"[ERROR] Failed to generate Redis configuration: {e}")
+            return False
         
         # Print configuration being used
         print(f"Redis configuration:")
         if self.config_options:
             for key, value in self.config_options.items():
                 print(f"  {key}: {value}")
+                print(f"[INFO] Config option: {key} = {value}")
         else:
             print("  Using default Redis configuration")
+            print("[INFO] Using default Redis configuration")
         print(f"  Config file: {config_path}")
         
         cmd = [self.redis_server, config_path]
+        print(f"[INFO] Starting Redis with command: {' '.join(cmd)}")
         
-        self.redis_process = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+        try:
+            self.redis_process = subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            print(f"[INFO] Redis process started with PID: {self.redis_process.pid}")
+        except Exception as e:
+            print(f"[ERROR] Failed to start Redis process: {e}")
+            return False
         
         # Wait for Redis to start with retries
         max_retries = 10
+        print(f"[INFO] Waiting for Redis to start (max {max_retries} retries)")
+        
         for i in range(max_retries):
             time.sleep(0.5)
             try:
                 result = subprocess.run([self.redis_cli, "ping"], 
                               check=True, capture_output=True, timeout=2, text=True)
                 if "PONG" in result.stdout:
+                    print(f"[INFO] Redis server started successfully after {i+1} attempts")
                     print("Redis server started successfully")
                     return True
-            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+                print(f"[DEBUG] Redis ping attempt {i+1} failed: {e}")
                 if i == max_retries - 1:
+                    print("[ERROR] Failed to start Redis server after multiple attempts")
                     print("Failed to start Redis server after multiple attempts")
                     if self.redis_process:
-                        stdout, stderr = self.redis_process.communicate(timeout=1)
-                        print(f"Redis stdout: {stdout.decode() if stdout else 'None'}")
-                        print(f"Redis stderr: {stderr.decode() if stderr else 'None'}")
+                        # Check if process is still running
+                        if self.redis_process.poll() is None:
+                            print("[INFO] Redis process is still running, but not responding to ping")
+                            try:
+                                # Try to get any available output without killing the process
+                                stdout, stderr = self.redis_process.communicate(timeout=2)
+                                stdout_str = stdout.decode() if stdout else 'No stdout'
+                                stderr_str = stderr.decode() if stderr else 'No stderr'
+                                print(f"[ERROR] Redis stdout: {stdout_str}")
+                                print(f"[ERROR] Redis stderr: {stderr_str}")
+                                print(f"Redis stdout: {stdout_str}")
+                                print(f"Redis stderr: {stderr_str}")
+                            except subprocess.TimeoutExpired:
+                                print("[ERROR] Redis process not responding, forcing termination")
+                                try:
+                                    self.redis_process.kill()
+                                    stdout, stderr = self.redis_process.communicate(timeout=1)
+                                    stdout_str = stdout.decode() if stdout else 'No stdout'
+                                    stderr_str = stderr.decode() if stderr else 'No stderr'
+                                    print(f"[ERROR] Redis stdout (after kill): {stdout_str}")
+                                    print(f"[ERROR] Redis stderr (after kill): {stderr_str}")
+                                except:
+                                    print("[ERROR] Could not get Redis process output")
+                        else:
+                            print(f"[ERROR] Redis process exited with code: {self.redis_process.returncode}")
+                            try:
+                                stdout, stderr = self.redis_process.communicate(timeout=1)
+                                stdout_str = stdout.decode() if stdout else 'No stdout'
+                                stderr_str = stderr.decode() if stderr else 'No stderr'
+                                print(f"[ERROR] Redis stdout: {stdout_str}")
+                                print(f"[ERROR] Redis stderr: {stderr_str}")
+                                print(f"Redis stdout: {stdout_str}")
+                                print(f"Redis stderr: {stderr_str}")
+                            except:
+                                print("[ERROR] Could not get Redis process output")
+                    
+                    # Also check if Redis config file exists and show its content
+                    if hasattr(self, 'config_file') and self.config_file and os.path.exists(self.config_file):
+                        print(f"[INFO] Redis config file content ({self.config_file}):")
+                        try:
+                            with open(self.config_file, 'r') as f:
+                                print(f.read())
+                        except Exception as e:
+                            print(f"[ERROR] Could not read config file: {e}")
+                    
                     return False
                 continue
         return False
     
     def stop_redis(self):
         """Stop Redis server"""
+        print("[INFO] Stopping Redis server")
+        
         try:
             # Try graceful shutdown first
-            subprocess.run([self.redis_cli, "shutdown", "nosave"], 
+            print("[INFO] Attempting graceful Redis shutdown")
+            result = subprocess.run([self.redis_cli, "shutdown", "nosave"], 
                           capture_output=True, timeout=2)
+            if result.returncode == 0:
+                print("[INFO] Redis graceful shutdown successful")
+            else:
+                print(f"[WARNING] Redis graceful shutdown returned code {result.returncode}")
             time.sleep(0.5)
-        except:
-            pass
+        except subprocess.TimeoutExpired:
+            print("[WARNING] Redis graceful shutdown timed out")
+        except Exception as e:
+            print(f"[WARNING] Redis graceful shutdown failed: {e}")
         
         # Kill the process if it's still running
         if hasattr(self, 'redis_process') and self.redis_process:
             try:
+                print(f"[INFO] Terminating Redis process (PID: {self.redis_process.pid})")
                 self.redis_process.terminate()
                 self.redis_process.wait(timeout=2)
-            except:
+                print("[INFO] Redis process terminated successfully")
+            except subprocess.TimeoutExpired:
+                print("[WARNING] Redis process termination timed out, forcing kill")
                 try:
                     self.redis_process.kill()
                     self.redis_process.wait(timeout=1)
-                except:
-                    pass
+                    print("[INFO] Redis process killed successfully")
+                except Exception as e:
+                    print(f"[ERROR] Failed to kill Redis process: {e}")
+            except Exception as e:
+                print(f"[ERROR] Error terminating Redis process: {e}")
             self.redis_process = None
         
         # Final cleanup - kill any remaining redis-server processes
         try:
-            subprocess.run(["pkill", "-f", "redis-server"], capture_output=True, timeout=1)
-        except:
-            pass
+            print("[INFO] Final cleanup: killing any remaining redis-server processes")
+            result = subprocess.run(["pkill", "-f", "redis-server"], capture_output=True, timeout=1)
+            if result.returncode == 0:
+                print("[INFO] Killed remaining redis-server processes")
+            else:
+                print("[INFO] No remaining redis-server processes found")
+        except subprocess.TimeoutExpired:
+            print("[WARNING] pkill redis-server timed out")
+        except Exception as e:
+            print(f"[WARNING] Final redis cleanup failed: {e}")
     
     def parse_csv_output(self, csv_output):
         """Parse CSV output into structured JSON"""
@@ -210,28 +352,64 @@ class RedisBenchmark:
     
     def run_benchmark(self, test_name, command_args):
         """Run a specific benchmark test"""
-        print(f"Running {test_name} benchmark...")
+        print(f"[INFO] Starting benchmark test: {test_name}")
+        print(f"[INFO] Benchmark command: {self.redis_benchmark} {' '.join(command_args)}")
         
-        # Print benchmark parameters
+        print(f"Running {test_name} benchmark...")
         print(f"Benchmark command: {self.redis_benchmark} {' '.join(command_args)}")
         
         start_time = time.time()
         
         # Run benchmark
         cmd = [self.redis_benchmark] + command_args
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        try:
+            print(f"[INFO] Executing benchmark command: {' '.join(cmd)}")
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            end_time = time.time()
+            duration = end_time - start_time
+            
+            print(f"[INFO] Benchmark {test_name} completed in {duration:.2f}s with return code {result.returncode}")
+            
+            if result.returncode != 0:
+                print(f"[ERROR] Benchmark {test_name} failed with return code {result.returncode}")
+                print(f"[ERROR] Stderr: {result.stderr}")
+            else:
+                print(f"[INFO] Benchmark {test_name} completed successfully")
+                
+        except subprocess.TimeoutExpired:
+            end_time = time.time()
+            duration = end_time - start_time
+            print(f"[ERROR] Benchmark {test_name} timed out after {duration:.2f}s")
+            result = subprocess.CompletedProcess(cmd, -1, "Benchmark timed out", "Timeout")
+        except Exception as e:
+            end_time = time.time()
+            duration = end_time - start_time
+            print(f"[ERROR] Benchmark {test_name} failed with exception after {duration:.2f}s: {e}")
+            result = subprocess.CompletedProcess(cmd, -1, f"Exception: {str(e)}", str(e))
         
-        end_time = time.time()
+        if result.stdout:
+            print(f"Benchmark result: {result.stdout}")
+            print(f"[DEBUG] Benchmark stdout ({len(result.stdout)} chars): {result.stdout[:500]}..." if len(result.stdout) > 500 else f"Benchmark stdout: {result.stdout}")
+        else:
+            print(f"[WARNING] Benchmark {test_name} produced no stdout")
         
-        print(f"Benchmark result: {result.stdout}")
+        if result.stderr:
+            print(f"[WARNING] Benchmark stderr: {result.stderr}")
         
         # Parse CSV output if present
         parsed_metrics = None
         if "--csv" in command_args and result.stdout:
-            parsed_metrics = self.parse_csv_output(result.stdout)
+            try:
+                parsed_metrics = self.parse_csv_output(result.stdout)
+                if parsed_metrics:
+                    print(f"[INFO] Successfully parsed {len(parsed_metrics)} CSV metrics")
+                else:
+                    print("[WARNING] CSV parsing returned no metrics")
+            except Exception as e:
+                print(f"[ERROR] Failed to parse CSV output: {e}")
         
         # Parse results
-        return {
+        result_dict = {
             "test_name": test_name,
             "command": " ".join(cmd),
             "stdout": result.stdout,
@@ -241,6 +419,10 @@ class RedisBenchmark:
             "parsed_metrics": parsed_metrics,
             "timestamp": datetime.now().isoformat()
         }
+        
+        print(f"[INFO] Benchmark {test_name} result: duration={result_dict['duration']:.2f}s, return_code={result_dict['return_code']}, parsed_metrics={len(parsed_metrics) if parsed_metrics else 0}")
+        
+        return result_dict
     
     def parse_benchmark_output(self, output):
         """Parse Redis benchmark output for metrics"""
@@ -317,7 +499,11 @@ class RedisBenchmark:
                                    keyspace=None, tests=None, threads=None, cluster=False, 
                                    precision=0, seed=None):
         """Run comprehensive Redis benchmarks"""
+        print(f"[INFO] Starting comprehensive benchmark: clients={clients}, requests={requests}, data_size={data_size}, pipeline={pipeline}")
+        print(f"[INFO] Additional params: keyspace={keyspace}, tests={tests}, threads={threads}, cluster={cluster}")
+        
         if not self.start_redis():
+            print("[ERROR] Failed to start Redis for comprehensive benchmark")
             return None
         
         # Build base arguments
@@ -400,23 +586,60 @@ class RedisBenchmark:
             ]
         
         results = []
+        print(f"[INFO] Prepared {len(benchmarks)} benchmark tests")
         
         try:
-            for benchmark in benchmarks:
-                result = self.run_benchmark(benchmark["name"], benchmark["args"])
+            for i, benchmark in enumerate(benchmarks, 1):
+                print(f"[INFO] Running benchmark {i}/{len(benchmarks)}: {benchmark['name']}")
                 
-                # Parse metrics from output
-                if result["return_code"] == 0:
-                    metrics = self.parse_benchmark_output(result["stdout"])
-                    result["metrics"] = metrics
+                try:
+                    result = self.run_benchmark(benchmark["name"], benchmark["args"])
+                    
+                    # Parse metrics from output
+                    if result["return_code"] == 0:
+                        try:
+                            metrics = self.parse_benchmark_output(result["stdout"])
+                            result["metrics"] = metrics
+                            print(f"[INFO] Successfully parsed metrics for {benchmark['name']}")
+                        except Exception as e:
+                            print(f"[ERROR] Failed to parse metrics for {benchmark['name']}: {e}")
+                            result["metrics"] = {}
+                    else:
+                        print(f"[WARNING] Benchmark {benchmark['name']} failed with return code {result['return_code']}")
+                        result["metrics"] = {}
+                    
+                    results.append(result)
+                    print(f"[INFO] Completed benchmark {i}/{len(benchmarks)}: {benchmark['name']}")
+                    
+                except Exception as e:
+                    print(f"[ERROR] Exception during benchmark {benchmark['name']}: {e}")
+                    error_result = {
+                        "test_name": benchmark["name"],
+                        "command": " ".join([self.redis_benchmark] + benchmark["args"]),
+                        "stdout": "",
+                        "stderr": str(e),
+                        "return_code": -1,
+                        "duration": 0,
+                        "parsed_metrics": None,
+                        "metrics": {},
+                        "timestamp": datetime.now().isoformat()
+                    }
+                    results.append(error_result)
                 
-                results.append(result)
                 time.sleep(1)  # Brief pause between tests
+                
         except Exception as e:
+            print(f"[ERROR] Critical error during comprehensive benchmark: {e}")
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
             print(f"Error during benchmark: {e}")
             return None
         finally:
+            print("[INFO] Stopping Redis after comprehensive benchmark")
             self.stop_redis()
+        
+        print(f"[INFO] Comprehensive benchmark completed with {len(results)} results")
+        successful_tests = sum(1 for r in results if r.get('return_code') == 0)
+        print(f"[INFO] Successful tests: {successful_tests}/{len(results)}")
         
         return results
     
@@ -426,11 +649,22 @@ class RedisBenchmark:
         filename = f"redis_benchmark_{timestamp}.json"
         filepath = os.path.join(self.results_dir, filename)
         
-        with open(filepath, 'w') as f:
-            json.dump(results, f, indent=2)
+        print(f"[INFO] Saving {len(results) if results else 0} results to {filepath}")
         
-        print(f"Results saved to {filepath}")
-        return filepath
+        try:
+            # Ensure results directory exists
+            os.makedirs(self.results_dir, exist_ok=True)
+            
+            with open(filepath, 'w') as f:
+                json.dump(results, f, indent=2)
+            
+            print(f"[INFO] Results successfully saved to {filepath}")
+            print(f"Results saved to {filepath}")
+            return filepath
+        except Exception as e:
+            print(f"[ERROR] Failed to save results to {filepath}: {e}")
+            print(f"Error saving results: {e}")
+            return None
     
     def generate_summary(self, results):
         """Generate benchmark summary"""
@@ -459,15 +693,20 @@ class RedisBenchmark:
                            keyspace=None, tests="set,get", threads=None, cluster=False, 
                            precision=0, seed=None):
         """Run a quick benchmark test"""
+        print(f"[INFO] Starting quick benchmark: clients={clients}, requests={requests}, tests={tests}")
+        
         if not self.start_redis():
+            print("[ERROR] Failed to start Redis for quick benchmark")
             return None
         
         try:
             print("\nRunning quick benchmark test...")
             print("-" * 40)
+            print("[INFO] Building quick benchmark command")
             
             # Build command arguments
             cmd = [self.redis_benchmark, "-t", tests, "-n", str(requests), "-c", str(clients), "-P", str(pipeline), "--csv"]
+            print(f"[INFO] Base command: {' '.join(cmd)}")
             
             if data_size != 3:
                 cmd.extend(["-d", str(data_size)])
@@ -482,15 +721,28 @@ class RedisBenchmark:
             if seed:
                 cmd.extend(["--seed", str(seed)])
             
+            print(f"[INFO] Executing quick benchmark: {' '.join(cmd)}")
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             
             if result.returncode == 0:
+                print("[INFO] Quick benchmark completed successfully")
                 print("Quick benchmark results:")
                 print(result.stdout)
                 
                 # Parse CSV output
-                parsed_metrics = self.parse_csv_output(result.stdout)
-                metrics = self.parse_benchmark_output(result.stdout)
+                try:
+                    parsed_metrics = self.parse_csv_output(result.stdout)
+                    print(f"[INFO] Parsed {len(parsed_metrics) if parsed_metrics else 0} CSV metrics")
+                except Exception as e:
+                    print(f"[ERROR] Failed to parse CSV output: {e}")
+                    parsed_metrics = None
+                
+                try:
+                    metrics = self.parse_benchmark_output(result.stdout)
+                    print("[INFO] Successfully parsed benchmark output")
+                except Exception as e:
+                    print(f"[ERROR] Failed to parse benchmark output: {e}")
+                    metrics = {}
                 
                 return {
                     "status": "success",
@@ -500,20 +752,31 @@ class RedisBenchmark:
                     "timestamp": datetime.now().isoformat()
                 }
             else:
+                print(f"[ERROR] Quick benchmark failed with return code {result.returncode}")
+                print(f"[ERROR] Stderr: {result.stderr}")
                 print(f"Benchmark failed: {result.stderr}")
                 return None
                 
         except subprocess.TimeoutExpired:
+            print("[ERROR] Quick benchmark timed out after 30 seconds")
             print("Benchmark timed out")
             return None
         except Exception as e:
+            print(f"[ERROR] Exception during quick benchmark: {e}")
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
             print(f"Error during benchmark: {e}")
             return None
         finally:
+            print("[INFO] Stopping Redis after quick benchmark")
             self.stop_redis()
 
 def main():
     import argparse
+    
+    print("[INFO] Starting Redis Benchmark Suite main function")
+    print(f"[INFO] Python version: {sys.version}")
+    print(f"[INFO] Working directory: {os.getcwd()}")
+    
     parser = argparse.ArgumentParser(description='Redis Benchmark Suite')
     parser.add_argument('--quick', action='store_true', help='Run quick benchmark only')
     parser.add_argument('--redis-dir', default='redis-src', help='Redis source directory')
@@ -538,6 +801,8 @@ def main():
     parser.add_argument('--seed', type=int, help='Random number generator seed')
     
     args = parser.parse_args()
+    
+    print(f"[INFO] Parsed arguments: {vars(args)}")
     
     # Build config options
     config_options = {}
@@ -573,6 +838,7 @@ def main():
         benchmark_params['seed'] = args.seed
     
     if args.explore_configs:
+        print("[INFO] Starting configuration exploration mode")
         # Test different configurations
         configs_to_test = [
             {},  # Default
@@ -583,14 +849,57 @@ def main():
             {'maxmemory': '512mb', 'maxmemory_policy': 'allkeys-lru'}
         ]
         
+        print(f"[INFO] Testing {len(configs_to_test)} different configurations")
+        
         for i, config in enumerate(configs_to_test):
+            print(f"[INFO] Testing configuration {i+1}/{len(configs_to_test)}: {config}")
             print(f"\n{'='*50}")
             print(f"Testing configuration {i+1}/{len(configs_to_test)}: {config}")
             print('='*50)
             
-            benchmark = RedisBenchmark(redis_dir=args.redis_dir, results_dir=args.results_dir, config_options=config)
+            try:
+                benchmark = RedisBenchmark(redis_dir=args.redis_dir, results_dir=args.results_dir, config_options=config)
+                result = benchmark.run_quick_benchmark(**benchmark_params)
+                
+                if result and result.get('parsed_metrics'):
+                    print(f"[INFO] Configuration {i+1} completed successfully")
+                    print("\nParsed Metrics:")
+                    for metric in result['parsed_metrics']:
+                        print(f"  Test: {metric.get('test', 'N/A')}")
+                        print(f"  RPS: {metric.get('rps', 'N/A'):,.0f}")
+                        if 'avg_latency_ms' in metric:
+                            print(f"  Avg Latency: {metric['avg_latency_ms']:.3f}ms")
+                        if 'p99_latency_ms' in metric:
+                            print(f"  P99 Latency: {metric['p99_latency_ms']:.3f}ms")
+                else:
+                    print(f"[ERROR] Configuration {i+1} failed or produced no results")
+                    print(f"Configuration {i+1} failed")
+            except Exception as e:
+                print(f"[ERROR] Exception during configuration {i+1}: {e}")
+                print(f"Error testing configuration {i+1}: {e}")
+        
+        print("[INFO] Configuration exploration completed")
+        return
+    
+    try:
+        benchmark = RedisBenchmark(redis_dir=args.redis_dir, results_dir=args.results_dir, config_options=config_options)
+        print("[INFO] RedisBenchmark instance created successfully")
+    except Exception as e:
+        print(f"[ERROR] Failed to create RedisBenchmark instance: {e}")
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        print(f"Error: Failed to create benchmark instance: {e}")
+        sys.exit(1)
+    
+    print("Redis Benchmark Suite")
+    print("=" * 50)
+    
+    if args.quick:
+        print("[INFO] Running quick benchmark mode")
+        try:
             result = benchmark.run_quick_benchmark(**benchmark_params)
+            
             if result and result.get('parsed_metrics'):
+                print("[INFO] Quick benchmark completed with parsed metrics")
                 print("\nParsed Metrics:")
                 for metric in result['parsed_metrics']:
                     print(f"  Test: {metric.get('test', 'N/A')}")
@@ -599,63 +908,77 @@ def main():
                         print(f"  Avg Latency: {metric['avg_latency_ms']:.3f}ms")
                     if 'p99_latency_ms' in metric:
                         print(f"  P99 Latency: {metric['p99_latency_ms']:.3f}ms")
-        return
-    
-    benchmark = RedisBenchmark(redis_dir=args.redis_dir, results_dir=args.results_dir, config_options=config_options)
-    
-    print("Redis Benchmark Suite")
-    print("=" * 50)
-    
-    if args.quick:
-        result = benchmark.run_quick_benchmark(**benchmark_params)
-        if result and result.get('parsed_metrics'):
-            print("\nParsed Metrics:")
-            for metric in result['parsed_metrics']:
-                print(f"  Test: {metric.get('test', 'N/A')}")
-                print(f"  RPS: {metric.get('rps', 'N/A'):,.0f}")
-                if 'avg_latency_ms' in metric:
-                    print(f"  Avg Latency: {metric['avg_latency_ms']:.3f}ms")
-                if 'p99_latency_ms' in metric:
-                    print(f"  P99 Latency: {metric['p99_latency_ms']:.3f}ms")
-                print()
+                    print()
+            else:
+                print("[ERROR] Quick benchmark failed or produced no results")
+                print("Quick benchmark failed")
+        except Exception as e:
+            print(f"[ERROR] Exception during quick benchmark: {e}")
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
+            print(f"Error during quick benchmark: {e}")
     else:
-        results = benchmark.run_comprehensive_benchmark(**benchmark_params)
-        
-        if results:
-            # Save detailed results
-            results_file = benchmark.save_results(results)
+        print("[INFO] Running comprehensive benchmark mode")
+        try:
+            results = benchmark.run_comprehensive_benchmark(**benchmark_params)
             
-            # Generate and display summary
-            summary = benchmark.generate_summary(results)
-            
-            print("\n" + "=" * 50)
-            print("BENCHMARK SUMMARY")
-            print("=" * 50)
-            print(f"Total tests: {summary['total_tests']}")
-            print(f"Successful: {summary['successful_tests']}")
-            print(f"Failed: {summary['failed_tests']}")
-            print(f"Total duration: {summary['total_duration']:.2f} seconds")
-            if summary.get('redis_config'):
-                print(f"Redis config: {summary['redis_config']}")
-            
-            print("\nTest Results:")
-            for test in summary['test_summary']:
-                status_symbol = "✓" if test['status'] == 'success' else "✗"
-                print(f"  {status_symbol} {test['test_name']}: {test['duration']:.2f}s")
+            if results:
+                print("[INFO] Comprehensive benchmark completed successfully")
+                # Save detailed results
+                results_file = benchmark.save_results(results)
                 
-                metrics = test.get('metrics', {})
-                if isinstance(metrics, dict):
-                    for key, value in metrics.items():
-                        if isinstance(value, dict):
-                            for k, v in value.items():
-                                print(f"      {k}: {v}")
-                        elif 'requests_per_second' in key:
-                            print(f"    RPS: {value:,.0f}")
-                        elif 'latency' in key:
-                            print(f"    {key}: {value:.2f}ms")
-        else:
-            print("Failed to run benchmarks")
+                # Generate and display summary
+                try:
+                    summary = benchmark.generate_summary(results)
+                    print("[INFO] Generated benchmark summary")
+                except Exception as e:
+                    print(f"[ERROR] Failed to generate summary: {e}")
+                    summary = {"total_tests": len(results), "successful_tests": 0, "failed_tests": 0, "total_duration": 0}
+                
+                print("\n" + "=" * 50)
+                print("BENCHMARK SUMMARY")
+                print("=" * 50)
+                print(f"Total tests: {summary['total_tests']}")
+                print(f"Successful: {summary['successful_tests']}")
+                print(f"Failed: {summary['failed_tests']}")
+                print(f"Total duration: {summary['total_duration']:.2f} seconds")
+                if summary.get('redis_config'):
+                    print(f"Redis config: {summary['redis_config']}")
+                
+                print("\nTest Results:")
+                for test in summary.get('test_summary', []):
+                    status_symbol = "✓" if test['status'] == 'success' else "✗"
+                    print(f"  {status_symbol} {test['test_name']}: {test['duration']:.2f}s")
+                    
+                    metrics = test.get('metrics', {})
+                    if isinstance(metrics, dict):
+                        for key, value in metrics.items():
+                            if isinstance(value, dict):
+                                for k, v in value.items():
+                                    print(f"      {k}: {v}")
+                            elif 'requests_per_second' in key:
+                                print(f"    RPS: {value:,.0f}")
+                            elif 'latency' in key:
+                                print(f"    {key}: {value:.2f}ms")
+            else:
+                print("[ERROR] Comprehensive benchmark failed or produced no results")
+                print("Failed to run benchmarks")
+                sys.exit(1)
+        except Exception as e:
+            print(f"[ERROR] Exception during comprehensive benchmark: {e}")
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
+            print(f"Error during comprehensive benchmark: {e}")
             sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+        print("[INFO] Redis benchmark completed successfully")
+    except KeyboardInterrupt:
+        print("[INFO] Redis benchmark interrupted by user")
+        print("\nBenchmark interrupted by user")
+        sys.exit(130)
+    except Exception as e:
+        print(f"[ERROR] Unhandled exception in main: {e}")
+        print(f"[ERROR] Full traceback: {traceback.format_exc()}")
+        print(f"Fatal error: {e}")
+        sys.exit(1)
