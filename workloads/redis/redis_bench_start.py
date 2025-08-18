@@ -656,8 +656,8 @@ class RedisBenchmarkTester(SchedulerBenchmark):
             data_sizes: List of data sizes to test (in bytes)
             production_only: Only test production-ready schedulers if schedulers is None
         """
-        data_sizes = data_sizes or [1, 16, 64, 256, 1024, 4096]  # bytes
-        
+        data_sizes = data_sizes or [1, 16, 64, 256, 1024, 2048]  # bytes
+        # data_sizes = data_sizes or [1, 64]  # bytes
         # Get schedulers to test
         if schedulers is None:
             schedulers = ['default'] + self.runner.get_available_schedulers(production_only)
