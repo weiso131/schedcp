@@ -16,6 +16,13 @@ import argparse
 import traceback
 from pathlib import Path
 
+# Import utility functions
+from utils import (
+    RedisCleanup,
+    ProcessManager,
+    BenchmarkSummary
+)
+
 # Add the scheduler module to the path
 sys.path.insert(0, '/root/yunwei37/ai-os/')
 
@@ -126,6 +133,10 @@ class RedisBenchmarkTester(SchedulerBenchmark):
         """
         self.redis_config.update(kwargs)
     
+    def cleanup_redis_files(self):
+        """Clean up Redis temporary files including .rdb and config files"""
+        RedisCleanup.cleanup_redis_files()
+    
     def run_redis_benchmark(self, scheduler_name: str = None) -> dict:
         """
         Run Redis benchmark with specified scheduler.
@@ -187,14 +198,7 @@ class RedisBenchmarkTester(SchedulerBenchmark):
                     print(f"[WARNING] Error stopping schedulers via runner: {e}")
                 
                 # Also kill any lingering scx schedulers
-                try:
-                    result = subprocess.run(["sudo", "pkill", "-f", "scx_"], capture_output=True, timeout=10)
-                    if result.returncode == 0:
-                        print("[INFO] Successfully killed lingering scx processes")
-                    else:
-                        print("[INFO] No lingering scx processes found")
-                except Exception as e:
-                    print(f"[WARNING] Error killing lingering scx processes: {e}")
+                ProcessManager.kill_scheduler_processes()
                 
                 time.sleep(2)
                 
@@ -278,6 +282,9 @@ class RedisBenchmarkTester(SchedulerBenchmark):
                     # Generate summary using RedisBenchmark's method
                     summary = self._generate_summary_from_results(results)
                     
+                    # Clean up Redis files after test
+                    self.cleanup_redis_files()
+                    
                     return {
                         "scheduler": scheduler_name,
                         "results": results,
@@ -296,6 +303,9 @@ class RedisBenchmarkTester(SchedulerBenchmark):
                         print("[INFO] Stopped scheduler after benchmark error")
                     except Exception as stop_e:
                         print(f"[ERROR] Failed to stop scheduler after benchmark error: {stop_e}")
+                    
+                    # Clean up Redis files even on error
+                    self.cleanup_redis_files()
                     
                     return {
                         "scheduler": scheduler_name,
@@ -324,6 +334,9 @@ class RedisBenchmarkTester(SchedulerBenchmark):
                 # Generate summary
                 summary = self._generate_summary_from_results(results)
                 
+                # Clean up Redis files after test
+                self.cleanup_redis_files()
+                
                 return {
                     "scheduler": "default",
                     "results": results,
@@ -343,27 +356,7 @@ class RedisBenchmarkTester(SchedulerBenchmark):
     
     def _generate_summary_from_results(self, results):
         """Generate summary from benchmark results"""
-        summary = {
-            "total_tests": len(results) if results else 0,
-            "successful_tests": sum(1 for r in results if r.get("return_code") == 0) if results else 0,
-            "failed_tests": sum(1 for r in results if r.get("return_code") != 0) if results else 0,
-            "total_duration": sum(r.get("duration", 0) for r in results) if results else 0,
-            "redis_config": self.redis_config,
-            "test_summary": []
-        }
-        
-        if results:
-            for result in results:
-                test_summary = {
-                    "test_name": result.get("test_name", "unknown"),
-                    "status": "success" if result.get("return_code") == 0 else "failed",
-                    "duration": result.get("duration", 0),
-                    "metrics": result.get("metrics", {}),
-                    "parsed_metrics": result.get("parsed_metrics", [])
-                }
-                summary["test_summary"].append(test_summary)
-        
-        return summary
+        return BenchmarkSummary.generate_summary(results, self.redis_config)
     
     def extract_metrics_from_results(self, benchmark_result: dict) -> dict:
         """Extract key metrics from Redis benchmark results"""
@@ -533,10 +526,6 @@ class RedisBenchmarkTester(SchedulerBenchmark):
         # Create separate figures for different metrics
         self._plot_throughput_comparison(all_metrics)
         self._plot_latency_comparison(all_metrics)
-        self._plot_combined_performance(all_metrics)
-        
-        # Print summary
-        self.print_performance_summary(results)
     
     def _plot_throughput_comparison(self, all_metrics: dict):
         """Plot throughput comparison across schedulers"""
@@ -654,120 +643,7 @@ class RedisBenchmarkTester(SchedulerBenchmark):
         print(f"Latency comparison figure saved to {figure_path}")
         plt.close()
     
-    def _plot_combined_performance(self, all_metrics: dict):
-        """Plot combined performance score"""
-        fig, ax = plt.subplots(figsize=(12, 8))
-        
-        # Calculate performance scores
-        scheduler_names = []
-        performance_scores = []
-        throughput_scores = []
-        latency_scores = []
-        
-        # Collect average metrics for each scheduler
-        scheduler_stats = {}
-        for scheduler_name, metrics in all_metrics.items():
-            if metrics["throughput_rps"]:
-                avg_throughput = np.mean([t for t in metrics["throughput_rps"] if t > 0])
-                # Use average latency for combined score, fallback to P95 if not available
-                valid_latencies = [l for l in metrics["latency_avg"] if l > 0]
-                if not valid_latencies:
-                    valid_latencies = [l for l in metrics["latency_p95"] if l > 0]
-                avg_latency = np.mean(valid_latencies) if valid_latencies else float('inf')
-                
-                scheduler_stats[scheduler_name] = {
-                    "throughput": avg_throughput,
-                    "latency": avg_latency
-                }
-        
-        if not scheduler_stats:
-            print("No valid performance data for combined score")
-            return
-        
-        # Normalize scores
-        max_throughput = max(s["throughput"] for s in scheduler_stats.values())
-        min_latency = min(s["latency"] for s in scheduler_stats.values() if s["latency"] != float('inf'))
-        
-        for scheduler_name, stats in scheduler_stats.items():
-            # Throughput score (higher is better, normalize to 0-1)
-            throughput_score = stats["throughput"] / max_throughput
-            
-            # Latency score (lower is better, invert and normalize to 0-1)
-            if stats["latency"] != float('inf'):
-                latency_score = min_latency / stats["latency"]
-            else:
-                latency_score = 0
-            
-            # Combined score (weighted average)
-            combined_score = 0.6 * throughput_score + 0.4 * latency_score
-            
-            scheduler_names.append(scheduler_name)
-            performance_scores.append(combined_score)
-            throughput_scores.append(throughput_score)
-            latency_scores.append(latency_score)
-        
-        # Create stacked bar chart
-        width = 0.6
-        ax.bar(scheduler_names, throughput_scores, width, label='Throughput Score (60%)', alpha=0.8)
-        ax.bar(scheduler_names, latency_scores, width, bottom=throughput_scores, 
-               label='Latency Score (40%)', alpha=0.8)
-        
-        ax.set_xlabel('Scheduler')
-        ax.set_ylabel('Normalized Performance Score')
-        ax.set_title('Redis Combined Performance Score\n(Higher is Better)')
-        ax.tick_params(axis='x', rotation=45)
-        ax.legend()
-        ax.grid(True, alpha=0.3)
-        
-        # Add total score labels
-        for i, score in enumerate(performance_scores):
-            ax.text(i, score + 0.05, f'{score:.2f}', ha='center', va='bottom', fontweight='bold')
-        
-        plt.tight_layout()
-        
-        # Save figure
-        figure_path = os.path.join(self.results_dir, "redis_combined_performance.png")
-        plt.savefig(figure_path, dpi=300, bbox_inches='tight')
-        print(f"Combined performance figure saved to {figure_path}")
-        plt.close()
     
-    def print_performance_summary(self, results: dict):
-        """Print performance summary"""
-        print("\n" + "="*60)
-        print("REDIS SCHEDULER PERFORMANCE SUMMARY")
-        print("="*60)
-        
-        for scheduler_name, result in results.items():
-            if "error" in result:
-                print(f"\n{scheduler_name:15} ERROR: {result['error']}")
-                continue
-            
-            print(f"\n{scheduler_name:15}")
-            
-            # Extract key metrics
-            metrics = self.extract_metrics_from_results(result)
-            
-            if metrics["throughput_rps"]:
-                avg_throughput = np.mean([t for t in metrics["throughput_rps"] if t > 0])
-                print(f"  Avg Throughput:  {avg_throughput:8.0f} req/s")
-            
-            # Print average latency if available, otherwise P95
-            if metrics["latency_avg"]:
-                valid_latencies = [l for l in metrics["latency_avg"] if l > 0]
-                if valid_latencies:
-                    avg_latency = np.mean(valid_latencies)
-                    print(f"  Avg Latency:     {avg_latency:8.2f} ms")
-            elif metrics["latency_p95"]:
-                valid_latencies = [l for l in metrics["latency_p95"] if l > 0]
-                if valid_latencies:
-                    avg_latency = np.mean(valid_latencies)
-                    print(f"  Avg P95 Latency: {avg_latency:8.2f} ms")
-            
-            # Print test results
-            if result.get("summary"):
-                summary = result["summary"]
-                print(f"  Tests Completed: {summary.get('successful_tests', 0)}")
-                print(f"  Total Duration:  {summary.get('total_duration', 0):8.2f} seconds")
 
     def run_parameter_sweep_multi_schedulers(self, schedulers: list = None,
                                             data_sizes: list = None,
@@ -780,7 +656,7 @@ class RedisBenchmarkTester(SchedulerBenchmark):
             data_sizes: List of data sizes to test (in bytes)
             production_only: Only test production-ready schedulers if schedulers is None
         """
-        data_sizes = data_sizes or [1, 16, 64, 256, 1024, 4096, 16384]  # bytes
+        data_sizes = data_sizes or [1, 16, 64, 256, 1024, 4096]  # bytes
         
         # Get schedulers to test
         if schedulers is None:
@@ -957,7 +833,7 @@ def main():
                        help="Number of Redis clients")
     parser.add_argument("--requests", type=int, default=1000000, 
                        help="Number of requests per test")
-    parser.add_argument("--data-size", type=int, default=16384,
+    parser.add_argument("--data-size", type=int, default=4096,
                        help="Data size in bytes")
     parser.add_argument("--pipeline", type=int, default=16,
                        help="Pipeline requests")
@@ -1079,11 +955,15 @@ def main():
     print("[INFO] Redis scheduler testing completed successfully")
     print("\nTesting complete!")
     
-    # Final cleanup attempt
+    # Final cleanup - processes and files
     try:
-        subprocess.run(["sudo", "pkill", "-f", "redis-server"], capture_output=True, timeout=5)
-        subprocess.run(["sudo", "pkill", "-f", "scx_"], capture_output=True, timeout=5)
-        print("[INFO] Final cleanup completed")
+        RedisCleanup.kill_redis_processes()
+        ProcessManager.kill_scheduler_processes()
+        print("[INFO] Final process cleanup completed")
+        
+        # Clean up any remaining Redis files
+        RedisCleanup.cleanup_redis_files()
+        print("[INFO] Final file cleanup completed")
     except Exception as e:
         print(f"[WARNING] Final cleanup had issues: {e}")
 
@@ -1096,8 +976,10 @@ if __name__ == "__main__":
         print("\nTesting interrupted by user")
         # Cleanup on interrupt
         try:
-            subprocess.run(["sudo", "pkill", "-f", "redis-server"], capture_output=True, timeout=5)
-            subprocess.run(["sudo", "pkill", "-f", "scx_"], capture_output=True, timeout=5)
+            RedisCleanup.kill_redis_processes()
+            ProcessManager.kill_scheduler_processes()
+            # Also clean up files
+            RedisCleanup.cleanup_redis_files()
         except:
             pass
         sys.exit(130)

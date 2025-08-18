@@ -2,3 +2,4 @@ redis.log
 redis_config_*.conf
 dump.rdb
 temp*.rdb
+redis_test.log

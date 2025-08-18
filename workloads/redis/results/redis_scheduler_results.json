@@ -1,12 +1,876 @@
 {
   "default": {
     "scheduler": "default",
-    "error": "Benchmark with default scheduler failed to produce results",
-    "exit_code": -1
+    "results": [
+      {
+        "test_name": "SET_operations",
+        "command": "redis-src/src/redis-benchmark -t set -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"SET\",\"205761.31\",\"2.001\",\"0.152\",\"2.007\",\"2.407\",\"3.127\",\"8.319\"\n",
+        "stderr": "",
+        "return_code": 0,
+        "duration": 4.875863790512085,
+        "parsed_metrics": [
+          {
+            "test": "SET",
+            "rps": 205761.31,
+            "avg_latency_ms": 2.001,
+            "min_latency_ms": 0.152,
+            "p50_latency_ms": 2.007,
+            "p95_latency_ms": 2.407,
+            "p99_latency_ms": 3.127,
+            "max_latency_ms": 8.319
+          }
+        ],
+        "timestamp": "2025-08-18T03:49:59.859615",
+        "metrics": {
+          "SET": {
+            "requests_per_second": 205761.31
+          }
+        },
+        "scheduler": "default"
+      },
+      {
+        "test_name": "GET_operations",
+        "command": "redis-src/src/redis-benchmark -t get -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"GET\",\"426985.47\",\"0.683\",\"0.192\",\"0.583\",\"1.551\",\"2.527\",\"5.399\"\n",
+        "stderr": "",
+        "return_code": 0,
+        "duration": 2.3524396419525146,
+        "parsed_metrics": [
+          {
+            "test": "GET",
+            "rps": 426985.47,
+            "avg_latency_ms": 0.683,
+            "min_latency_ms": 0.192,
+            "p50_latency_ms": 0.583,
+            "p95_latency_ms": 1.551,
+            "p99_latency_ms": 2.527,
+            "max_latency_ms": 5.399
+          }
+        ],
+        "timestamp": "2025-08-18T03:50:03.212472",
+        "metrics": {
+          "GET": {
+            "requests_per_second": 426985.47
+          }
+        },
+        "scheduler": "default"
+      },
+      {
+        "test_name": "INCR_operations",
+        "command": "redis-src/src/redis-benchmark -t incr -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"INCR\",\"1077586.25\",\"0.727\",\"0.360\",\"0.719\",\"0.743\",\"1.407\",\"6.175\"\n",
+        "stderr": "",
+        "return_code": 0,
+        "duration": 0.9393646717071533,
+        "parsed_metrics": [
+          {
+            "test": "INCR",
+            "rps": 1077586.25,
+            "avg_latency_ms": 0.727,
+            "min_latency_ms": 0.36,
+            "p50_latency_ms": 0.719,
+            "p95_latency_ms": 0.743,
+            "p99_latency_ms": 1.407,
+            "max_latency_ms": 6.175
+          }
+        ],
+        "timestamp": "2025-08-18T03:50:05.152180",
+        "metrics": {
+          "INCR": {
+            "requests_per_second": 1077586.25
+          }
+        },
+        "scheduler": "default"
+      },
+      {
+        "test_name": "LPUSH_operations",
+        "command": "redis-src/src/redis-benchmark -t lpush -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"LPUSH\",\"106849.02\",\"1.824\",\"0.176\",\"1.727\",\"3.151\",\"4.463\",\"14.471\"\n",
+        "stderr": "",
+        "return_code": 0,
+        "duration": 9.377054452896118,
+        "parsed_metrics": [
+          {
+            "test": "LPUSH",
+            "rps": 106849.02,
+            "avg_latency_ms": 1.824,
+            "min_latency_ms": 0.176,
+            "p50_latency_ms": 1.727,
+            "p95_latency_ms": 3.151,
+            "p99_latency_ms": 4.463,
+            "max_latency_ms": 14.471
+          }
+        ],
+        "timestamp": "2025-08-18T03:50:15.529564",
+        "metrics": {
+          "LPUSH": {
+            "requests_per_second": 106849.02
+          }
+        },
+        "scheduler": "default"
+      },
+      {
+        "test_name": "LPOP_operations",
+        "command": "redis-src/src/redis-benchmark -t lpop -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"LPOP\",\"241138.19\",\"3.219\",\"0.408\",\"3.239\",\"4.855\",\"5.703\",\"12.711\"\n",
+        "stderr": "",
+        "return_code": 0,
+        "duration": 4.158764362335205,
+        "parsed_metrics": [
+          {
+            "test": "LPOP",
+            "rps": 241138.19,
+            "avg_latency_ms": 3.219,
+            "min_latency_ms": 0.408,
+            "p50_latency_ms": 3.239,
+            "p95_latency_ms": 4.855,
+            "p99_latency_ms": 5.703,
+            "max_latency_ms": 12.711
+          }
+        ],
+        "timestamp": "2025-08-18T03:50:20.688750",
+        "metrics": {
+          "LPOP": {
+            "requests_per_second": 241138.19
+          }
+        },
+        "scheduler": "default"
+      },
+      {
+        "test_name": "SADD_operations",
+        "command": "redis-src/src/redis-benchmark -t sadd -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"SADD\",\"781250.00\",\"0.997\",\"0.440\",\"0.983\",\"1.063\",\"2.159\",\"3.591\"\n",
+        "stderr": "",
+        "return_code": 0,
+        "duration": 1.291372299194336,
+        "parsed_metrics": [
+          {
+            "test": "SADD",
+            "rps": 781250.0,
+            "avg_latency_ms": 0.997,
+            "min_latency_ms": 0.44,
+            "p50_latency_ms": 0.983,
+            "p95_latency_ms": 1.063,
+            "p99_latency_ms": 2.159,
+            "max_latency_ms": 3.591
+          }
+        ],
+        "timestamp": "2025-08-18T03:50:22.980477",
+        "metrics": {
+          "SADD": {
+            "requests_per_second": 781250.0
+          }
+        },
+        "scheduler": "default"
+      },
+      {
+        "test_name": "HSET_operations",
+        "command": "redis-src/src/redis-benchmark -t hset -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"HSET\",\"186915.89\",\"1.945\",\"0.184\",\"1.959\",\"2.591\",\"3.543\",\"7.455\"\n",
+        "stderr": "",
+        "return_code": 0,
+        "duration": 5.365514755249023,
+        "parsed_metrics": [
+          {
+            "test": "HSET",
+            "rps": 186915.89,
+            "avg_latency_ms": 1.945,
+            "min_latency_ms": 0.184,
+            "p50_latency_ms": 1.959,
+            "p95_latency_ms": 2.591,
+            "p99_latency_ms": 3.543,
+            "max_latency_ms": 7.455
+          }
+        ],
+        "timestamp": "2025-08-18T03:50:29.346329",
+        "metrics": {
+          "HSET": {
+            "requests_per_second": 186915.89
+          }
+        },
+        "scheduler": "default"
+      },
+      {
+        "test_name": "LRANGE_100_operations",
+        "command": "redis-src/src/redis-benchmark -t lrange_100 -c 50 -P 16 --csv -d 4096 -n 100000.0",
+        "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"LPUSH (needed to benchmark LRANGE)\",\"107066.38\",\"1.863\",\"0.272\",\"1.743\",\"3.191\",\"5.207\",\"8.543\"\n\"LRANGE_100 (first 100 elements)\",\"2285.82\",\"5.445\",\"1.896\",\"3.639\",\"7.575\",\"66.303\",\"174.591\"\n",
+        "stderr": "",
+        "return_code": 0,
+        "duration": 44.70157742500305,
+        "parsed_metrics": [
+          {
+            "test": "LPUSH (needed to benchmark LRANGE)",
+            "rps": 107066.38,
+            "avg_latency_ms": 1.863,
+            "min_latency_ms": 0.272,
+            "p50_latency_ms": 1.743,
+            "p95_latency_ms": 3.191,
+            "p99_latency_ms": 5.207,
+            "max_latency_ms": 8.543
+          },
+          {
+            "test": "LRANGE_100 (first 100 elements)",
+            "rps": 2285.82,
+            "avg_latency_ms": 5.445,
+            "min_latency_ms": 1.896,
+            "p50_latency_ms": 3.639,
+            "p95_latency_ms": 7.575,
+            "p99_latency_ms": 66.303,
+            "max_latency_ms": 174.591
+          }
+        ],
+        "timestamp": "2025-08-18T03:51:15.048369",
+        "metrics": {
+          "LPUSH (needed to benchmark LRANGE)": {
+            "requests_per_second": 107066.38
+          },
+          "LRANGE_100 (first 100 elements)": {
+            "requests_per_second": 2285.82
+          }
+        },
+        "scheduler": "default"
+      },
+      {
+        "test_name": "LRANGE_300_operations",
+        "command": "redis-src/src/redis-benchmark -t lrange_300 -c 50 -P 16 --csv -d 4096 -n 100000.0",
+        "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"LPUSH (needed to benchmark LRANGE)\",\"108108.11\",\"1.828\",\"0.152\",\"1.679\",\"3.431\",\"5.103\",\"8.655\"\n",
+        "stderr": "Error: Server closed the connection\n",
+        "return_code": 1,
+        "duration": 114.44943690299988,
+        "parsed_metrics": [
+          {
+            "test": "LPUSH (needed to benchmark LRANGE)",
+            "rps": 108108.11,
+            "avg_latency_ms": 1.828,
+            "min_latency_ms": 0.152,
+            "p50_latency_ms": 1.679,
+            "p95_latency_ms": 3.431,
+            "p99_latency_ms": 5.103,
+            "max_latency_ms": 8.655
+          }
+        ],
+        "timestamp": "2025-08-18T03:53:10.498265",
+        "metrics": {},
+        "scheduler": "default"
+      },
+      {
+        "test_name": "LRANGE_500_operations",
+        "command": "redis-src/src/redis-benchmark -t lrange_500 -c 50 -P 16 --csv -d 4096 -n 50000.0",
+        "stdout": "",
+        "stderr": "Could not connect to Redis at 127.0.0.1:6379: Connection refused\n",
+        "return_code": 1,
+        "duration": 0.005681276321411133,
+        "parsed_metrics": null,
+        "timestamp": "2025-08-18T03:53:11.504369",
+        "metrics": {},
+        "scheduler": "default"
+      },
+      {
+        "test_name": "LRANGE_600_operations",
+        "command": "redis-src/src/redis-benchmark -t lrange_600 -c 50 -P 16 --csv -d 4096 -n 50000.0",
+        "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n",
+        "stderr": "Error from server: LOADING Redis is loading the dataset in memory\n",
+        "return_code": 1,
+        "duration": 0.024400949478149414,
+        "parsed_metrics": null,
+        "timestamp": "2025-08-18T03:53:12.529241",
+        "metrics": {},
+        "scheduler": "default"
+      },
+      {
+        "test_name": "MSET_operations",
+        "command": "redis-src/src/redis-benchmark -t mset -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n",
+        "stderr": "Error: Connection reset by peer\n",
+        "return_code": 1,
+        "duration": 0.16934466361999512,
+        "parsed_metrics": null,
+        "timestamp": "2025-08-18T03:53:13.698968",
+        "metrics": {},
+        "scheduler": "default"
+      }
+    ],
+    "summary": {
+      "total_tests": 12,
+      "successful_tests": 8,
+      "failed_tests": 4,
+      "total_duration": 187.71081519126892,
+      "redis_config": {
+        "io_threads": 64,
+        "io_threads_do_reads": "yes",
+        "maxmemory": "256gb",
+        "hz": 100
+      },
+      "test_summary": [
+        {
+          "test_name": "SET_operations",
+          "status": "success",
+          "duration": 4.875863790512085,
+          "metrics": {
+            "SET": {
+              "requests_per_second": 205761.31
+            }
+          },
+          "parsed_metrics": [
+            {
+              "test": "SET",
+              "rps": 205761.31,
+              "avg_latency_ms": 2.001,
+              "min_latency_ms": 0.152,
+              "p50_latency_ms": 2.007,
+              "p95_latency_ms": 2.407,
+              "p99_latency_ms": 3.127,
+              "max_latency_ms": 8.319
+            }
+          ]
+        },
+        {
+          "test_name": "GET_operations",
+          "status": "success",
+          "duration": 2.3524396419525146,
+          "metrics": {
+            "GET": {
+              "requests_per_second": 426985.47
+            }
+          },
+          "parsed_metrics": [
+            {
+              "test": "GET",
+              "rps": 426985.47,
+              "avg_latency_ms": 0.683,
+              "min_latency_ms": 0.192,
+              "p50_latency_ms": 0.583,
+              "p95_latency_ms": 1.551,
+              "p99_latency_ms": 2.527,
+              "max_latency_ms": 5.399
+            }
+          ]
+        },
+        {
+          "test_name": "INCR_operations",
+          "status": "success",
+          "duration": 0.9393646717071533,
+          "metrics": {
+            "INCR": {
+              "requests_per_second": 1077586.25
+            }
+          },
+          "parsed_metrics": [
+            {
+              "test": "INCR",
+              "rps": 1077586.25,
+              "avg_latency_ms": 0.727,
+              "min_latency_ms": 0.36,
+              "p50_latency_ms": 0.719,
+              "p95_latency_ms": 0.743,
+              "p99_latency_ms": 1.407,
+              "max_latency_ms": 6.175
+            }
+          ]
+        },
+        {
+          "test_name": "LPUSH_operations",
+          "status": "success",
+          "duration": 9.377054452896118,
+          "metrics": {
+            "LPUSH": {
+              "requests_per_second": 106849.02
+            }
+          },
+          "parsed_metrics": [
+            {
+              "test": "LPUSH",
+              "rps": 106849.02,
+              "avg_latency_ms": 1.824,
+              "min_latency_ms": 0.176,
+              "p50_latency_ms": 1.727,
+              "p95_latency_ms": 3.151,
+              "p99_latency_ms": 4.463,
+              "max_latency_ms": 14.471
+            }
+          ]
+        },
+        {
+          "test_name": "LPOP_operations",
+          "status": "success",
+          "duration": 4.158764362335205,
+          "metrics": {
+            "LPOP": {
+              "requests_per_second": 241138.19
+            }
+          },
+          "parsed_metrics": [
+            {
+              "test": "LPOP",
+              "rps": 241138.19,
+              "avg_latency_ms": 3.219,
+              "min_latency_ms": 0.408,
+              "p50_latency_ms": 3.239,
+              "p95_latency_ms": 4.855,
+              "p99_latency_ms": 5.703,
+              "max_latency_ms": 12.711
+            }
+          ]
+        },
+        {
+          "test_name": "SADD_operations",
+          "status": "success",
+          "duration": 1.291372299194336,
+          "metrics": {
+            "SADD": {
+              "requests_per_second": 781250.0
+            }
+          },
+          "parsed_metrics": [
+            {
+              "test": "SADD",
+              "rps": 781250.0,
+              "avg_latency_ms": 0.997,
+              "min_latency_ms": 0.44,
+              "p50_latency_ms": 0.983,
+              "p95_latency_ms": 1.063,
+              "p99_latency_ms": 2.159,
+              "max_latency_ms": 3.591
+            }
+          ]
+        },
+        {
+          "test_name": "HSET_operations",
+          "status": "success",
+          "duration": 5.365514755249023,
+          "metrics": {
+            "HSET": {
+              "requests_per_second": 186915.89
+            }
+          },
+          "parsed_metrics": [
+            {
+              "test": "HSET",
+              "rps": 186915.89,
+              "avg_latency_ms": 1.945,
+              "min_latency_ms": 0.184,
+              "p50_latency_ms": 1.959,
+              "p95_latency_ms": 2.591,
+              "p99_latency_ms": 3.543,
+              "max_latency_ms": 7.455
+            }
+          ]
+        },
+        {
+          "test_name": "LRANGE_100_operations",
+          "status": "success",
+          "duration": 44.70157742500305,
+          "metrics": {
+            "LPUSH (needed to benchmark LRANGE)": {
+              "requests_per_second": 107066.38
+            },
+            "LRANGE_100 (first 100 elements)": {
+              "requests_per_second": 2285.82
+            }
+          },
+          "parsed_metrics": [
+            {
+              "test": "LPUSH (needed to benchmark LRANGE)",
+              "rps": 107066.38,
+              "avg_latency_ms": 1.863,
+              "min_latency_ms": 0.272,
+              "p50_latency_ms": 1.743,
+              "p95_latency_ms": 3.191,
+              "p99_latency_ms": 5.207,
+              "max_latency_ms": 8.543
+            },
+            {
+              "test": "LRANGE_100 (first 100 elements)",
+              "rps": 2285.82,
+              "avg_latency_ms": 5.445,
+              "min_latency_ms": 1.896,
+              "p50_latency_ms": 3.639,
+              "p95_latency_ms": 7.575,
+              "p99_latency_ms": 66.303,
+              "max_latency_ms": 174.591
+            }
+          ]
+        },
+        {
+          "test_name": "LRANGE_300_operations",
+          "status": "failed",
+          "duration": 114.44943690299988,
+          "metrics": {},
+          "parsed_metrics": [
+            {
+              "test": "LPUSH (needed to benchmark LRANGE)",
+              "rps": 108108.11,
+              "avg_latency_ms": 1.828,
+              "min_latency_ms": 0.152,
+              "p50_latency_ms": 1.679,
+              "p95_latency_ms": 3.431,
+              "p99_latency_ms": 5.103,
+              "max_latency_ms": 8.655
+            }
+          ]
+        },
+        {
+          "test_name": "LRANGE_500_operations",
+          "status": "failed",
+          "duration": 0.005681276321411133,
+          "metrics": {},
+          "parsed_metrics": null
+        },
+        {
+          "test_name": "LRANGE_600_operations",
+          "status": "failed",
+          "duration": 0.024400949478149414,
+          "metrics": {},
+          "parsed_metrics": null
+        },
+        {
+          "test_name": "MSET_operations",
+          "status": "failed",
+          "duration": 0.16934466361999512,
+          "metrics": {},
+          "parsed_metrics": null
+        }
+      ]
+    },
+    "exit_code": 0
   },
   "scx_bpfland": {
     "scheduler": "scx_bpfland",
-    "error": "Benchmark failed to produce results",
-    "exit_code": -1
+    "results": [
+      {
+        "test_name": "SET_operations",
+        "command": "redis-src/src/redis-benchmark -t set -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"SET\",\"180505.42\",\"2.252\",\"0.208\",\"2.143\",\"3.303\",\"4.551\",\"30.719\"\n",
+        "stderr": "",
+        "return_code": 0,
+        "duration": 5.559111595153809,
+        "parsed_metrics": [
+          {
+            "test": "SET",
+            "rps": 180505.42,
+            "avg_latency_ms": 2.252,
+            "min_latency_ms": 0.208,
+            "p50_latency_ms": 2.143,
+            "p95_latency_ms": 3.303,
+            "p99_latency_ms": 4.551,
+            "max_latency_ms": 30.719
+          }
+        ],
+        "timestamp": "2025-08-18T03:53:30.058451",
+        "metrics": {
+          "SET": {
+            "requests_per_second": 180505.42
+          }
+        },
+        "scheduler": "scx_bpfland"
+      },
+      {
+        "test_name": "GET_operations",
+        "command": "redis-src/src/redis-benchmark -t get -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"GET\",\"292226.78\",\"1.093\",\"0.192\",\"0.831\",\"2.415\",\"3.535\",\"23.727\"\n",
+        "stderr": "",
+        "return_code": 0,
+        "duration": 3.4325876235961914,
+        "parsed_metrics": [
+          {
+            "test": "GET",
+            "rps": 292226.78,
+            "avg_latency_ms": 1.093,
+            "min_latency_ms": 0.192,
+            "p50_latency_ms": 0.831,
+            "p95_latency_ms": 2.415,
+            "p99_latency_ms": 3.535,
+            "max_latency_ms": 23.727
+          }
+        ],
+        "timestamp": "2025-08-18T03:53:34.491526",
+        "metrics": {
+          "GET": {
+            "requests_per_second": 292226.78
+          }
+        },
+        "scheduler": "scx_bpfland"
+      },
+      {
+        "test_name": "INCR_operations",
+        "command": "redis-src/src/redis-benchmark -t incr -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "\"test\",\"rps\",\"avg_latency_ms\",\"min_latency_ms\",\"p50_latency_ms\",\"p95_latency_ms\",\"p99_latency_ms\",\"max_latency_ms\"\n\"INCR\",\"604960.69\",\"0.862\",\"0.336\",\"0.799\",\"1.447\",\"2.095\",\"21.999\"\n",
+        "stderr": "",
+        "return_code": 0,
+        "duration": 1.6637983322143555,
+        "parsed_metrics": [
+          {
+            "test": "INCR",
+            "rps": 604960.69,
+            "avg_latency_ms": 0.862,
+            "min_latency_ms": 0.336,
+            "p50_latency_ms": 0.799,
+            "p95_latency_ms": 1.447,
+            "p99_latency_ms": 2.095,
+            "max_latency_ms": 21.999
+          }
+        ],
+        "timestamp": "2025-08-18T03:53:37.155757",
+        "metrics": {
+          "INCR": {
+            "requests_per_second": 604960.69
+          }
+        },
+        "scheduler": "scx_bpfland"
+      },
+      {
+        "test_name": "LPUSH_operations",
+        "command": "redis-src/src/redis-benchmark -t lpush -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "",
+        "stderr": "Could not connect to Redis at 127.0.0.1:6379: Connection refused\n",
+        "return_code": 1,
+        "duration": 0.006270885467529297,
+        "parsed_metrics": null,
+        "timestamp": "2025-08-18T03:53:38.162457",
+        "metrics": {},
+        "scheduler": "scx_bpfland"
+      },
+      {
+        "test_name": "LPOP_operations",
+        "command": "redis-src/src/redis-benchmark -t lpop -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "",
+        "stderr": "Could not connect to Redis at 127.0.0.1:6379: Connection refused\n",
+        "return_code": 1,
+        "duration": 0.006169319152832031,
+        "parsed_metrics": null,
+        "timestamp": "2025-08-18T03:53:39.168977",
+        "metrics": {},
+        "scheduler": "scx_bpfland"
+      },
+      {
+        "test_name": "SADD_operations",
+        "command": "redis-src/src/redis-benchmark -t sadd -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "",
+        "stderr": "Could not connect to Redis at 127.0.0.1:6379: Connection refused\n",
+        "return_code": 1,
+        "duration": 0.006191730499267578,
+        "parsed_metrics": null,
+        "timestamp": "2025-08-18T03:53:40.175480",
+        "metrics": {},
+        "scheduler": "scx_bpfland"
+      },
+      {
+        "test_name": "HSET_operations",
+        "command": "redis-src/src/redis-benchmark -t hset -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "",
+        "stderr": "Could not connect to Redis at 127.0.0.1:6379: Connection refused\n",
+        "return_code": 1,
+        "duration": 0.00622105598449707,
+        "parsed_metrics": null,
+        "timestamp": "2025-08-18T03:53:41.182155",
+        "metrics": {},
+        "scheduler": "scx_bpfland"
+      },
+      {
+        "test_name": "LRANGE_100_operations",
+        "command": "redis-src/src/redis-benchmark -t lrange_100 -c 50 -P 16 --csv -d 4096 -n 100000.0",
+        "stdout": "",
+        "stderr": "Could not connect to Redis at 127.0.0.1:6379: Connection refused\n",
+        "return_code": 1,
+        "duration": 0.0038199424743652344,
+        "parsed_metrics": null,
+        "timestamp": "2025-08-18T03:53:42.186288",
+        "metrics": {},
+        "scheduler": "scx_bpfland"
+      },
+      {
+        "test_name": "LRANGE_300_operations",
+        "command": "redis-src/src/redis-benchmark -t lrange_300 -c 50 -P 16 --csv -d 4096 -n 100000.0",
+        "stdout": "",
+        "stderr": "Could not connect to Redis at 127.0.0.1:6379: Connection refused\n",
+        "return_code": 1,
+        "duration": 0.0060503482818603516,
+        "parsed_metrics": null,
+        "timestamp": "2025-08-18T03:53:43.192750",
+        "metrics": {},
+        "scheduler": "scx_bpfland"
+      },
+      {
+        "test_name": "LRANGE_500_operations",
+        "command": "redis-src/src/redis-benchmark -t lrange_500 -c 50 -P 16 --csv -d 4096 -n 50000.0",
+        "stdout": "",
+        "stderr": "Could not connect to Redis at 127.0.0.1:6379: Connection refused\n",
+        "return_code": 1,
+        "duration": 0.005830049514770508,
+        "parsed_metrics": null,
+        "timestamp": "2025-08-18T03:53:44.198865",
+        "metrics": {},
+        "scheduler": "scx_bpfland"
+      },
+      {
+        "test_name": "LRANGE_600_operations",
+        "command": "redis-src/src/redis-benchmark -t lrange_600 -c 50 -P 16 --csv -d 4096 -n 50000.0",
+        "stdout": "",
+        "stderr": "Could not connect to Redis at 127.0.0.1:6379: Connection refused\n",
+        "return_code": 1,
+        "duration": 0.0059967041015625,
+        "parsed_metrics": null,
+        "timestamp": "2025-08-18T03:53:45.205261",
+        "metrics": {},
+        "scheduler": "scx_bpfland"
+      },
+      {
+        "test_name": "MSET_operations",
+        "command": "redis-src/src/redis-benchmark -t mset -c 50 -P 16 --csv -d 4096 -n 1000000",
+        "stdout": "",
+        "stderr": "Could not connect to Redis at 127.0.0.1:6379: Connection refused\n",
+        "return_code": 1,
+        "duration": 0.006331920623779297,
+        "parsed_metrics": null,
+        "timestamp": "2025-08-18T03:53:46.212055",
+        "metrics": {},
+        "scheduler": "scx_bpfland"
+      }
+    ],
+    "summary": {
+      "total_tests": 12,
+      "successful_tests": 3,
+      "failed_tests": 9,
+      "total_duration": 10.70837950706482,
+      "redis_config": {
+        "io_threads": 64,
+        "io_threads_do_reads": "yes",
+        "maxmemory": "256gb",
+        "hz": 100
+      },
+      "test_summary": [
+        {
+          "test_name": "SET_operations",
+          "status": "success",
+          "duration": 5.559111595153809,
+          "metrics": {
+            "SET": {
+              "requests_per_second": 180505.42
+            }
+          },
+          "parsed_metrics": [
+            {
+              "test": "SET",
+              "rps": 180505.42,
+              "avg_latency_ms": 2.252,
+              "min_latency_ms": 0.208,
+              "p50_latency_ms": 2.143,
+              "p95_latency_ms": 3.303,
+              "p99_latency_ms": 4.551,
+              "max_latency_ms": 30.719
+            }
+          ]
+        },
+        {
+          "test_name": "GET_operations",
+          "status": "success",
+          "duration": 3.4325876235961914,
+          "metrics": {
+            "GET": {
+              "requests_per_second": 292226.78
+            }
+          },
+          "parsed_metrics": [
+            {
+              "test": "GET",
+              "rps": 292226.78,
+              "avg_latency_ms": 1.093,
+              "min_latency_ms": 0.192,
+              "p50_latency_ms": 0.831,
+              "p95_latency_ms": 2.415,
+              "p99_latency_ms": 3.535,
+              "max_latency_ms": 23.727
+            }
+          ]
+        },
+        {
+          "test_name": "INCR_operations",
+          "status": "success",
+          "duration": 1.6637983322143555,
+          "metrics": {
+            "INCR": {
+              "requests_per_second": 604960.69
+            }
+          },
+          "parsed_metrics": [
+            {
+              "test": "INCR",
+              "rps": 604960.69,
+              "avg_latency_ms": 0.862,
+              "min_latency_ms": 0.336,
+              "p50_latency_ms": 0.799,
+              "p95_latency_ms": 1.447,
+              "p99_latency_ms": 2.095,
+              "max_latency_ms": 21.999
+            }
+          ]
+        },
+        {
+          "test_name": "LPUSH_operations",
+          "status": "failed",
+          "duration": 0.006270885467529297,
+          "metrics": {},
+          "parsed_metrics": null
+        },
+        {
+          "test_name": "LPOP_operations",
+          "status": "failed",
+          "duration": 0.006169319152832031,
+          "metrics": {},
+          "parsed_metrics": null
+        },
+        {
+          "test_name": "SADD_operations",
+          "status": "failed",
+          "duration": 0.006191730499267578,
+          "metrics": {},
+          "parsed_metrics": null
+        },
+        {
+          "test_name": "HSET_operations",
+          "status": "failed",
+          "duration": 0.00622105598449707,
+          "metrics": {},
+          "parsed_metrics": null
+        },
+        {
+          "test_name": "LRANGE_100_operations",
+          "status": "failed",
+          "duration": 0.0038199424743652344,
+          "metrics": {},
+          "parsed_metrics": null
+        },
+        {
+          "test_name": "LRANGE_300_operations",
+          "status": "failed",
+          "duration": 0.0060503482818603516,
+          "metrics": {},
+          "parsed_metrics": null
+        },
+        {
+          "test_name": "LRANGE_500_operations",
+          "status": "failed",
+          "duration": 0.005830049514770508,
+          "metrics": {},
+          "parsed_metrics": null
+        },
+        {
+          "test_name": "LRANGE_600_operations",
+          "status": "failed",
+          "duration": 0.0059967041015625,
+          "metrics": {},
+          "parsed_metrics": null
+        },
+        {
+          "test_name": "MSET_operations",
+          "status": "failed",
+          "duration": 0.006331920623779297,
+          "metrics": {},
+          "parsed_metrics": null
+        }
+      ]
+    },
+    "exit_code": 0
   }
 }

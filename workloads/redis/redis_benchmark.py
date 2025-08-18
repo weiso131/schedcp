@@ -15,6 +15,15 @@ import atexit
 import traceback
 from pathlib import Path
 
+# Import utility functions
+from utils import (
+    RedisCleanup,
+    RedisConfig,
+    BenchmarkParser,
+    ProcessManager,
+    BenchmarkSummary
+)
+
 class RedisBenchmark:
     def __init__(self, redis_dir="redis-src", results_dir="results", config_options=None):
         print(f"[INFO] Initializing RedisBenchmark with redis_dir={redis_dir}, results_dir={results_dir}")
@@ -71,7 +80,7 @@ class RedisBenchmark:
         sys.exit(0)
     
     def cleanup(self):
-        """Ensure Redis is stopped on exit"""
+        """Ensure Redis is stopped on exit and clean up all temporary files"""
         print("[INFO] Starting cleanup process")
         
         if hasattr(self, 'redis_process') and self.redis_process:
@@ -86,75 +95,18 @@ class RedisBenchmark:
             except Exception as e:
                 print(f"[WARNING] Failed to remove config file {self.config_file}: {e}")
         
+        # Use utility function for comprehensive cleanup
+        RedisCleanup.cleanup_redis_files()
+        
         print("[INFO] Cleanup completed")
         
     def generate_config(self):
         """Generate Redis configuration file"""
         print("[INFO] Generating Redis configuration file")
         
-        config_lines = [
-            "# Dynamically generated Redis configuration",
-            "port 6379",
-            "bind 127.0.0.1",
-            "daemonize no",
-            "loglevel warning",
-            "maxclients 10000",
-            "timeout 0",
-            "tcp-keepalive 300",
-            "tcp-backlog 511",
-            ""
-        ]
-        
-        # Add custom configuration options
-        for key, value in self.config_options.items():
-            if key == "io_threads" and value > 1:
-                # Validate io_threads value
-                if value > 128:
-                    print(f"[WARNING] io_threads value {value} is very high, capping at 128")
-                    value = 128
-                elif value < 1:
-                    print(f"[WARNING] io_threads value {value} is invalid, setting to 1")
-                    value = 1
-                config_lines.append(f"io-threads {value}")
-                print(f"[INFO] Setting io-threads to {value}")
-            elif key == "io_threads_do_reads":
-                config_lines.append(f"io-threads-do-reads {value}")
-                print(f"[INFO] Setting io-threads-do-reads to {value}")
-            elif key == "threads":
-                config_lines.append(f"threads {value}")
-            elif key == "maxmemory":
-                config_lines.append(f"maxmemory {value}")
-            elif key == "maxmemory_policy":
-                config_lines.append(f"maxmemory-policy {value}")
-            elif key == "hz":
-                if value > 500:
-                    print(f"[WARNING] hz value {value} is very high, may cause issues")
-                config_lines.append(f"hz {value}")
-            elif key == "client_output_buffer_limit":
-                config_lines.append(f"client-output-buffer-limit normal {value}")
-            else:
-                # Generic key-value pairs
-                config_lines.append(f"{key.replace('_', '-')} {value}")
-        
-        # Write to temporary file
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.config_file = f"redis_config_{timestamp}.conf"
-        
-        try:
-            with open(self.config_file, 'w') as f:
-                f.write('\n'.join(config_lines))
-            
-            print(f"[INFO] Redis configuration written to: {self.config_file}")
-            print(f"[INFO] Configuration contains {len(config_lines)} lines")
-            
-            # Log key configuration options
-            if self.config_options:
-                print(f"[INFO] Custom config options applied: {list(self.config_options.keys())}")
-            
-            return self.config_file
-        except Exception as e:
-            print(f"[ERROR] Failed to write Redis configuration file: {e}")
-            raise
+        # Use utility function to generate config
+        self.config_file = RedisConfig.generate_config_file(self.config_options)
+        return self.config_file
     
     def start_redis(self):
         """Start Redis server"""
@@ -204,15 +156,12 @@ class RedisBenchmark:
         
         for i in range(max_retries):
             time.sleep(0.5)
-            try:
-                result = subprocess.run([self.redis_cli, "ping"], 
-                              check=True, capture_output=True, timeout=2, text=True)
-                if "PONG" in result.stdout:
-                    print(f"[INFO] Redis server started successfully after {i+1} attempts")
-                    print("Redis server started successfully")
-                    return True
-            except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
-                print(f"[DEBUG] Redis ping attempt {i+1} failed: {e}")
+            if ProcessManager.check_redis_running(self.redis_cli):
+                print(f"[INFO] Redis server started successfully after {i+1} attempts")
+                print("Redis server started successfully")
+                return True
+            else:
+                print(f"[DEBUG] Redis ping attempt {i+1} failed")
                 if i == max_retries - 1:
                     print("[ERROR] Failed to start Redis server after multiple attempts")
                     print("Failed to start Redis server after multiple attempts")
@@ -270,20 +219,9 @@ class RedisBenchmark:
         """Stop Redis server"""
         print("[INFO] Stopping Redis server")
         
-        try:
-            # Try graceful shutdown first
-            print("[INFO] Attempting graceful Redis shutdown")
-            result = subprocess.run([self.redis_cli, "shutdown", "nosave"], 
-                          capture_output=True, timeout=2)
-            if result.returncode == 0:
-                print("[INFO] Redis graceful shutdown successful")
-            else:
-                print(f"[WARNING] Redis graceful shutdown returned code {result.returncode}")
-            time.sleep(0.5)
-        except subprocess.TimeoutExpired:
-            print("[WARNING] Redis graceful shutdown timed out")
-        except Exception as e:
-            print(f"[WARNING] Redis graceful shutdown failed: {e}")
+        # Try graceful shutdown first
+        ProcessManager.stop_redis_gracefully(self.redis_cli)
+        time.sleep(0.5)
         
         # Kill the process if it's still running
         if hasattr(self, 'redis_process') and self.redis_process:
@@ -305,50 +243,11 @@ class RedisBenchmark:
             self.redis_process = None
         
         # Final cleanup - kill any remaining redis-server processes
-        try:
-            print("[INFO] Final cleanup: killing any remaining redis-server processes")
-            result = subprocess.run(["pkill", "-f", "redis-server"], capture_output=True, timeout=1)
-            if result.returncode == 0:
-                print("[INFO] Killed remaining redis-server processes")
-            else:
-                print("[INFO] No remaining redis-server processes found")
-        except subprocess.TimeoutExpired:
-            print("[WARNING] pkill redis-server timed out")
-        except Exception as e:
-            print(f"[WARNING] Final redis cleanup failed: {e}")
+        RedisCleanup.kill_redis_processes()
     
     def parse_csv_output(self, csv_output):
         """Parse CSV output into structured JSON"""
-        lines = csv_output.strip().split('\n')
-        if len(lines) < 2:
-            return None
-        
-        # Parse header
-        header_line = lines[0].strip('"')
-        headers = [h.strip('"') for h in header_line.split('","')]
-        
-        results = []
-        for line in lines[1:]:
-            if line.strip():
-                # Parse data line
-                data_line = line.strip('"')
-                values = [v.strip('"') for v in data_line.split('","')]
-                
-                if len(values) == len(headers):
-                    row = {}
-                    for i, header in enumerate(headers):
-                        value = values[i]
-                        # Try to convert numeric values
-                        try:
-                            if '.' in value:
-                                row[header] = float(value)
-                            else:
-                                row[header] = int(value)
-                        except ValueError:
-                            row[header] = value
-                    results.append(row)
-        
-        return results
+        return BenchmarkParser.parse_csv_output(csv_output)
     
     def run_benchmark(self, test_name, command_args):
         """Run a specific benchmark test"""
@@ -426,74 +325,8 @@ class RedisBenchmark:
     
     def parse_benchmark_output(self, output):
         """Parse Redis benchmark output for metrics"""
-        metrics = {}
-        lines = output.split('\n')
-        
-        current_test = None
-        for line in lines:
-            # Detect test type (e.g., "====== SET ======")
-            if line.startswith("======") and "======" in line[6:]:
-                current_test = line.replace("=", "").strip()
-                continue
-            
-            # Parse CSV output if present
-            if '"' in line and ',' in line:
-                try:
-                    parts = line.strip().strip('"').split('","')
-                    if len(parts) >= 2:
-                        test_name = parts[0]
-                        rps = float(parts[1])
-                        if test_name not in metrics:
-                            metrics[test_name] = {}
-                        metrics[test_name]['requests_per_second'] = rps
-                except:
-                    pass
-            
-            # Parse regular output
-            elif 'requests per second' in line.lower():
-                # Extract RPS
-                parts = line.split()
-                for i, part in enumerate(parts):
-                    cleaned = part.replace(',', '').replace('.', '', part.count('.') - 1)
-                    try:
-                        rps = float(cleaned)
-                        if current_test:
-                            if current_test not in metrics:
-                                metrics[current_test] = {}
-                            metrics[current_test]['requests_per_second'] = rps
-                        else:
-                            metrics['requests_per_second'] = rps
-                        break
-                    except:
-                        continue
-            
-            elif 'latency summary' in line.lower():
-                current_test = "latency"
-            
-            # Parse percentile latencies
-            elif '%' in line and ('percentile' in line.lower() or 'latency' in line.lower()):
-                percentiles = ['50.00', '95.00', '99.00', '99.90']
-                for p in percentiles:
-                    if p + '%' in line:
-                        latency = self.extract_latency(line)
-                        if latency > 0:
-                            key = f'latency_p{p.split(".")[0]}'
-                            if current_test and current_test != "latency":
-                                if current_test not in metrics:
-                                    metrics[current_test] = {}
-                                metrics[current_test][key] = latency
-                            else:
-                                metrics[key] = latency
-        
-        return metrics
+        return BenchmarkParser.parse_benchmark_output(output)
     
-    def extract_latency(self, line):
-        """Extract latency value from line"""
-        parts = line.split()
-        for part in parts:
-            if part.replace('.', '').isdigit():
-                return float(part)
-        return 0.0
     
     def run_comprehensive_benchmark(self, clients=50, requests=100000, data_size=3, pipeline=1, 
                                    keyspace=None, tests=None, threads=None, cluster=False, 
@@ -668,26 +501,7 @@ class RedisBenchmark:
     
     def generate_summary(self, results):
         """Generate benchmark summary"""
-        summary = {
-            "total_tests": len(results),
-            "successful_tests": sum(1 for r in results if r["return_code"] == 0),
-            "failed_tests": sum(1 for r in results if r["return_code"] != 0),
-            "total_duration": sum(r["duration"] for r in results),
-            "redis_config": self.config_options,
-            "test_summary": []
-        }
-        
-        for result in results:
-            test_summary = {
-                "test_name": result["test_name"],
-                "status": "success" if result["return_code"] == 0 else "failed",
-                "duration": result["duration"],
-                "metrics": result.get("metrics", {}),
-                "parsed_metrics": result.get("parsed_metrics", [])
-            }
-            summary["test_summary"].append(test_summary)
-        
-        return summary
+        return BenchmarkSummary.generate_summary(results, self.config_options)
 
     def run_quick_benchmark(self, clients=50, requests=10000, data_size=3, pipeline=16, 
                            keyspace=None, tests="set,get", threads=None, cluster=False, 
