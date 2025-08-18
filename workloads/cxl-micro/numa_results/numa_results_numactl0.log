@@ -1,0 +1,42 @@
+Starting CXL perf bandwidth parameter sweep...
+Perf counters: instructions, cycles, cache-references, cache-misses, longest_lat_cache.miss, mem_inst_retired.all_loads, mem_inst_retired.all_stores, mem_load_retired.l3_hit, mem_load_retired.l3_miss, offcore_requests.l3_miss_demand_data_rd, offcore_requests.demand_data_rd, offcore_requests.demand_rfo, uncore_imc/cas_count_read/, uncore_imc/cas_count_write/, cycle_activity.stalls_l3_miss, memory_activity.stalls_l3_miss
+Running parameter sweep:
+  Thread counts: [4, 16, 64, 172, 256]
+  Read ratios: [0, 0.15, 0.25, 0.35, 0.45, 0.5, 0.55, 0.65, 0.75, 0.85, 0.95, 1]
+  Buffer sizes: ['1GB', '4GB', '16GB', '64GB']
+
+Test 1/240: buffer_size=1.0GB, threads=4, read_ratio=0.00
+Running perf + double_bandwidth
+Parameters: buffer_size=1073741824, threads=4, duration=20, read_ratio=0
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 1073741824 --threads 4 --duration 20 --read-ratio 0 --json
+  App Bandwidth: 12586.6 MB/s, Cache Refs: 12396.4 MB/s
+
+Test 2/240: buffer_size=1.0GB, threads=4, read_ratio=0.15
+Running perf + double_bandwidth
+Parameters: buffer_size=1073741824, threads=4, duration=20, read_ratio=0.15
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 1073741824 --threads 4 --duration 20 --read-ratio 0.15 --json
+Traceback (most recent call last):
+  File "/root/yunwei37/ai-os/workloads/cxl-micro/cxl_perf_bandwidth_bench.py", line 797, in <module>
+    main()
+  File "/root/yunwei37/ai-os/workloads/cxl-micro/cxl_perf_bandwidth_bench.py", line 772, in main
+    sweep_results = tester.run_parameter_sweep()
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/yunwei37/ai-os/workloads/cxl-micro/cxl_perf_bandwidth_bench.py", line 437, in run_parameter_sweep
+    result = self.run_perf_bandwidth_benchmark()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/yunwei37/ai-os/workloads/cxl-micro/cxl_perf_bandwidth_bench.py", line 355, in run_perf_bandwidth_benchmark
+    result = subprocess.run(
+             ^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/subprocess.py", line 2113, in _communicate
+    ready = selector.select(timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.12/selectors.py", line 415, in select
+    fd_event_list = self._selector.poll(timeout)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

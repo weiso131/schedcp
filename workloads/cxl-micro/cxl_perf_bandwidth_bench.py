@@ -397,17 +397,17 @@ class CXLPerfBandwidthTester:
             List of dictionaries containing results for each parameter combination
         """
         # Default parameter ranges
-        # thread_counts = thread_counts or [4, 16, 64, 172, 256]
-        # read_ratios = read_ratios or [0, 0.15, 0.25, 0.35, 0.45, 0.5, 0.55, 0.65, 0.75, 0.85, 0.95, 1]
-        # buffer_sizes = buffer_sizes or [
-        #     1 * 1024**3,    # 1GB
-        #     4 * 1024**3,    # 4GB  
-        #     16 * 1024**3,   # 16GB
-        #     64 * 1024**3,   # 64GB
-        # ]
-        buffer_sizes = [64 * 1024**3]
-        thread_counts = [64]
-        read_ratios = [0, 0.5, 1]
+        thread_counts = thread_counts or [4, 16, 64, 172, 256]
+        read_ratios = read_ratios or [0, 0.15, 0.25, 0.35, 0.45, 0.5, 0.55, 0.65, 0.75, 0.85, 0.95, 1]
+        buffer_sizes = buffer_sizes or [
+            1 * 1024**3,    # 1GB
+            4 * 1024**3,    # 4GB  
+            16 * 1024**3,   # 16GB
+            64 * 1024**3,   # 64GB
+        ]
+        # buffer_sizes = [64 * 1024**3]
+        # thread_counts = [64]
+        # read_ratios = [0, 0.5, 1]
         
         print(f"Running parameter sweep:")
         print(f"  Thread counts: {thread_counts}")

@@ -1,0 +1,25 @@
+#! /bin/bash
+
+mkdir -p numa_results
+
+python /root/yunwei37/ai-os/workloads/cxl-micro/cxl_perf_bandwidth_bench.py --parameter-sweep > numa_results/numa_results_numact_none.log 2>&1
+cp /root/yunwei37/ai-os/workloads/cxl-micro/results/cxl_perf_parameter_sweep.csv numa_results/cxl_perf_parameter_sweep_numact_none.csv
+
+numactl --interleave=0 python /root/yunwei37/ai-os/workloads/cxl-micro/cxl_perf_bandwidth_bench.py --parameter-sweep > numa_results/numa_results_numactl0.log 2>&1
+cp /root/yunwei37/ai-os/workloads/cxl-micro/results/cxl_perf_parameter_sweep.csv numa_results/cxl_perf_parameter_sweep_numactl0.csv
+
+numactl --interleave=0,1 python /root/yunwei37/ai-os/workloads/cxl-micro/cxl_perf_bandwidth_bench.py --parameter-sweep > numa_results/numa_results_numactl01.log 2>&1
+cp /root/yunwei37/ai-os/workloads/cxl-micro/results/cxl_perf_parameter_sweep.csv numa_results/cxl_perf_parameter_sweep_numactl01.csv
+
+numactl --interleave=2 python /root/yunwei37/ai-os/workloads/cxl-micro/cxl_perf_bandwidth_bench.py --parameter-sweep > numa_results/numa_results_numactl2.log 2>&1
+cp /root/yunwei37/ai-os/workloads/cxl-micro/results/cxl_perf_parameter_sweep.csv numa_results/cxl_perf_parameter_sweep_numactl2.csv
+
+numactl --interleave=3 python /root/yunwei37/ai-os/workloads/cxl-micro/cxl_perf_bandwidth_bench.py --parameter-sweep > numa_results/numa_results_numactl3.log 2>&1
+cp /root/yunwei37/ai-os/workloads/cxl-micro/results/cxl_perf_parameter_sweep.csv numa_results/cxl_perf_parameter_sweep_numactl3.csv
+
+numactl --interleave=2,3 python /root/yunwei37/ai-os/workloads/cxl-micro/cxl_perf_bandwidth_bench.py --parameter-sweep > numa_results/numa_results_numactl23.log 2>&1
+cp /root/yunwei37/ai-os/workloads/cxl-micro/results/cxl_perf_parameter_sweep.csv numa_results/cxl_perf_parameter_sweep_numactl23.csv
+
+numactl --interleave=0,1,2,3 python /root/yunwei37/ai-os/workloads/cxl-micro/cxl_perf_bandwidth_bench.py --parameter-sweep > numa_results/numa_results_numactl0123.log 2>&1
+cp /root/yunwei37/ai-os/workloads/cxl-micro/results/cxl_perf_parameter_sweep.csv numa_results/cxl_perf_parameter_sweep_numactl0123.csv
+
