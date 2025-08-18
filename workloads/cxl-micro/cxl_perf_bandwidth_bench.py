@@ -37,10 +37,10 @@ class PerfBandwidthCalculator:
         "mem_load_retired.l3_hit",
         "mem_load_retired.l3_miss", 
         # L3 miss breakdown by destination
-        "mem_load_l3_miss_retired.local_dram",
-        "mem_load_l3_miss_retired.remote_dram",
-        "mem_load_l3_miss_retired.remote_fwd",
-        "mem_load_l3_miss_retired.remote_hitm",
+        # "mem_load_l3_miss_retired.local_dram",
+        # "mem_load_l3_miss_retired.remote_dram",
+        # "mem_load_l3_miss_retired.remote_fwd",
+        # "mem_load_l3_miss_retired.remote_hitm",
         # Offcore requests (L3 miss traffic)
         "offcore_requests.l3_miss_demand_data_rd",
         "offcore_requests.demand_data_rd",
@@ -397,14 +397,17 @@ class CXLPerfBandwidthTester:
             List of dictionaries containing results for each parameter combination
         """
         # Default parameter ranges
-        thread_counts = thread_counts or [4, 16, 64, 172, 256]
-        read_ratios = read_ratios or [0, 0.15, 0.25, 0.35, 0.45, 0.5, 0.55, 0.65, 0.75, 0.85, 0.95, 1]
-        buffer_sizes = buffer_sizes or [
-            1 * 1024**3,    # 1GB
-            4 * 1024**3,    # 4GB  
-            16 * 1024**3,   # 16GB
-            64 * 1024**3,   # 64GB
-        ]
+        # thread_counts = thread_counts or [4, 16, 64, 172, 256]
+        # read_ratios = read_ratios or [0, 0.15, 0.25, 0.35, 0.45, 0.5, 0.55, 0.65, 0.75, 0.85, 0.95, 1]
+        # buffer_sizes = buffer_sizes or [
+        #     1 * 1024**3,    # 1GB
+        #     4 * 1024**3,    # 4GB  
+        #     16 * 1024**3,   # 16GB
+        #     64 * 1024**3,   # 64GB
+        # ]
+        buffer_sizes = [64 * 1024**3]
+        thread_counts = [64]
+        read_ratios = [0, 0.5, 1]
         
         print(f"Running parameter sweep:")
         print(f"  Thread counts: {thread_counts}")
@@ -719,7 +722,7 @@ def main():
                        help="Number of threads for testing")
     parser.add_argument("--buffer-size", type=int, default=64*1024*1024*1024, 
                        help="Buffer size in bytes (default 256GB)")
-    parser.add_argument("--duration", type=int, default=30, 
+    parser.add_argument("--duration", type=int, default=20, 
                        help="Test duration in seconds")
     parser.add_argument("--read-ratio", type=float, default=0.5,
                        help="Ratio of readers (0.0-1.0, default: 0.5)")
