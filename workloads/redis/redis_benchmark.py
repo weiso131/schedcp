@@ -398,19 +398,19 @@ class RedisBenchmark:
                 },
                 {
                     "name": "LRANGE_100_operations",
-                    "args": ["-t", "lrange_100"] + base_args + ["-n", str(requests / 10)]
+                    "args": ["-t", "lrange_100"] + base_args + ["-n", str(requests / 20)]
                 },
                 {
                     "name": "LRANGE_300_operations",
-                    "args": ["-t", "lrange_300"] + base_args + ["-n", str(requests / 10)]
+                    "args": ["-t", "lrange_300"] + base_args + ["-n", str(requests / 20)]
                 },
                 {
                     "name": "LRANGE_500_operations",
-                    "args": ["-t", "lrange_500"] + base_args + ["-n", str(requests / 20)]
+                    "args": ["-t", "lrange_500"] + base_args + ["-n", str(requests / 50)]
                 },
                 {
                     "name": "LRANGE_600_operations",
-                    "args": ["-t", "lrange_600"] + base_args + ["-n", str(requests / 20)]
+                    "args": ["-t", "lrange_600"] + base_args + ["-n", str(requests / 50)]
                 },
                 {
                     "name": "MSET_operations",
@@ -604,8 +604,8 @@ def main():
     
     # Redis benchmark parameters
     parser.add_argument('-c', '--clients', type=int, help='Number of parallel connections', default=50)
-    parser.add_argument('-n', '--requests', type=int, help='Total number of requests', default=100000)
-    parser.add_argument('-d', '--data-size', type=int, help='Data size of SET/GET value in bytes', default=3)
+    parser.add_argument('-n', '--requests', type=int, help='Total number of requests', default=1000000)
+    parser.add_argument('-d', '--data-size', type=int, help='Data size of SET/GET value in bytes', default=4096)
     parser.add_argument('-P', '--pipeline', type=int, help='Pipeline requests', default=1)
     parser.add_argument('-r', '--keyspace', type=int, help='Use random keys in specified range')
     parser.add_argument('-t', '--tests', help='Specific tests to run (comma-separated: set,get,incr,lpush,lpop,sadd,hset)')

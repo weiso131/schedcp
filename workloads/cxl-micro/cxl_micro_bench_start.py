@@ -204,6 +204,7 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             }
         
         # Parse results
+        print(f"stdout: {stdout}")
         metrics = self._parse_bandwidth_output(stdout)
         metrics["scheduler"] = scheduler_name or "default"
         metrics["exit_code"] = exit_code
@@ -255,7 +256,15 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
     
     def save_results(self, results: dict):
         """Save results to JSON file"""
-        results_file = os.path.join(self.results_dir, "cxl_scheduler_results.json")
+        # Generate filename with test parameters
+        array_size_gb = self.test_params["array_size"] / (1024**3)
+        threads = self.test_params["threads"]
+        read_ratio = self.test_params["read_ratio"]
+        access_pattern = "random" if self.test_params.get("random", True) else "seq"
+        
+        filename = f"cxl_scheduler_results_t{threads}_s{array_size_gb:.0f}gb_r{read_ratio:.2f}_{access_pattern}.json"
+        results_file = os.path.join(self.results_dir, filename)
+        
         with open(results_file, 'w') as f:
             json.dump(results, f, indent=2)
         print(f"Results saved to {results_file}")
@@ -298,8 +307,14 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
         
         plt.tight_layout()
         
-        # Save figure
-        figure_path = os.path.join(self.results_dir, "cxl_scheduler_performance.png")
+        # Save figure with test parameters in filename
+        array_size_gb = self.test_params["array_size"] / (1024**3)
+        threads = self.test_params["threads"]
+        read_ratio = self.test_params["read_ratio"]
+        access_pattern = "random" if self.test_params.get("random", True) else "seq"
+        
+        figure_filename = f"cxl_scheduler_performance_t{threads}_s{array_size_gb:.0f}gb_r{read_ratio:.2f}_{access_pattern}.png"
+        figure_path = os.path.join(self.results_dir, figure_filename)
         plt.savefig(figure_path, dpi=300, bbox_inches='tight')
         print(f"Performance figure saved to {figure_path}")
         
@@ -543,7 +558,7 @@ def main():
                        help="Run parameter sweep comparing all schedulers")
     parser.add_argument("--scheduler", type=str, default=None,
                        help="Test specific scheduler only")
-    parser.add_argument("--random", "-R", action="store_true", default=True,
+    parser.add_argument("--random", "-R", action="store_true", default=False,
                        help="Use random memory access pattern instead of sequential")
     
     args = parser.parse_args()

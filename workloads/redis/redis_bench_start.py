@@ -833,7 +833,7 @@ def main():
                        help="Number of Redis clients")
     parser.add_argument("--requests", type=int, default=1000000, 
                        help="Number of requests per test")
-    parser.add_argument("--data-size", type=int, default=4096,
+    parser.add_argument("--data-size", type=int, default=16,
                        help="Data size in bytes")
     parser.add_argument("--pipeline", type=int, default=16,
                        help="Pipeline requests")

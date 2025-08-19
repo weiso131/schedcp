@@ -2,6 +2,8 @@
 
 numactl --interleave=0,1,2   python redis_bench_start.py --parameter-sweep > redis_test.log
 
+numactl --interleave=3 python redis_bench_start.py
+
 ## Overview
 
 This guide provides comprehensive information on measuring Redis performance, including built-in tools, benchmarking methodologies, key metrics, and best practices for performance evaluation.

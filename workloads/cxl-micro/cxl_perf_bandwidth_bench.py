@@ -740,7 +740,7 @@ def main():
                        help="Print raw data output instead of summary")
     parser.add_argument("--parameter-sweep", action="store_true", 
                        help="Run parameter sweep across threads, read ratios, and buffer sizes")
-    parser.add_argument("--random", "-R", action="store_true", default=True,
+    parser.add_argument("--random", "-R", action="store_true", default=False,
                        help="Use random memory access pattern instead of sequential")
     
     args = parser.parse_args()
