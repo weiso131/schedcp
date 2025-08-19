@@ -1,5 +1,7 @@
 # LLaMA.cpp Benchmark Testing Documentation
 
+numactl --interleave=3 python /root/yunwei37/ai-os/workloads/llama.cpp/llamacpp_bench_start.py > llama_test.log
+
 ## Overview
 
 This document explains the llama.cpp benchmark testing framework, how it works, and analysis of the test results including why some requests fail.

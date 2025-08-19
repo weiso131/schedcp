@@ -485,13 +485,13 @@ def main():
                        help="Directory to store results")
     parser.add_argument("--production-only", action="store_true", 
                        help="Test only production schedulers")
-    parser.add_argument("--threads", type=int, default=128, 
+    parser.add_argument("--threads", type=int, default=86, 
                        help="Number of threads for testing")
-    parser.add_argument("--batch-size", type=int, default=512, 
+    parser.add_argument("--batch-size", type=int, default=16, 
                        help="Batch size for testing")
     parser.add_argument("--repetitions", type=int, default=3, 
                        help="Number of repetitions per test")
-    parser.add_argument("--timeout", type=int, default=300, 
+    parser.add_argument("--timeout", type=int, default=30000, 
                        help="Timeout in seconds")
     parser.add_argument("--parameter-sweep", action="store_true",
                        help="Run parameter sweep for each scheduler")
