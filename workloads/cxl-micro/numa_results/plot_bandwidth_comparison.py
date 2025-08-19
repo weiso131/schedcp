@@ -31,7 +31,7 @@ def plot_bandwidth_vs_datasize():
     
     # Create figure with subplots
     fig, axes = plt.subplots(1, 3, figsize=(20, 6))
-    fig.suptitle('Total Bandwidth vs Read Ratio (Thread Count = 172)', fontsize=16, fontweight='bold')
+    fig.suptitle('Random Access Total Bandwidth vs Read Ratio (Thread Count = 172)', fontsize=20, fontweight='bold')
     
     # Color palette for different data sizes
     colors = plt.cm.viridis(np.linspace(0, 1, 10))
@@ -90,17 +90,22 @@ def plot_bandwidth_vs_datasize():
                    alpha=0.8)
         
         # Customize subplot
-        ax.set_xlabel('Read Ratio', fontsize=12)
-        ax.set_ylabel('Total Bandwidth (MB/s)', fontsize=12)
-        ax.set_title(f"{config['label']}\n(numactl interleave={config['interleave']})", fontsize=12)
+        ax.set_xlabel('Read Ratio', fontsize=16)
+        ax.set_ylabel('Total Bandwidth (MB/s)', fontsize=16)
+        ax.set_title(f"{config['label']}\n(numactl interleave={config['interleave']})", fontsize=16)
         ax.grid(True, alpha=0.3)
-        ax.legend(loc='best', fontsize=10, title='Buffer Size')
         ax.set_xlim(-0.05, 1.05)
         ax.set_ylim(bottom=0)
+        ax.tick_params(axis='both', which='major', labelsize=14)
         
         # Add minor gridlines
         ax.minorticks_on()
         ax.grid(which='minor', alpha=0.1)
+    
+    # Add a single legend for all subplots
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 0), 
+               ncol=5, fontsize=14, title_fontsize=14)
     
     plt.tight_layout()
     
@@ -121,7 +126,7 @@ def plot_bandwidth_comparison():
     
     # Create figure with subplots
     fig, axes = plt.subplots(1, 3, figsize=(20, 6))
-    fig.suptitle('Total Bandwidth vs Read Ratio (Buffer Size = 64GB)', fontsize=16, fontweight='bold')
+    fig.suptitle('Random Access Total Bandwidth vs Read Ratio (Buffer Size = 64GB)', fontsize=20, fontweight='bold')
     
     # Color palette for different thread counts
     colors = plt.cm.tab10(np.linspace(0, 0.8, 10))
@@ -177,17 +182,22 @@ def plot_bandwidth_comparison():
                    alpha=0.8)
         
         # Customize subplot
-        ax.set_xlabel('Read Ratio', fontsize=12)
-        ax.set_ylabel('Total Bandwidth (MB/s)', fontsize=12)
-        ax.set_title(f"{config['label']}\n(numactl interleave={config['interleave']})", fontsize=12)
+        ax.set_xlabel('Read Ratio', fontsize=16)
+        ax.set_ylabel('Total Bandwidth (MB/s)', fontsize=16)
+        ax.set_title(f"{config['label']}\n(numactl interleave={config['interleave']})", fontsize=16)
         ax.grid(True, alpha=0.3)
-        ax.legend(loc='best', fontsize=10)
         ax.set_xlim(-0.05, 1.05)
         ax.set_ylim(bottom=0)
+        ax.tick_params(axis='both', which='major', labelsize=14)
         
         # Add minor gridlines
         ax.minorticks_on()
         ax.grid(which='minor', alpha=0.1)
+    
+    # Add a single legend for all subplots
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 0), 
+               ncol=5, fontsize=14, title_fontsize=14)
     
     plt.tight_layout()
     
@@ -205,8 +215,8 @@ def create_combined_plot(numa_configs):
     """Create a single plot with all NUMA configurations overlaid"""
     
     fig, ax = plt.subplots(figsize=(12, 8))
-    fig.suptitle('Total Bandwidth Comparison Across NUMA Configurations\n(Buffer Size = 64GB, Threads = 172)', 
-                 fontsize=16, fontweight='bold')
+    fig.suptitle('Random Access Total Bandwidth Comparison Across NUMA Configurations\n(Buffer Size = 64GB, Threads = 172)', 
+                 fontsize=20, fontweight='bold')
     
     # Use different line styles for different NUMA configs
     line_styles = ['-', '--', '-.']
@@ -250,16 +260,17 @@ def create_combined_plot(numa_configs):
                label=label,
                alpha=0.8)
     
-    ax.set_xlabel('Read Ratio', fontsize=14)
-    ax.set_ylabel('Total Bandwidth (MB/s)', fontsize=14)
+    ax.set_xlabel('Read Ratio', fontsize=18)
+    ax.set_ylabel('Total Bandwidth (MB/s)', fontsize=18)
     ax.grid(True, alpha=0.3)
     ax.minorticks_on()
     ax.grid(which='minor', alpha=0.1)
     ax.set_xlim(-0.05, 1.05)
     ax.set_ylim(bottom=0)
+    ax.tick_params(axis='both', which='major', labelsize=16)
     
     # Position legend outside the plot
-    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10, ncol=1)
+    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=14, ncol=1)
     
     plt.tight_layout()
     
@@ -277,16 +288,22 @@ def print_summary_statistics():
         {'file': 'cxl_perf_parameter_sweep_numactl3.csv', 'label': 'NUMA Node 3 (CXL 512GB)', 'interleave': '3'}
     ]
     
+    # Print detailed statistics for 172 threads, 64GB
     print("\n" + "="*80)
-    print("SUMMARY STATISTICS (Buffer Size = 64GB)")
+    print("DETAILED STATISTICS (172 Threads, 64GB Buffer)")
     print("="*80)
     
     for config in numa_configs:
         if not os.path.exists(config['file']):
             continue
         
-        df = load_and_filter_data(config['file'])
-        if df.empty:
+        # Load full data
+        df = pd.read_csv(config['file'])
+        # Filter for 172 threads and 64GB
+        df_filtered = df[(df['threads'] == 172) & (df['buffer_size_gb'] == 64.0)].copy()
+        
+        if df_filtered.empty:
+            print(f"\n{config['label']}: No data for 172 threads with 64GB buffer")
             continue
         
         print(f"\n{config['label']} (interleave={config['interleave']})")
@@ -294,20 +311,150 @@ def print_summary_statistics():
         
         # Use appropriate bandwidth column
         bandwidth_col = 'app_total_bandwidth_mbps'
-        if bandwidth_col not in df.columns:
-            bandwidth_col = 'bandwidth_mbps' if 'bandwidth_mbps' in df.columns else 'total_bandwidth_mbps'
+        if bandwidth_col not in df_filtered.columns:
+            if 'bandwidth_mbps' in df_filtered.columns:
+                bandwidth_col = 'bandwidth_mbps'
+            elif 'total_bandwidth_mbps' in df_filtered.columns:
+                bandwidth_col = 'total_bandwidth_mbps'
+            else:
+                continue
         
-        if bandwidth_col in df.columns:
-            print(f"  Average Bandwidth: {df[bandwidth_col].mean():.2f} MB/s")
-            print(f"  Max Bandwidth: {df[bandwidth_col].max():.2f} MB/s")
-            print(f"  Min Bandwidth: {df[bandwidth_col].min():.2f} MB/s")
-            print(f"  Std Dev: {df[bandwidth_col].std():.2f} MB/s")
+        # Calculate statistics
+        avg_bandwidth = df_filtered[bandwidth_col].mean()
+        max_bandwidth = df_filtered[bandwidth_col].max()
+        
+        # Get bandwidth at specific read ratios
+        read_0 = df_filtered[df_filtered['read_ratio'] == 0.0]
+        read_1 = df_filtered[df_filtered['read_ratio'] == 1.0]
+        
+        print(f"  Average Bandwidth: {avg_bandwidth:.2f} MB/s")
+        print(f"  Max Bandwidth: {max_bandwidth:.2f} MB/s")
+        
+        if not read_0.empty:
+            print(f"  Read Ratio 0.0 (100% Write): {read_0[bandwidth_col].iloc[0]:.2f} MB/s")
+        else:
+            print(f"  Read Ratio 0.0 (100% Write): No data")
             
-            # Best configuration
-            best_row = df.loc[df[bandwidth_col].idxmax()]
-            print(f"  Best Config: {best_row['threads']:.0f} threads, "
-                  f"read_ratio={best_row['read_ratio']:.2f}, "
-                  f"bandwidth={best_row[bandwidth_col]:.2f} MB/s")
+        if not read_1.empty:
+            print(f"  Read Ratio 1.0 (100% Read): {read_1[bandwidth_col].iloc[0]:.2f} MB/s")
+        else:
+            print(f"  Read Ratio 1.0 (100% Read): No data")
+        
+        # Find optimal read ratio
+        optimal_row = df_filtered.loc[df_filtered[bandwidth_col].idxmax()]
+        print(f"  Optimal Read Ratio: {optimal_row['read_ratio']:.2f} "
+              f"(Bandwidth: {optimal_row[bandwidth_col]:.2f} MB/s)")
+        
+        # Calculate write vs read performance ratio
+        if not read_0.empty and not read_1.empty:
+            write_bw = read_0[bandwidth_col].iloc[0]
+            read_bw = read_1[bandwidth_col].iloc[0]
+            if read_bw > 0:
+                ratio = write_bw / read_bw
+                print(f"  Write/Read Ratio: {ratio:.2f} (Write is {ratio:.1f}x of Read)")
+        
+        # Show bandwidth range and improvement
+        min_bw = df_filtered[bandwidth_col].min()
+        print(f"  Bandwidth Range: {min_bw:.2f} - {max_bandwidth:.2f} MB/s")
+        
+        # Calculate percentage improvements from minimum
+        if min_bw > 0:
+            max_improvement = ((max_bandwidth - min_bw) / min_bw) * 100
+            avg_improvement = ((avg_bandwidth - min_bw) / min_bw) * 100
+            print(f"  Max Improvement from Min: {max_improvement:.1f}%")
+            print(f"  Avg Improvement from Min: {avg_improvement:.1f}%")
+            
+            # Show improvement at specific read ratios if they exist
+            if not read_0.empty:
+                write_improvement = ((read_0[bandwidth_col].iloc[0] - min_bw) / min_bw) * 100
+                print(f"  100% Write Improvement from Min: {write_improvement:.1f}%")
+            if not read_1.empty:
+                read_improvement = ((read_1[bandwidth_col].iloc[0] - min_bw) / min_bw) * 100
+                print(f"  100% Read Improvement from Min: {read_improvement:.1f}%")
+    
+    # Print detailed statistics for 172 threads, 1GB
+    print("\n" + "="*80)
+    print("DETAILED STATISTICS (172 Threads, 1GB Buffer)")
+    print("="*80)
+    
+    for config in numa_configs:
+        if not os.path.exists(config['file']):
+            continue
+        
+        # Load full data
+        df = pd.read_csv(config['file'])
+        # Filter for 172 threads and 1GB
+        df_filtered = df[(df['threads'] == 172) & (df['buffer_size_gb'] == 1.0)].copy()
+        
+        if df_filtered.empty:
+            print(f"\n{config['label']}: No data for 172 threads with 1GB buffer")
+            continue
+        
+        print(f"\n{config['label']} (interleave={config['interleave']})")
+        print("-" * 50)
+        
+        # Use appropriate bandwidth column
+        bandwidth_col = 'app_total_bandwidth_mbps'
+        if bandwidth_col not in df_filtered.columns:
+            if 'bandwidth_mbps' in df_filtered.columns:
+                bandwidth_col = 'bandwidth_mbps'
+            elif 'total_bandwidth_mbps' in df_filtered.columns:
+                bandwidth_col = 'total_bandwidth_mbps'
+            else:
+                continue
+        
+        # Calculate statistics
+        avg_bandwidth = df_filtered[bandwidth_col].mean()
+        max_bandwidth = df_filtered[bandwidth_col].max()
+        
+        # Get bandwidth at specific read ratios
+        read_0 = df_filtered[df_filtered['read_ratio'] == 0.0]
+        read_1 = df_filtered[df_filtered['read_ratio'] == 1.0]
+        
+        print(f"  Average Bandwidth: {avg_bandwidth:.2f} MB/s")
+        print(f"  Max Bandwidth: {max_bandwidth:.2f} MB/s")
+        
+        if not read_0.empty:
+            print(f"  Read Ratio 0.0 (100% Write): {read_0[bandwidth_col].iloc[0]:.2f} MB/s")
+        else:
+            print(f"  Read Ratio 0.0 (100% Write): No data")
+            
+        if not read_1.empty:
+            print(f"  Read Ratio 1.0 (100% Read): {read_1[bandwidth_col].iloc[0]:.2f} MB/s")
+        else:
+            print(f"  Read Ratio 1.0 (100% Read): No data")
+        
+        # Find optimal read ratio
+        optimal_row = df_filtered.loc[df_filtered[bandwidth_col].idxmax()]
+        print(f"  Optimal Read Ratio: {optimal_row['read_ratio']:.2f} "
+              f"(Bandwidth: {optimal_row[bandwidth_col]:.2f} MB/s)")
+        
+        # Calculate write vs read performance ratio
+        if not read_0.empty and not read_1.empty:
+            write_bw = read_0[bandwidth_col].iloc[0]
+            read_bw = read_1[bandwidth_col].iloc[0]
+            if read_bw > 0:
+                ratio = write_bw / read_bw
+                print(f"  Write/Read Ratio: {ratio:.2f} (Write is {ratio:.1f}x of Read)")
+        
+        # Show bandwidth range and improvement
+        min_bw = df_filtered[bandwidth_col].min()
+        print(f"  Bandwidth Range: {min_bw:.2f} - {max_bandwidth:.2f} MB/s")
+        
+        # Calculate percentage improvements from minimum
+        if min_bw > 0:
+            max_improvement = ((max_bandwidth - min_bw) / min_bw) * 100
+            avg_improvement = ((avg_bandwidth - min_bw) / min_bw) * 100
+            print(f"  Max Improvement from Min: {max_improvement:.1f}%")
+            print(f"  Avg Improvement from Min: {avg_improvement:.1f}%")
+            
+            # Show improvement at specific read ratios if they exist
+            if not read_0.empty:
+                write_improvement = ((read_0[bandwidth_col].iloc[0] - min_bw) / min_bw) * 100
+                print(f"  100% Write Improvement from Min: {write_improvement:.1f}%")
+            if not read_1.empty:
+                read_improvement = ((read_1[bandwidth_col].iloc[0] - min_bw) / min_bw) * 100
+                print(f"  100% Read Improvement from Min: {read_improvement:.1f}%")
 
 if __name__ == "__main__":
     # Change to the numa_results directory
