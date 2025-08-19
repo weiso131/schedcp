@@ -26,7 +26,7 @@ init-submodule:
 	git submodule update --init --recursive
 
 # Main build target
-build: build-redis build-tools
+build: build-redis build-tools build-memtier
 
 # Build Redis server and core components
 build-redis: 
@@ -46,6 +46,19 @@ build-tools:
 	$(CHECK_SUBMODULE)
 	@echo "Building Redis tools..."
 	cd $(REDIS_DIR) && make redis-benchmark redis-cli redis-check-aof redis-check-rdb
+
+# Build memtier_benchmark tool
+build-memtier:
+	@echo "Building memtier_benchmark..."
+	@if [ ! -f "memtier_benchmark/configure" ]; then \
+		cd memtier_benchmark && autoreconf -ivf; \
+	fi
+	@if [ ! -f "memtier_benchmark/Makefile" ]; then \
+		cd memtier_benchmark && ./configure; \
+	fi
+	cd memtier_benchmark && make -j$(BUILD_THREADS)
+	@echo "memtier_benchmark built successfully:"
+	@ls -la memtier_benchmark/memtier_benchmark 2>/dev/null || true
 
 # Build with specific allocator
 build-jemalloc:
@@ -157,6 +170,9 @@ clean:
 	@if [ -d "$(REDIS_DIR)" ]; then \
 		cd $(REDIS_DIR) && make clean; \
 	fi
+	@if [ -d "memtier_benchmark" ] && [ -f "memtier_benchmark/Makefile" ]; then \
+		cd memtier_benchmark && make clean; \
+	fi
 	@rm -f dump.rdb appendonly.aof
 	@echo "Clean complete"
 
@@ -204,6 +220,7 @@ help:
 	@echo "=================================="
 	@echo "Build targets:"
 	@echo "  make build          - Build Redis from submodule"
+	@echo "  make build-memtier  - Build memtier_benchmark tool"
 	@echo "  make build-debug    - Build with debugging symbols"
 	@echo "  make build-jemalloc - Build with jemalloc allocator"
 	@echo "  make build-libc     - Build with libc malloc"

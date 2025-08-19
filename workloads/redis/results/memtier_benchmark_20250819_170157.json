@@ -1,0 +1,167 @@
+[
+  {
+    "test_name": "write_only",
+    "command": "./memtier_benchmark/memtier_benchmark -p 6379 -c 10 -t 4 -d 32 --pipeline 1 --key-pattern R:R --key-maximum 10000000 --hide-histogram --ratio 1:0 -n 5000",
+    "stdout": "4         Threads\n10        Connections per thread\n5000      Requests per client\n\n\nALL STATS\n============================================================================================================================\nType         Ops/sec     Hits/sec   Misses/sec    Avg. Latency     p50 Latency     p99 Latency   p99.9 Latency       KB/sec \n----------------------------------------------------------------------------------------------------------------------------\nSets     49140049.14          ---          ---         0.20094         0.17500         0.63900         1.02300   3785703.32 \nGets            0.00         0.00         0.00             ---             ---             ---             ---         0.00 \nWaits           0.00          ---          ---             ---             ---             ---             ---          --- \nTotals   49140049.14         0.00         0.00         0.20094         0.17500         0.63900         1.02300   3785703.32 \n",
+    "stderr": "Writing results to stdout\n[RUN #1] Preparing benchmark client...\n[RUN #1] Launching threads now...\n[RUN #1 99%,   0 secs]  4 threads:      197737 ops,  200134 (avg:  200134) ops/sec, 15.06MB/sec (avg: 15.06MB/sec),  0.20 (avg:  0.20) msec latency\n[RUN #1 100%,   1 secs]  0 threads:      200000 ops,  200134 (avg:  198986) ops/sec, 15.06MB/sec (avg: 14.97MB/sec),  0.20 (avg:  0.20) msec latency\n\n",
+    "return_code": 0,
+    "duration": 2.0273447036743164,
+    "metrics": {
+      "sets_ops_per_second": 49140049.14,
+      "sets_avg_latency_ms": 0.20094,
+      "sets_p50_latency_ms": 0.175,
+      "sets_p99_latency_ms": 0.639,
+      "gets_ops_per_second": 0.0
+    },
+    "timestamp": "2025-08-19T17:01:36.616379"
+  },
+  {
+    "test_name": "read_only",
+    "command": "./memtier_benchmark/memtier_benchmark -p 6379 -c 10 -t 4 -d 32 --pipeline 1 --key-pattern R:R --key-maximum 10000000 --hide-histogram --ratio 0:1 -n 5000",
+    "stdout": "4         Threads\n10        Connections per thread\n5000      Requests per client\n\n\nALL STATS\n============================================================================================================================\nType         Ops/sec     Hits/sec   Misses/sec    Avg. Latency     p50 Latency     p99 Latency   p99.9 Latency       KB/sec \n----------------------------------------------------------------------------------------------------------------------------\nSets            0.00          ---          ---             ---             ---             ---             ---         0.00 \nGets            0.00         0.00         0.00         0.18500         0.16700         0.56700         1.09500         0.00 \nWaits           0.00          ---          ---             ---             ---             ---             ---          --- \nTotals          0.00         0.00         0.00         0.18500         0.16700         0.56700         1.09500         0.00 \n",
+    "stderr": "Writing results to stdout\n[RUN #1] Preparing benchmark client...\n[RUN #1] Launching threads now...\n[RUN #1 100%,   0 secs]  0 threads:      200000 ops,       0 (avg:  216214) ops/sec, 0.00KB/sec (avg: 15.24MB/sec),  0.00 (avg:  0.18) msec latency\n\n",
+    "return_code": 0,
+    "duration": 1.0222318172454834,
+    "metrics": {
+      "sets_ops_per_second": 0.0,
+      "gets_ops_per_second": 0.0,
+      "gets_avg_latency_ms": 0.185,
+      "gets_p50_latency_ms": 0.167,
+      "gets_p99_latency_ms": 0.567
+    },
+    "timestamp": "2025-08-19T17:01:38.639021"
+  },
+  {
+    "test_name": "mixed_1_10",
+    "command": "./memtier_benchmark/memtier_benchmark -p 6379 -c 10 -t 4 -d 32 --pipeline 1 --key-pattern R:R --key-maximum 10000000 --hide-histogram --ratio 1:10 -n 5000",
+    "stdout": "4         Threads\n10        Connections per thread\n5000      Requests per client\n\n\nALL STATS\n============================================================================================================================\nType         Ops/sec     Hits/sec   Misses/sec    Avg. Latency     p50 Latency     p99 Latency   p99.9 Latency       KB/sec \n----------------------------------------------------------------------------------------------------------------------------\nSets        18679.85          ---          ---         0.19583         0.17500         0.57500         1.07900      1438.07 \nGets       186593.21    186593.21         0.00         0.19273         0.17500         0.56700         0.87900     13464.87 \nWaits           0.00          ---          ---             ---             ---             ---             ---          --- \nTotals     205273.05    186593.21         0.00         0.19301         0.17500         0.56700         0.90300     14902.94 \n",
+    "stderr": "Writing results to stdout\n[RUN #1] Preparing benchmark client...\n[RUN #1] Launching threads now...\n[RUN #1 100%,   0 secs]  4 threads:      199282 ops,  206981 (avg:  206981) ops/sec, 14.67MB/sec (avg: 14.67MB/sec),  0.19 (avg:  0.19) msec latency\n[RUN #1 100%,   0 secs]  0 threads:      200000 ops,  206981 (avg:  207175) ops/sec, 14.67MB/sec (avg: 14.69MB/sec),  0.19 (avg:  0.19) msec latency\n\n",
+    "return_code": 0,
+    "duration": 2.0240862369537354,
+    "metrics": {
+      "sets_ops_per_second": 18679.85,
+      "sets_avg_latency_ms": 0.19583,
+      "sets_p50_latency_ms": 0.175,
+      "sets_p99_latency_ms": 0.575,
+      "gets_ops_per_second": 186593.21,
+      "gets_avg_latency_ms": 0.19273,
+      "gets_p50_latency_ms": 0.175,
+      "gets_p99_latency_ms": 0.567
+    },
+    "timestamp": "2025-08-19T17:01:41.663500"
+  },
+  {
+    "test_name": "mixed_1_1",
+    "command": "./memtier_benchmark/memtier_benchmark -p 6379 -c 10 -t 4 -d 32 --pipeline 1 --key-pattern R:R --key-maximum 10000000 --hide-histogram --ratio 1:1 -n 5000",
+    "stdout": "4         Threads\n10        Connections per thread\n5000      Requests per client\n\n\nALL STATS\n============================================================================================================================\nType         Ops/sec     Hits/sec   Misses/sec    Avg. Latency     p50 Latency     p99 Latency   p99.9 Latency       KB/sec \n----------------------------------------------------------------------------------------------------------------------------\nSets        50080.88          ---          ---         0.20116         0.17500         0.63100         1.17500      3858.50 \nGets        50080.88     50080.88         0.00         0.20044         0.17500         0.63100         1.16700      3613.34 \nWaits           0.00          ---          ---             ---             ---             ---             ---          --- \nTotals     100161.76     50080.88         0.00         0.20080         0.17500         0.63100         1.17500      7471.83 \n",
+    "stderr": "Writing results to stdout\n[RUN #1] Preparing benchmark client...\n[RUN #1] Launching threads now...\n[RUN #1 98%,   0 secs]  4 threads:      196266 ops,  199824 (avg:  199824) ops/sec, 14.56MB/sec (avg: 14.56MB/sec),  0.20 (avg:  0.20) msec latency\n[RUN #1 100%,   1 secs]  0 threads:      200000 ops,  199824 (avg:  199099) ops/sec, 14.56MB/sec (avg: 14.50MB/sec),  0.20 (avg:  0.20) msec latency\n\n",
+    "return_code": 0,
+    "duration": 2.0189502239227295,
+    "metrics": {
+      "sets_ops_per_second": 50080.88,
+      "sets_avg_latency_ms": 0.20116,
+      "sets_p50_latency_ms": 0.175,
+      "sets_p99_latency_ms": 0.631,
+      "gets_ops_per_second": 50080.88,
+      "gets_avg_latency_ms": 0.20044,
+      "gets_p50_latency_ms": 0.175,
+      "gets_p99_latency_ms": 0.631
+    },
+    "timestamp": "2025-08-19T17:01:44.682725"
+  },
+  {
+    "test_name": "pipeline_16",
+    "command": "./memtier_benchmark/memtier_benchmark -p 6379 -c 10 -t 4 -d 32 --pipeline 16 --key-pattern R:R --key-maximum 10000000 --ratio 1:10 -n 5000 --hide-histogram",
+    "stdout": "4         Threads\n10        Connections per thread\n5000      Requests per client\n\n\nALL STATS\n============================================================================================================================\nType         Ops/sec     Hits/sec   Misses/sec    Avg. Latency     p50 Latency     p99 Latency   p99.9 Latency       KB/sec \n----------------------------------------------------------------------------------------------------------------------------\nSets        90043.29          ---          ---         0.65315         0.61500         1.55900         1.91900      6932.01 \nGets       899443.41    899443.41         0.00         0.65235         0.61500         1.55100         1.91900     64905.30 \nWaits           0.00          ---          ---             ---             ---             ---             ---          --- \nTotals     989486.70    899443.41         0.00         0.65243         0.61500         1.55100         1.91900     71837.31 \n",
+    "stderr": "Writing results to stdout\n[RUN #1] Preparing benchmark client...\n[RUN #1] Launching threads now...\n[RUN #1 100%,   0 secs]  0 threads:      200000 ops,       0 (avg:  972351) ops/sec, 0.00KB/sec (avg: 68.94MB/sec),  0.00 (avg:  0.65) msec latency\n\n",
+    "return_code": 0,
+    "duration": 1.0243568420410156,
+    "metrics": {
+      "sets_ops_per_second": 90043.29,
+      "sets_avg_latency_ms": 0.65315,
+      "sets_p50_latency_ms": 0.615,
+      "sets_p99_latency_ms": 1.559,
+      "gets_ops_per_second": 899443.41,
+      "gets_avg_latency_ms": 0.65235,
+      "gets_p50_latency_ms": 0.615,
+      "gets_p99_latency_ms": 1.551
+    },
+    "timestamp": "2025-08-19T17:01:46.707344"
+  },
+  {
+    "test_name": "pipeline_32",
+    "command": "./memtier_benchmark/memtier_benchmark -p 6379 -c 10 -t 4 -d 32 --pipeline 32 --key-pattern R:R --key-maximum 10000000 --ratio 1:10 -n 5000 --hide-histogram",
+    "stdout": "4         Threads\n10        Connections per thread\n5000      Requests per client\n\n\nALL STATS\n============================================================================================================================\nType         Ops/sec     Hits/sec   Misses/sec    Avg. Latency     p50 Latency     p99 Latency   p99.9 Latency       KB/sec \n----------------------------------------------------------------------------------------------------------------------------\nSets       128000.45          ---          ---         0.88028         0.82300         2.27100         3.53500      9854.16 \nGets      1278597.90   1278597.90         0.00         0.87906         0.82300         2.25500         3.53500     92265.71 \nWaits           0.00          ---          ---             ---             ---             ---             ---          --- \nTotals    1406598.35   1278597.90         0.00         0.87917         0.82300         2.25500         3.53500    102119.86 \n",
+    "stderr": "Writing results to stdout\n[RUN #1] Preparing benchmark client...\n[RUN #1] Launching threads now...\n[RUN #1 100%,   0 secs]  0 threads:      200000 ops,       0 (avg: 1435533) ops/sec, 0.00KB/sec (avg: 101.78MB/sec),  0.00 (avg:  0.88) msec latency\n\n",
+    "return_code": 0,
+    "duration": 1.0252187252044678,
+    "metrics": {
+      "sets_ops_per_second": 128000.45,
+      "sets_avg_latency_ms": 0.88028,
+      "sets_p50_latency_ms": 0.823,
+      "sets_p99_latency_ms": 2.271,
+      "gets_ops_per_second": 1278597.9,
+      "gets_avg_latency_ms": 0.87906,
+      "gets_p50_latency_ms": 0.823,
+      "gets_p99_latency_ms": 2.255
+    },
+    "timestamp": "2025-08-19T17:01:48.732872"
+  },
+  {
+    "test_name": "large_values",
+    "command": "./memtier_benchmark/memtier_benchmark -p 6379 -c 10 -t 4 -d 1024 --pipeline 1 --key-pattern R:R --key-maximum 10000000 --ratio 1:10 -n 500 --hide-histogram",
+    "stdout": "4         Threads\n10        Connections per thread\n500       Requests per client\n\n\nALL STATS\n============================================================================================================================\nType         Ops/sec     Hits/sec   Misses/sec    Avg. Latency     p50 Latency     p99 Latency   p99.9 Latency       KB/sec \n----------------------------------------------------------------------------------------------------------------------------\nSets        20548.33          ---          ---         0.19495         0.15900         1.08700         1.48700     21526.36 \nGets       202803.06    202803.06         0.00         0.17329         0.15900         0.48700         0.73500     14638.24 \nWaits           0.00          ---          ---             ---             ---             ---             ---          --- \nTotals     223351.39    202803.06         0.00         0.17528         0.15900         0.50300         1.06300     36164.60 \n",
+    "stderr": "Writing results to stdout\n[RUN #1] Preparing benchmark client...\n[RUN #1] Launching threads now...\n[RUN #1 100%,   0 secs]  0 threads:       20000 ops,       0 (avg:  228221) ops/sec, 0.00KB/sec (avg: 36.09MB/sec),  0.00 (avg:  0.17) msec latency\n\n",
+    "return_code": 0,
+    "duration": 1.0220911502838135,
+    "metrics": {
+      "sets_ops_per_second": 20548.33,
+      "sets_avg_latency_ms": 0.19495,
+      "sets_p50_latency_ms": 0.159,
+      "sets_p99_latency_ms": 1.087,
+      "gets_ops_per_second": 202803.06,
+      "gets_avg_latency_ms": 0.17329,
+      "gets_p50_latency_ms": 0.159,
+      "gets_p99_latency_ms": 0.487
+    },
+    "timestamp": "2025-08-19T17:01:50.755241"
+  },
+  {
+    "test_name": "sequential_pattern",
+    "command": "./memtier_benchmark/memtier_benchmark -p 6379 -c 10 -t 4 -d 32 --pipeline 1 --key-pattern S:S --key-maximum 10000000 --ratio 1:10 -n 5000 --hide-histogram",
+    "stdout": "4         Threads\n10        Connections per thread\n5000      Requests per client\n\n\nALL STATS\n============================================================================================================================\nType         Ops/sec     Hits/sec   Misses/sec    Avg. Latency     p50 Latency     p99 Latency   p99.9 Latency       KB/sec \n----------------------------------------------------------------------------------------------------------------------------\nSets        19747.58          ---          ---         0.18794         0.16700         0.60700         1.20700      1441.27 \nGets       197258.78       217.01    197041.77         0.18579         0.15900         0.61500         1.12700      7087.25 \nWaits           0.00          ---          ---             ---             ---             ---             ---          --- \nTotals     217006.35       217.01    197041.77         0.18598         0.15900         0.61500         1.12700      8528.52 \n",
+    "stderr": "Writing results to stdout\n[RUN #1] Preparing benchmark client...\n[RUN #1] Launching threads now...\n[RUN #1 100%,   0 secs]  2 threads:      199674 ops,       0 (avg:  214872) ops/sec, 0.00KB/sec (avg: 8.25MB/sec),  0.00 (avg:  0.19) msec latency\n[RUN #1 100%,   0 secs]  0 threads:      200000 ops,       0 (avg:  215061) ops/sec, 0.00KB/sec (avg: 8.25MB/sec),  0.00 (avg:  0.19) msec latency\n\n",
+    "return_code": 0,
+    "duration": 2.0220887660980225,
+    "metrics": {
+      "sets_ops_per_second": 19747.58,
+      "sets_avg_latency_ms": 0.18794,
+      "sets_p50_latency_ms": 0.167,
+      "sets_p99_latency_ms": 0.607,
+      "gets_ops_per_second": 197258.78,
+      "gets_avg_latency_ms": 0.18579,
+      "gets_p50_latency_ms": 0.159,
+      "gets_p99_latency_ms": 0.615
+    },
+    "timestamp": "2025-08-19T17:01:53.777616"
+  },
+  {
+    "test_name": "gaussian_pattern",
+    "command": "./memtier_benchmark/memtier_benchmark -p 6379 -c 10 -t 4 -d 32 --pipeline 1 --key-pattern G:G --key-maximum 10000000 --ratio 1:10 -n 5000 --hide-histogram",
+    "stdout": "4         Threads\n10        Connections per thread\n5000      Requests per client\n\n\nALL STATS\n============================================================================================================================\nType         Ops/sec     Hits/sec   Misses/sec    Avg. Latency     p50 Latency     p99 Latency   p99.9 Latency       KB/sec \n----------------------------------------------------------------------------------------------------------------------------\nSets        19055.68          ---          ---         0.19307         0.17500         0.55100         1.06300      1470.07 \nGets       190347.36        83.76    190263.60         0.19107         0.17500         0.53500         0.94300      7437.20 \nWaits           0.00          ---          ---             ---             ---             ---             ---          --- \nTotals     209403.03        83.76    190263.60         0.19126         0.17500         0.53500         0.95900      8907.28 \n",
+    "stderr": "Writing results to stdout\n[RUN #1] Preparing benchmark client...\n[RUN #1] Launching threads now...\n[RUN #1 100%,   0 secs]  0 threads:      200000 ops,       0 (avg:  209135) ops/sec, 0.00KB/sec (avg: 8.69MB/sec),  0.00 (avg:  0.19) msec latency\n\n",
+    "return_code": 0,
+    "duration": 1.01967453956604,
+    "metrics": {
+      "sets_ops_per_second": 19055.68,
+      "sets_avg_latency_ms": 0.19307,
+      "sets_p50_latency_ms": 0.175,
+      "sets_p99_latency_ms": 0.551,
+      "gets_ops_per_second": 190347.36,
+      "gets_avg_latency_ms": 0.19107,
+      "gets_p50_latency_ms": 0.175,
+      "gets_p99_latency_ms": 0.535
+    },
+    "timestamp": "2025-08-19T17:01:55.797574"
+  }
+]

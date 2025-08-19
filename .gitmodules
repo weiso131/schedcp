@@ -22,3 +22,6 @@
 [submodule "workloads/redis/redis-src"]
 	path = workloads/redis/redis-src
 	url = https://github.com/redis/redis.git
+[submodule "workloads/redis/memtier_benchmark"]
+	path = workloads/redis/memtier_benchmark
+	url = https://github.com/RedisLabs/memtier_benchmark.git
