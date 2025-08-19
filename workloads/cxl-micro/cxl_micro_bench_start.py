@@ -57,6 +57,7 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             "timeout": 300,
             "read_ratio": 0.5,  # 50% readers, 50% writers
             "duration": 1,
+            "random": True,
         }
         
         # Environment setup
@@ -81,6 +82,13 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             "--read-ratio", str(self.test_params["read_ratio"]),
             "--json"  # Use JSON output for easier parsing
         ]
+        
+        # Add access pattern flag
+        if self.test_params.get("random", True):
+            cmd.append("--random")
+        else:
+            cmd.append("--sequential")
+        
         return cmd
     
     def _parse_bandwidth_output(self, output: str) -> dict:
@@ -392,7 +400,7 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
                             'read_ratio': read_ratio,
                             'bandwidth_mbps': 0,
                             'execution_time': 0,
-                            'array_size_gb': array_size / (1024**3),
+                            'array_size_gb': self.test_params["array_size"] / (1024**3),
                             'duration': self.test_params["duration"]
                         })
                     
@@ -519,7 +527,7 @@ def main():
                        help="Directory to store results")
     parser.add_argument("--production-only", action="store_true", 
                        help="Test only production schedulers", default=False)
-    parser.add_argument("--threads", type=int, default=128, 
+    parser.add_argument("--threads", type=int, default=172, 
                        help="Number of threads for testing")
     parser.add_argument("--array-size", type=int, default=64*1024*1024*1024, 
                        help="Array size in bytes (default 64GB)")
@@ -535,6 +543,8 @@ def main():
                        help="Run parameter sweep comparing all schedulers")
     parser.add_argument("--scheduler", type=str, default=None,
                        help="Test specific scheduler only")
+    parser.add_argument("--random", "-R", action="store_true", default=True,
+                       help="Use random memory access pattern instead of sequential")
     
     args = parser.parse_args()
     
@@ -553,7 +563,8 @@ def main():
         duration=args.duration,
         iterations=args.iterations,
         timeout=args.timeout,
-        read_ratio=args.read_ratio
+        read_ratio=args.read_ratio,
+        random=args.random
     )
     
     # Check if binary exists

@@ -245,6 +245,7 @@ class CXLPerfBandwidthTester:
             "duration": 10,
             "read_ratio": 0.5,
             "timeout": 300,
+            "random": True,
         }
         
         # Environment setup
@@ -281,6 +282,13 @@ class CXLPerfBandwidthTester:
             "--read-ratio", str(self.test_params["read_ratio"]),
             "--json"  # Use JSON output for easier parsing
         ]
+        
+        # Add access pattern flag
+        if self.test_params.get("random", False):
+            cmd.append("--random")
+        else:
+            cmd.append("--sequential")
+        
         return cmd
     
     def _parse_combined_output(self, stdout: str, stderr: str) -> Dict:
@@ -732,6 +740,8 @@ def main():
                        help="Print raw data output instead of summary")
     parser.add_argument("--parameter-sweep", action="store_true", 
                        help="Run parameter sweep across threads, read ratios, and buffer sizes")
+    parser.add_argument("--random", "-R", action="store_true", default=True,
+                       help="Use random memory access pattern instead of sequential")
     
     args = parser.parse_args()
     
@@ -749,7 +759,8 @@ def main():
         buffer_size=args.buffer_size,
         duration=args.duration,
         timeout=args.timeout,
-        read_ratio=args.read_ratio
+        read_ratio=args.read_ratio,
+        random=args.random
     )
     
     # Check if binary exists
