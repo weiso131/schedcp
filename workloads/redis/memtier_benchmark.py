@@ -333,8 +333,8 @@ class MemtierBenchmark:
                 "args": base_args + ["--ratio", "1:10", "-n", str(requests)]
             },
             {
-                "name": "mixed_1_1",
-                "args": base_args + ["--ratio", "1:1", "-n", str(requests)]
+                "name": "mixed_10_1",
+                "args": base_args + ["--ratio", "10:1", "-n", str(requests)]
             },
             {
                 "name": "pipeline_16",
@@ -360,7 +360,7 @@ class MemtierBenchmark:
             {
                 "name": "advanced_gaussian_random",
                 "args": ["-p", "6379", "-c", str(clients), "-t", str(threads),
-                        "--random-data", "--data-size-range", "4-204", "--data-size-pattern", "S",
+                        "--random-data", "--data-size-range", "4-2048", "--data-size-pattern", "S",
                         "--key-minimum", "200", "--key-maximum", "400", "--key-pattern", "G:G",
                         "--key-stddev", "10", "--key-median", "300",
                         "--pipeline", str(pipeline), "--ratio", ratio,

@@ -393,6 +393,10 @@ class MemtierBenchmarkTester(SchedulerBenchmark):
             "latency_p50": [],
             "latency_p99": [],
             "latency_avg": [],
+            "gets_p50_latency": [],
+            "gets_p99_latency": [],
+            "sets_p50_latency": [],
+            "sets_p99_latency": [],
             "throughput_ops": [],
             "gets_ops": [],
             "sets_ops": [],
@@ -417,10 +421,16 @@ class MemtierBenchmarkTester(SchedulerBenchmark):
                 metrics["gets_ops"].append(test_metrics.get("gets_ops_per_second", 0))
                 metrics["sets_ops"].append(test_metrics.get("sets_ops_per_second", 0))
                 
-                # Extract latency metrics
+                # Extract overall latency metrics
                 metrics["latency_avg"].append(test_metrics.get("avg_latency_ms", 0))
                 metrics["latency_p50"].append(test_metrics.get("p50_latency_ms", 0))
                 metrics["latency_p99"].append(test_metrics.get("p99_latency_ms", 0))
+                
+                # Extract GET/SET specific latency metrics
+                metrics["gets_p50_latency"].append(test_metrics.get("gets_p50_latency_ms", 0))
+                metrics["gets_p99_latency"].append(test_metrics.get("gets_p99_latency_ms", 0))
+                metrics["sets_p50_latency"].append(test_metrics.get("sets_p50_latency_ms", 0))
+                metrics["sets_p99_latency"].append(test_metrics.get("sets_p99_latency_ms", 0))
         
         return metrics
     
@@ -503,7 +513,7 @@ class MemtierBenchmarkTester(SchedulerBenchmark):
         return results
     
     def save_results(self, results: dict):
-        """Save results to JSON file"""
+        """Save results to JSON and CSV files"""
         try:
             # Use a single file name without timestamp
             results_file = os.path.join(self.results_dir, "memtier_scheduler_results.json")
@@ -516,9 +526,78 @@ class MemtierBenchmarkTester(SchedulerBenchmark):
             
             print(f"[INFO] Results saved to {results_file}")
             print(f"Results saved to {results_file}")
+            
+            # Also save to CSV
+            self.save_results_to_csv(results)
         except Exception as e:
             print(f"[ERROR] Failed to save results: {e}")
             print(f"Error saving results: {e}")
+    
+    def save_results_to_csv(self, results: dict):
+        """Save results to CSV file with detailed metrics"""
+        csv_file = os.path.join(self.results_dir, "memtier_scheduler_results.csv")
+        
+        # Test cases order (1-6)
+        test_cases = ["mixed_1_10", "mixed_10_1", "pipeline_16", 
+                      "sequential_pattern", "gaussian_pattern", "advanced_gaussian_random"]
+        
+        csv_data = []
+        
+        for scheduler_name, result in results.items():
+            if "error" in result:
+                continue
+                
+            test_results = result.get("results", [])
+            
+            for idx, test_case in enumerate(test_cases, 1):
+                # Find the matching test result
+                test_data = None
+                for tr in test_results:
+                    if tr.get("test_name") == test_case:
+                        test_data = tr
+                        break
+                
+                if test_data and test_data.get("metrics"):
+                    metrics = test_data["metrics"]
+                    csv_data.append({
+                        'scheduler': scheduler_name,
+                        'test_number': idx,
+                        'test_case': test_case,
+                        'total_ops_per_sec': metrics.get("ops_per_second", 0),
+                        'total_p50_latency_ms': metrics.get("p50_latency_ms", 0),
+                        'total_p99_latency_ms': metrics.get("p99_latency_ms", 0),
+                        'gets_ops_per_sec': metrics.get("gets_ops_per_second", 0),
+                        'gets_p50_latency_ms': metrics.get("gets_p50_latency_ms", 0),
+                        'gets_p99_latency_ms': metrics.get("gets_p99_latency_ms", 0),
+                        'sets_ops_per_sec': metrics.get("sets_ops_per_second", 0),
+                        'sets_p50_latency_ms': metrics.get("sets_p50_latency_ms", 0),
+                        'sets_p99_latency_ms': metrics.get("sets_p99_latency_ms", 0),
+                        'avg_latency_ms': metrics.get("avg_latency_ms", 0),
+                        'bandwidth_kb_sec': metrics.get("bandwidth_kb_sec", 0)
+                    })
+                else:
+                    csv_data.append({
+                        'scheduler': scheduler_name,
+                        'test_number': idx,
+                        'test_case': test_case,
+                        'total_ops_per_sec': 0,
+                        'total_p50_latency_ms': 0,
+                        'total_p99_latency_ms': 0,
+                        'gets_ops_per_sec': 0,
+                        'gets_p50_latency_ms': 0,
+                        'gets_p99_latency_ms': 0,
+                        'sets_ops_per_sec': 0,
+                        'sets_p50_latency_ms': 0,
+                        'sets_p99_latency_ms': 0,
+                        'avg_latency_ms': 0,
+                        'bandwidth_kb_sec': 0
+                    })
+        
+        if csv_data:
+            df = pd.DataFrame(csv_data)
+            df.to_csv(csv_file, index=False)
+            print(f"[INFO] Results saved to CSV: {csv_file}")
+            print(f"Results saved to CSV: {csv_file}")
     
     def generate_performance_figures(self, results: dict):
         """Generate performance comparison figures"""
@@ -879,9 +958,9 @@ def main():
                        help="Number of requests per client")
     parser.add_argument("--data-size", type=int, default=32,
                        help="Data size in bytes")
-    parser.add_argument("--pipeline", type=int, default=1,
+    parser.add_argument("--pipeline", type=int, default=16,
                        help="Pipeline requests")
-    parser.add_argument("--ratio", default="1:10",
+    parser.add_argument("--ratio", default="1:1",
                        help="SET:GET ratio")
     parser.add_argument("--key-pattern", default="R:R",
                        help="Key pattern (R:R for random, S:S for sequential, G:G for gaussian)")
