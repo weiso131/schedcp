@@ -558,7 +558,7 @@ def main():
                        help="Run parameter sweep comparing all schedulers")
     parser.add_argument("--scheduler", type=str, default=None,
                        help="Test specific scheduler only")
-    parser.add_argument("--random", "-R", action="store_true", default=False,
+    parser.add_argument("--random", "-R", action="store_true", default=True,
                        help="Use random memory access pattern instead of sequential")
     
     args = parser.parse_args()
