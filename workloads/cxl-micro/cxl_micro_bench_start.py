@@ -546,9 +546,9 @@ def main():
                        help="Number of threads for testing")
     parser.add_argument("--array-size", type=int, default=32*1024*1024*1024, 
                        help="Array size in bytes (default 32GB)")
-    parser.add_argument("--duration", type=int, default=20, 
+    parser.add_argument("--duration", type=int, default=10, 
                        help="Duration in seconds (default 1)")
-    parser.add_argument("--iterations", type=int, default=3, 
+    parser.add_argument("--iterations", type=int, default=1, 
                        help="Number of iterations per test")
     parser.add_argument("--read-ratio", type=float, default=0.5,
                        help="Ratio of readers (0.0-1.0, default: 0.5)")

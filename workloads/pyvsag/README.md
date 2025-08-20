@@ -1,5 +1,7 @@
 # PyVSAG ANN Benchmark
 
+numactl --interleave=3 python /root/yunwei37/ai-os/workloads/pyvsag/pyvsag_bench_start.py
+
 This benchmark tests different Linux schedulers with PyVSAG (VSAG Python bindings) to compare Approximate Nearest Neighbor (ANN) search performance.
 
 ## Overview

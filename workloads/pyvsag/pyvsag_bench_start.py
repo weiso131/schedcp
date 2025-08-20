@@ -18,9 +18,9 @@ import argparse
 import traceback
 
 # Add the scheduler module to the path
-sys.path.insert(0, '../../')
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'scheduler')))
 
-from scheduler import SchedulerRunner, SchedulerBenchmark
+from scheduler_runner import SchedulerRunner, SchedulerBenchmark
 
 # Try to import pyvsag and numpy
 try:
@@ -275,14 +275,14 @@ import traceback
 import time
 
 # Add the scheduler module to the path
-sys.path.insert(0, '{os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}')
+sys.path.append('{os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "scheduler"))}')
 
 try:
     import pyvsag
     import numpy as np
     
     # Import the class directly by recreating it here
-    from scheduler import SchedulerRunner, SchedulerBenchmark
+    from scheduler_runner import SchedulerRunner, SchedulerBenchmark
     
     class PyVSAGBenchmarkTester(SchedulerBenchmark):
         def __init__(self, results_dir="results", scheduler_runner=None):
@@ -450,10 +450,24 @@ except Exception as e:
             
             # Parse JSON result
             try:
-                result = json.loads(stdout.strip())
-                if "error" in result:
+                # Extract JSON from output (might have log messages before it)
+                lines = stdout.strip().split('\n')
+                json_str = None
+                for line in lines:
+                    if line.startswith('{'):
+                        json_str = line
+                        break
+                
+                if json_str:
+                    result = json.loads(json_str)
+                    if "error" in result:
+                        return result
                     return result
-                return result
+                else:
+                    return {
+                        "error": f"No JSON found in output: {stdout}",
+                        "raw_output": stdout
+                    }
             except json.JSONDecodeError:
                 return {
                     "error": f"Failed to parse output: {stdout}",
