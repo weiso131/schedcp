@@ -1,5 +1,57 @@
 
 ================================================================================
+THREAD SCALING ANALYSIS (64GB Buffer)
+================================================================================
+
+NUMA Node 0 (DDR5) (interleave=0)
+--------------------------------------------------
+  Thread counts tested: [np.int64(4), np.int64(16), np.int64(64), np.int64(172), np.int64(256)]
+    4 threads: Avg= 17714.8 MB/s, Max= 18498.0 MB/s @ read_ratio=1.00
+   16 threads: Avg= 66259.0 MB/s, Max= 72407.9 MB/s @ read_ratio=1.00
+   64 threads: Avg=172187.3 MB/s, Max=198756.0 MB/s @ read_ratio=0.45
+  172 threads: Avg=166710.8 MB/s, Max=188843.0 MB/s @ read_ratio=0.45
+  256 threads: Avg=168739.8 MB/s, Max=190895.0 MB/s @ read_ratio=0.45
+
+  Scaling Efficiency (relative to 4 threads):
+     16 threads: 97.9% efficiency (actual: 72407.9 MB/s, ideal: 73992.0 MB/s)
+     64 threads: 67.2% efficiency (actual: 198756.0 MB/s, ideal: 295968.0 MB/s)
+    172 threads: 23.7% efficiency (actual: 188843.0 MB/s, ideal: 795414.0 MB/s)
+    256 threads: 16.1% efficiency (actual: 190895.0 MB/s, ideal: 1183872.0 MB/s)
+  Bandwidth saturation point: ~64 threads
+
+NUMA Node 2 (CXL 256GB) (interleave=2)
+--------------------------------------------------
+  Thread counts tested: [np.int64(4), np.int64(16), np.int64(64), np.int64(172), np.int64(256)]
+    4 threads: Avg= 10031.1 MB/s, Max= 10732.4 MB/s @ read_ratio=1.00
+   16 threads: Avg= 22747.2 MB/s, Max= 24175.0 MB/s @ read_ratio=0.15
+   64 threads: Avg= 25514.3 MB/s, Max= 30596.0 MB/s @ read_ratio=0.35
+  172 threads: Avg= 27815.6 MB/s, Max= 34437.8 MB/s @ read_ratio=0.50
+  256 threads: Avg= 27613.2 MB/s, Max= 34527.1 MB/s @ read_ratio=0.55
+
+  Scaling Efficiency (relative to 4 threads):
+     16 threads: 56.3% efficiency (actual: 24175.0 MB/s, ideal: 42929.6 MB/s)
+     64 threads: 17.8% efficiency (actual: 30596.0 MB/s, ideal: 171718.4 MB/s)
+    172 threads: 7.5% efficiency (actual: 34437.8 MB/s, ideal: 461493.2 MB/s)
+    256 threads: 5.0% efficiency (actual: 34527.1 MB/s, ideal: 686873.6 MB/s)
+  Bandwidth saturation point: ~172 threads
+
+NUMA Node 3 (CXL 512GB) (interleave=3)
+--------------------------------------------------
+  Thread counts tested: [np.int64(4), np.int64(16), np.int64(64), np.int64(172), np.int64(256)]
+    4 threads: Avg= 10376.7 MB/s, Max= 10895.4 MB/s @ read_ratio=1.00
+   16 threads: Avg= 37045.0 MB/s, Max= 40792.4 MB/s @ read_ratio=1.00
+   64 threads: Avg= 46904.7 MB/s, Max= 52974.9 MB/s @ read_ratio=0.45
+  172 threads: Avg= 48637.9 MB/s, Max= 57756.8 MB/s @ read_ratio=0.55
+  256 threads: Avg= 48467.5 MB/s, Max= 56402.1 MB/s @ read_ratio=0.55
+
+  Scaling Efficiency (relative to 4 threads):
+     16 threads: 93.6% efficiency (actual: 40792.4 MB/s, ideal: 43581.6 MB/s)
+     64 threads: 30.4% efficiency (actual: 52974.9 MB/s, ideal: 174326.4 MB/s)
+    172 threads: 12.3% efficiency (actual: 57756.8 MB/s, ideal: 468502.2 MB/s)
+    256 threads: 8.1% efficiency (actual: 56402.1 MB/s, ideal: 697305.6 MB/s)
+  Bandwidth saturation point: ~172 threads
+
+================================================================================
 DETAILED STATISTICS (172 Threads, 64GB Buffer)
 ================================================================================
 

@@ -56,7 +56,7 @@ class LlamaBenchmarkTester(SchedulerBenchmark):
             "batch_size": 512,
             "repetitions": 3,
             "timeout": 300,
-            "n_samples": 1,
+            "n_samples": 50,
         }
         
         # Environment setup - change to the directory containing llama-bench
@@ -485,11 +485,11 @@ def main():
                        help="Directory to store results")
     parser.add_argument("--production-only", action="store_true", 
                        help="Test only production schedulers")
-    parser.add_argument("--threads", type=int, default=86, 
+    parser.add_argument("--threads", type=int, default=172, 
                        help="Number of threads for testing")
-    parser.add_argument("--batch-size", type=int, default=16, 
+    parser.add_argument("--batch-size", type=int, default=4, 
                        help="Batch size for testing")
-    parser.add_argument("--repetitions", type=int, default=3, 
+    parser.add_argument("--repetitions", type=int, default=1, 
                        help="Number of repetitions per test")
     parser.add_argument("--timeout", type=int, default=30000, 
                        help="Timeout in seconds")

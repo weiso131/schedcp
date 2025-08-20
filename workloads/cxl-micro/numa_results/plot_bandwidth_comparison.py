@@ -288,6 +288,87 @@ def print_summary_statistics():
         {'file': 'cxl_perf_parameter_sweep_numactl3.csv', 'label': 'NUMA Node 3 (CXL 512GB)', 'interleave': '3'}
     ]
     
+    # First print thread scaling analysis
+    print("\n" + "="*80)
+    print("THREAD SCALING ANALYSIS (64GB Buffer)")
+    print("="*80)
+    
+    for config in numa_configs:
+        if not os.path.exists(config['file']):
+            continue
+        
+        # Load full data
+        df = pd.read_csv(config['file'])
+        # Filter for 64GB buffer
+        df_filtered = df[df['buffer_size_gb'] == 64.0].copy()
+        
+        if df_filtered.empty:
+            print(f"\n{config['label']}: No data for 64GB buffer")
+            continue
+        
+        print(f"\n{config['label']} (interleave={config['interleave']})")
+        print("-" * 50)
+        
+        # Use appropriate bandwidth column
+        bandwidth_col = 'app_total_bandwidth_mbps'
+        if bandwidth_col not in df_filtered.columns:
+            if 'bandwidth_mbps' in df_filtered.columns:
+                bandwidth_col = 'bandwidth_mbps'
+            elif 'total_bandwidth_mbps' in df_filtered.columns:
+                bandwidth_col = 'total_bandwidth_mbps'
+            else:
+                continue
+        
+        # Get unique thread counts
+        thread_counts = sorted(df_filtered['threads'].unique())
+        print(f"  Thread counts tested: {thread_counts}")
+        
+        # Analyze bandwidth scaling with threads
+        for threads in thread_counts:
+            df_thread = df_filtered[df_filtered['threads'] == threads]
+            avg_bw = df_thread[bandwidth_col].mean()
+            max_bw = df_thread[bandwidth_col].max()
+            
+            # Find optimal read ratio for this thread count
+            optimal_row = df_thread.loc[df_thread[bandwidth_col].idxmax()]
+            optimal_ratio = optimal_row['read_ratio']
+            
+            print(f"  {threads:3d} threads: Avg={avg_bw:8.1f} MB/s, Max={max_bw:8.1f} MB/s @ read_ratio={optimal_ratio:.2f}")
+        
+        # Calculate scaling efficiency
+        if len(thread_counts) > 1:
+            base_threads = thread_counts[0]
+            base_max = df_filtered[df_filtered['threads'] == base_threads][bandwidth_col].max()
+            
+            print(f"\n  Scaling Efficiency (relative to {base_threads} threads):")
+            for threads in thread_counts[1:]:
+                thread_max = df_filtered[df_filtered['threads'] == threads][bandwidth_col].max()
+                scaling_factor = threads / base_threads
+                ideal_bw = base_max * scaling_factor
+                efficiency = (thread_max / ideal_bw) * 100 if ideal_bw > 0 else 0
+                print(f"    {threads:3d} threads: {efficiency:.1f}% efficiency (actual: {thread_max:.1f} MB/s, ideal: {ideal_bw:.1f} MB/s)")
+        
+        # Find saturation point (where adding threads doesn't improve bandwidth significantly)
+        if len(thread_counts) > 2:
+            max_bws = []
+            for threads in thread_counts:
+                df_thread = df_filtered[df_filtered['threads'] == threads]
+                max_bws.append(df_thread[bandwidth_col].max())
+            
+            # Find where bandwidth increase is less than 5%
+            saturation_point = None
+            for i in range(1, len(max_bws)):
+                if i > 0:
+                    improvement = ((max_bws[i] - max_bws[i-1]) / max_bws[i-1]) * 100
+                    if improvement < 5:
+                        saturation_point = thread_counts[i-1]
+                        break
+            
+            if saturation_point:
+                print(f"  Bandwidth saturation point: ~{saturation_point} threads")
+            else:
+                print(f"  Bandwidth continues to scale beyond {thread_counts[-1]} threads")
+    
     # Print detailed statistics for 172 threads, 64GB
     print("\n" + "="*80)
     print("DETAILED STATISTICS (172 Threads, 64GB Buffer)")
