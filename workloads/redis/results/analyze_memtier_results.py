@@ -181,7 +181,7 @@ def create_scx_nest_comparison(df):
     test_labels = ['Read Heavy', 'Write Heavy', 'Balance Pipeline', 'Balance Sequential', 'Balance Random']
     
     # Create figure with 2 subplots (throughput and latency)
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 5))
     
     x = np.arange(len(test_cases))
     width = 0.35
