@@ -353,8 +353,8 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             read_ratios: List of read ratios to test (0.0-1.0)
             production_only: Only test production-ready schedulers if schedulers is None
         """
-        thread_counts = thread_counts or [172]
-        read_ratios = read_ratios or [0, 0.15, 0.25, 0.35, 0.45, 0.5, 0.55, 0.65, 0.75, 0.85, 0.95, 1]
+        thread_counts = thread_counts or [256]
+        read_ratios = read_ratios or [0, 0.25, 0.5, 0.75, 1]
         
         # Get schedulers to test
         if schedulers is None:
@@ -542,10 +542,10 @@ def main():
                        help="Directory to store results")
     parser.add_argument("--production-only", action="store_true", 
                        help="Test only production schedulers", default=False)
-    parser.add_argument("--threads", type=int, default=172, 
+    parser.add_argument("--threads", type=int, default=256, 
                        help="Number of threads for testing")
-    parser.add_argument("--array-size", type=int, default=32*1024*1024*1024, 
-                       help="Array size in bytes (default 32GB)")
+    parser.add_argument("--array-size", type=int, default=16*1024*1024*1024, 
+                       help="Array size in bytes (default 16GB)")
     parser.add_argument("--duration", type=int, default=10, 
                        help="Duration in seconds (default 1)")
     parser.add_argument("--iterations", type=int, default=1, 

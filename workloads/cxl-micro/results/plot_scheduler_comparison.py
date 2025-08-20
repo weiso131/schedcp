@@ -7,13 +7,6 @@ import math
 # Set style for better-looking plots
 plt.style.use('seaborn-v0_8-darkgrid')
 
-# Read CSV files
-random_df = pd.read_csv('/root/yunwei37/ai-os/workloads/cxl-micro/results/parameter_sweep_multi_schedulers_numactl3_random_32g_172t.csv')
-seq_df = pd.read_csv('/root/yunwei37/ai-os/workloads/cxl-micro/results/parameter_sweep_multi_schedulers_numactl3_seq_32g_172t.csv')
-
-# Get all unique schedulers (excluding default)
-schedulers = sorted([s for s in random_df['scheduler'].unique() if s != 'default'])
-
 # Function to create comparison plots
 def create_comparison_figure(df, access_type, output_file):
     # Get default scheduler data
@@ -242,13 +235,30 @@ def create_random_vs_seq_comparison(random_df, seq_df, scheduler='default'):
     
     return report_lines
 
+# Read CSV files
+seq_df = pd.read_csv('/root/yunwei37/ai-os/workloads/cxl-micro/results/parameter_sweep_multi_schedulers_numactl3_seq_32g_172t.csv')
+
+
+# Get all unique schedulers (excluding default)
+schedulers = sorted([s for s in seq_df['scheduler'].unique() if s != 'default'])
+
+
 # Create sequential access comparison figure
 create_comparison_figure(seq_df, 'Sequential', 
                         '/root/yunwei37/ai-os/workloads/cxl-micro/results/sequential_schedulers_comparison.pdf')
 
+random_df = pd.read_csv('/root/yunwei37/ai-os/workloads/cxl-micro/results/parameter_sweep_multi_schedulers_numactl3_random_32g_172t.csv')
+
 # Create random access comparison figure
 create_comparison_figure(random_df, 'Random', 
                         '/root/yunwei37/ai-os/workloads/cxl-micro/results/random_schedulers_comparison.pdf')
+
+
+raw_df = pd.read_csv('/root/yunwei37/ai-os/workloads/cxl-micro/results/parameter_sweep_multi_schedulers.csv')
+
+create_comparison_figure(raw_df, 'Raw', 
+                        '/root/yunwei37/ai-os/workloads/cxl-micro/results/raw_schedulers_comparison.pdf')
+
 
 # Create random vs sequential comparison for default scheduler
 report = create_random_vs_seq_comparison(random_df, seq_df, 'default')
