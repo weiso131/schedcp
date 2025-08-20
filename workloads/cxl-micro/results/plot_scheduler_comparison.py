@@ -254,11 +254,83 @@ create_comparison_figure(random_df, 'Random',
                         '/root/yunwei37/ai-os/workloads/cxl-micro/results/random_schedulers_comparison.pdf')
 
 
-raw_df = pd.read_csv('/root/yunwei37/ai-os/workloads/cxl-micro/results/parameter_sweep_multi_schedulers.csv')
+# Comment out raw_df processing
+# raw_df = seq_df  # Using sequential data for raw comparison
+# create_comparison_figure(raw_df, 'Raw', 
+#                         '/root/yunwei37/ai-os/workloads/cxl-micro/results/raw_schedulers_comparison.pdf')
 
-create_comparison_figure(raw_df, 'Raw', 
-                        '/root/yunwei37/ai-os/workloads/cxl-micro/results/raw_schedulers_comparison.pdf')
+# Load the 16GB 256 threads random data
+random_16g_df = pd.read_csv('/root/yunwei37/ai-os/workloads/cxl-micro/results/parameter_sweep_multi_schedulers_numactl3_random_16g_256t.csv')
 
+def create_rustland_vs_default_comparison(seq_df, random_16g_df):
+    """Create comparison plot of scx_rustland vs default with sequential and random as subplots"""
+    
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+    
+    # Subplot 1: Sequential Access
+    ax = axes[0]
+    
+    # Get data for sequential access
+    seq_default = seq_df[seq_df['scheduler'] == 'default'].copy().sort_values('read_ratio')
+    seq_rustland = seq_df[seq_df['scheduler'] == 'scx_rustland'].copy().sort_values('read_ratio')
+    
+    # Convert read_ratio to percentage
+    x_default = seq_default['read_ratio'] * 100
+    x_rustland = seq_rustland['read_ratio'] * 100
+    
+    # Plot sequential access
+    ax.plot(x_default, seq_default['bandwidth_mbps'], 'o-', 
+            label='default', linewidth=2.5, markersize=10, color='tab:blue')
+    ax.plot(x_rustland, seq_rustland['bandwidth_mbps'], 's-', 
+            label='scx_rustland', linewidth=2.5, markersize=10, color='tab:orange')
+    
+    ax.set_xlabel('Read Ratio (%)', fontsize=14)
+    ax.set_ylabel('Bandwidth (MB/s)', fontsize=14)
+    ax.set_title('Sequential Access (32GB, 172 threads)', fontsize=16, fontweight='bold')
+    ax.legend(fontsize=12, loc='best')
+    ax.grid(True, alpha=0.3)
+    ax.set_xlim(-5, 105)
+    ax.tick_params(labelsize=12)
+    
+    # Subplot 2: Random 16GB 256 threads Access
+    ax = axes[1]
+    
+    # Use random_16g_df for the second subplot
+    random16_default = random_16g_df[random_16g_df['scheduler'] == 'default'].copy().sort_values('read_ratio')
+    random16_rustland = random_16g_df[random_16g_df['scheduler'] == 'scx_rustland'].copy().sort_values('read_ratio')
+    
+    # Convert read_ratio to percentage
+    x_default = random16_default['read_ratio'] * 100
+    x_rustland = random16_rustland['read_ratio'] * 100
+    
+    # Plot random 16GB access
+    ax.plot(x_default, random16_default['bandwidth_mbps'], 'o-', 
+            label='default', linewidth=2.5, markersize=10, color='tab:blue')
+    ax.plot(x_rustland, random16_rustland['bandwidth_mbps'], 's-', 
+            label='scx_rustland', linewidth=2.5, markersize=10, color='tab:orange')
+    
+    ax.set_xlabel('Read Ratio (%)', fontsize=14)
+    ax.set_ylabel('Bandwidth (MB/s)', fontsize=14)
+    ax.set_title('Random Access (16GB, 256 threads)', fontsize=16, fontweight='bold')
+    ax.legend(fontsize=12, loc='best')
+    ax.grid(True, alpha=0.3)
+    ax.set_xlim(-5, 105)
+    ax.tick_params(labelsize=12)
+    
+    # Overall title
+    fig.suptitle('scx_rustland vs Default Scheduler: Bandwidth Comparison', 
+                 fontsize=18, fontweight='bold', y=1.02)
+    
+    plt.tight_layout()
+    
+    # Save as PDF
+    output_path = '/root/yunwei37/ai-os/workloads/cxl-micro/results/rustland_vs_default_comparison.pdf'
+    plt.savefig(output_path, format='pdf', dpi=300, bbox_inches='tight')
+    print(f"Figure saved to: {output_path}")
+    plt.close()
 
 # Create random vs sequential comparison for default scheduler
-report = create_random_vs_seq_comparison(random_df, seq_df, 'default')
+report = create_random_vs_seq_comparison(random_16g_df, seq_df, 'default')
+
+# Create scx_rustland vs default comparison
+create_rustland_vs_default_comparison(seq_df, random_16g_df)

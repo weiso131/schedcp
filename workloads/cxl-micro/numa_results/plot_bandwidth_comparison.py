@@ -537,6 +537,139 @@ def print_summary_statistics():
                 read_improvement = ((read_1[bandwidth_col].iloc[0] - min_bw) / min_bw) * 100
                 print(f"  100% Read Improvement from Min: {read_improvement:.1f}%")
 
+def plot_numactl_interleave_comparison():
+    """Create comparison plots for numactl interleave 0,1 and 2,3 configurations (fixed buffer size)"""
+    
+    # File paths for the two configurations
+    configs = [
+        {'file': 'cxl_perf_parameter_sweep_numactl01.csv', 'label': 'Interleave 0,1', 'title': 'NUMA Interleave 0,1'},
+        {'file': 'cxl_perf_parameter_sweep_numactl23.csv', 'label': 'Interleave 2,3', 'title': 'NUMA Interleave 2,3'}
+    ]
+    
+    # Check if files exist
+    for config in configs:
+        if not os.path.exists(config['file']):
+            print(f"Warning: File {config['file']} not found")
+            return
+    
+    # Create figure with two subplots
+    fig, axes = plt.subplots(1, 2, figsize=(18, 7))
+    fig.suptitle('Random Access Total Bandwidth vs Read Ratio (Buffer Size = 64GB)', fontsize=20, fontweight='bold')
+    
+    # Color palette for different thread counts
+    colors = plt.cm.tab10(np.linspace(0, 0.8, 10))
+    markers = ['o', 's', '^', 'D', 'v', '<', '>', 'p', '*', 'h']
+    
+    for idx, config in enumerate(configs):
+        ax = axes[idx]
+        
+        # Load data
+        df = pd.read_csv(config['file'])
+        # Filter for 64GB buffer
+        df_64gb = df[df['buffer_size_gb'] == 64.0].copy()
+        
+        if not df_64gb.empty:
+            thread_counts = sorted(df_64gb['threads'].unique())
+            
+            for i, threads in enumerate(thread_counts):
+                df_thread = df_64gb[df_64gb['threads'] == threads].sort_values('read_ratio')
+                ax.plot(df_thread['read_ratio'], 
+                       df_thread['app_total_bandwidth_mbps'],
+                       marker=markers[i % len(markers)],
+                       color=colors[i % len(colors)],
+                       linewidth=2,
+                       markersize=8,
+                       label=f'{threads} threads',
+                       alpha=0.8)
+            
+            ax.set_xlabel('Read Ratio', fontsize=14)
+            ax.set_ylabel('Total Bandwidth (MB/s)', fontsize=14)
+            ax.set_title(config['title'], fontsize=16)
+            ax.grid(True, alpha=0.3)
+            ax.legend(loc='best', fontsize=10)
+            ax.set_xlim(-0.05, 1.05)
+            ax.set_ylim(bottom=0)
+            ax.minorticks_on()
+            ax.grid(which='minor', alpha=0.1)
+        else:
+            ax.text(0.5, 0.5, f"No data for 64GB buffer size\nin {config['file']}", 
+                   ha='center', va='center', transform=ax.transAxes)
+            ax.set_title(config['title'], fontsize=16)
+    
+    plt.tight_layout()
+    
+    # Save figure
+    output_file = 'numa_interleave_01_vs_23_fixed_64gb_buffer.pdf'
+    plt.savefig(output_file, dpi=300, bbox_inches='tight')
+    print(f"Figure saved as {output_file}")
+
+def plot_numactl_interleave_detailed():
+    """Create detailed comparison plots for numactl interleave 0,1 and 2,3 configurations (fixed thread count)"""
+    
+    # File paths for the two configurations
+    configs = [
+        {'file': 'cxl_perf_parameter_sweep_numactl01.csv', 'label': 'Interleave 0,1', 'title': 'NUMA Interleave 0,1'},
+        {'file': 'cxl_perf_parameter_sweep_numactl23.csv', 'label': 'Interleave 2,3', 'title': 'NUMA Interleave 2,3'}
+    ]
+    
+    # Check if files exist
+    for config in configs:
+        if not os.path.exists(config['file']):
+            print(f"Warning: File {config['file']} not found")
+            return
+    
+    # Create figure with two subplots
+    fig, axes = plt.subplots(1, 2, figsize=(18, 7))
+    fig.suptitle('Random Access Total Bandwidth vs Read Ratio (Thread Count = 172)', fontsize=20, fontweight='bold')
+    
+    # Color palette for different buffer sizes
+    colors = plt.cm.viridis(np.linspace(0, 1, 10))
+    markers = ['o', 's', '^', 'D', 'v', '<', '>', 'p', '*', 'h']
+    
+    for idx, config in enumerate(configs):
+        ax = axes[idx]
+        
+        # Load data
+        df = pd.read_csv(config['file'])
+        # Filter for 172 threads
+        df_172t = df[df['threads'] == 172].copy()
+        
+        if not df_172t.empty:
+            buffer_sizes = sorted(df_172t['buffer_size_gb'].unique())
+            buffer_sizes = [size for size in buffer_sizes if 1 <= size <= 64]
+            
+            for i, size in enumerate(buffer_sizes):
+                df_size = df_172t[df_172t['buffer_size_gb'] == size].sort_values('read_ratio')
+                ax.plot(df_size['read_ratio'], 
+                       df_size['app_total_bandwidth_mbps'],
+                       marker=markers[i % len(markers)],
+                       color=colors[i % len(colors)],
+                       linewidth=2,
+                       markersize=8,
+                       label=f'{size:.0f} GB',
+                       alpha=0.8)
+            
+            ax.set_xlabel('Read Ratio', fontsize=14)
+            ax.set_ylabel('Total Bandwidth (MB/s)', fontsize=14)
+            ax.set_title(config['title'], fontsize=16)
+            ax.grid(True, alpha=0.3)
+            ax.legend(loc='best', fontsize=10, ncol=2)
+            ax.set_xlim(-0.05, 1.05)
+            ax.set_ylim(bottom=0)
+            ax.minorticks_on()
+            ax.grid(which='minor', alpha=0.1)
+        else:
+            ax.text(0.5, 0.5, f"No data for 172 threads\nin {config['file']}", 
+                   ha='center', va='center', transform=ax.transAxes)
+            ax.set_title(config['title'], fontsize=16)
+    
+    plt.tight_layout()
+    
+    # Save figure
+    output_file = 'numa_interleave_01_vs_23_fixed_172_threads.pdf'
+    plt.savefig(output_file, dpi=300, bbox_inches='tight')
+    print(f"Figure saved as {output_file}")
+
 if __name__ == "__main__":
     # Change to the numa_results directory
     os.chdir('/root/yunwei37/ai-os/workloads/cxl-micro/numa_results')
@@ -549,5 +682,9 @@ if __name__ == "__main__":
     
     # Create plots with fixed thread count (172) and varying data sizes
     plot_bandwidth_vs_datasize()
+    
+    # Create interleave comparison plots
+    plot_numactl_interleave_comparison()
+    plot_numactl_interleave_detailed()
     
     print("\nAll plots have been generated successfully!")

@@ -353,8 +353,8 @@ class CXLMicroBenchmarkTester(SchedulerBenchmark):
             read_ratios: List of read ratios to test (0.0-1.0)
             production_only: Only test production-ready schedulers if schedulers is None
         """
-        thread_counts = thread_counts or [256]
-        read_ratios = read_ratios or [0, 0.25, 0.5, 0.75, 1]
+        thread_counts = thread_counts or [64]
+        read_ratios = read_ratios or [0, 0.25, 0.35, 0.5, 0.75, 1]
         
         # Get schedulers to test
         if schedulers is None:
