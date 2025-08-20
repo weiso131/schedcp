@@ -282,7 +282,7 @@ def create_rustland_vs_default_comparison(seq_df, random_16g_df):
     ax.plot(x_default, seq_default['bandwidth_mbps'], 'o-', 
             label='default', linewidth=2.5, markersize=10, color='tab:blue')
     ax.plot(x_rustland, seq_rustland['bandwidth_mbps'], 's-', 
-            label='scx_rustland', linewidth=2.5, markersize=10, color='tab:orange')
+            label='duplexOS', linewidth=2.5, markersize=10, color='tab:orange')
     
     ax.set_xlabel('Read Ratio (%)', fontsize=14)
     ax.set_ylabel('Bandwidth (MB/s)', fontsize=14)
@@ -307,7 +307,7 @@ def create_rustland_vs_default_comparison(seq_df, random_16g_df):
     ax.plot(x_default, random16_default['bandwidth_mbps'], 'o-', 
             label='default', linewidth=2.5, markersize=10, color='tab:blue')
     ax.plot(x_rustland, random16_rustland['bandwidth_mbps'], 's-', 
-            label='scx_rustland', linewidth=2.5, markersize=10, color='tab:orange')
+            label='duplexOS', linewidth=2.5, markersize=10, color='tab:orange')
     
     ax.set_xlabel('Read Ratio (%)', fontsize=14)
     ax.set_ylabel('Bandwidth (MB/s)', fontsize=14)
@@ -318,7 +318,7 @@ def create_rustland_vs_default_comparison(seq_df, random_16g_df):
     ax.tick_params(labelsize=12)
     
     # Overall title
-    fig.suptitle('scx_rustland vs Default Scheduler: Bandwidth Comparison', 
+    fig.suptitle('duplexOS vs Default Scheduler: Bandwidth Comparison', 
                  fontsize=18, fontweight='bold', y=1.02)
     
     plt.tight_layout()
@@ -328,6 +328,53 @@ def create_rustland_vs_default_comparison(seq_df, random_16g_df):
     plt.savefig(output_path, format='pdf', dpi=300, bbox_inches='tight')
     print(f"Figure saved to: {output_path}")
     plt.close()
+    
+    # Print comparison statistics
+    print("\n" + "="*60)
+    print("duplexOS vs Default Scheduler Performance Comparison")
+    print("="*60)
+    
+    # Sequential Access Statistics
+    print("\nSEQUENTIAL ACCESS (32GB, 172 threads):")
+    seq_default_avg = seq_default['bandwidth_mbps'].mean()
+    seq_rustland_avg = seq_rustland['bandwidth_mbps'].mean()
+    seq_default_max = seq_default['bandwidth_mbps'].max()
+    seq_rustland_max = seq_rustland['bandwidth_mbps'].max()
+    
+    seq_avg_improvement = ((seq_rustland_avg - seq_default_avg) / seq_default_avg) * 100
+    seq_max_improvement = ((seq_rustland_max - seq_default_max) / seq_default_max) * 100
+    
+    print(f"  Default Average: {seq_default_avg:.2f} MB/s")
+    print(f"  duplexOS Average: {seq_rustland_avg:.2f} MB/s")
+    print(f"  Average Improvement: {seq_avg_improvement:.1f}%")
+    print(f"  Default Max: {seq_default_max:.2f} MB/s")
+    print(f"  duplexOS Max: {seq_rustland_max:.2f} MB/s")
+    print(f"  Max Improvement: {seq_max_improvement:.1f}%")
+    
+    # Random Access Statistics
+    print("\nRANDOM ACCESS (16GB, 256 threads):")
+    random16_default_avg = random16_default['bandwidth_mbps'].mean()
+    random16_rustland_avg = random16_rustland['bandwidth_mbps'].mean()
+    random16_default_max = random16_default['bandwidth_mbps'].max()
+    random16_rustland_max = random16_rustland['bandwidth_mbps'].max()
+    
+    random_avg_improvement = ((random16_rustland_avg - random16_default_avg) / random16_default_avg) * 100
+    random_max_improvement = ((random16_rustland_max - random16_default_max) / random16_default_max) * 100
+    
+    print(f"  Default Average: {random16_default_avg:.2f} MB/s")
+    print(f"  duplexOS Average: {random16_rustland_avg:.2f} MB/s")
+    print(f"  Average Improvement: {random_avg_improvement:.1f}%")
+    print(f"  Default Max: {random16_default_max:.2f} MB/s")
+    print(f"  duplexOS Max: {random16_rustland_max:.2f} MB/s")
+    print(f"  Max Improvement: {random_max_improvement:.1f}%")
+    
+    # Overall comparison
+    print("\nOVERALL COMPARISON:")
+    overall_avg_improvement = (seq_avg_improvement + random_avg_improvement) / 2
+    overall_max_improvement = (seq_max_improvement + random_max_improvement) / 2
+    print(f"  Overall Average Improvement: {overall_avg_improvement:.1f}%")
+    print(f"  Overall Max Improvement: {overall_max_improvement:.1f}%")
+    print("="*60)
 
 # Create random vs sequential comparison for default scheduler
 report = create_random_vs_seq_comparison(random_16g_df, seq_df, 'default')
