@@ -1,12 +1,12 @@
 {
   "default": {
-    "build_time": 21.685271739959717,
+    "build_time": 22.663209199905396,
     "recall": 0.94,
-    "avg_query_time_ms": 0.20991992950439453,
-    "p95_query_time_ms": 0.23126602172851562,
-    "p99_query_time_ms": 0.2477264404296875,
-    "total_search_time": 0.21058249473571777,
-    "qps": 4748.732800677501,
+    "avg_query_time_ms": 0.20973706245422363,
+    "p95_query_time_ms": 0.23032426834106445,
+    "p99_query_time_ms": 0.25512218475341797,
+    "total_search_time": 0.21053743362426758,
+    "qps": 4749.749167098877,
     "num_queries": 1000,
     "total_results": 10000,
     "scheduler": "default",
@@ -14,121 +14,121 @@
   },
   "scx_bpfland": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpgwrgzw6b.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp4_sqxw9a.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_bpfland",
     "exit_code": 0
   },
   "scx_central": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpo8oaz56a.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpjop6ndfc.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_central",
     "exit_code": 0
   },
   "scx_chaos": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp6v1y8i0d.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpuc5qlq5o.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_chaos",
     "exit_code": 0
   },
   "scx_flash": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp6eezhybt.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp8r5ul1x5.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_flash",
     "exit_code": 0
   },
   "scx_flatcg": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmppe0n6dms.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpv4qdrfqi.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_flatcg",
     "exit_code": 0
   },
   "scx_lavd": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpsd5o8b0n.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpv7e6zbmv.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_lavd",
     "exit_code": 0
   },
   "scx_layered": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpq0szhu50.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp1xsw_q63.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_layered",
     "exit_code": 0
   },
   "scx_mitosis": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpdtaqew7k.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpfeg76umt.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_mitosis",
     "exit_code": 0
   },
   "scx_nest": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp4y23rnjw.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpgx7b27pa.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_nest",
     "exit_code": 0
   },
   "scx_p2dq": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpg0_2r5hw.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmphis5ureq.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_p2dq",
     "exit_code": 0
   },
   "scx_pair": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpqnss7wzu.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpojo3vvss.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_pair",
     "exit_code": 0
   },
   "scx_prev": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpge9ws500.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpm8p5einz.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_prev",
     "exit_code": 0
   },
   "scx_qmap": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpoyb927j1.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpcnr_4t81.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_qmap",
     "exit_code": 0
   },
   "scx_rlfifo": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp95zl8x98.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp27i1w1wd.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_rlfifo",
     "exit_code": 0
   },
   "scx_rustland": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp6da1xmss.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpeb95381_.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_rustland",
     "exit_code": 0
   },
   "scx_rusty": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpynu91sgk.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpuowwc6ip.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_rusty",
     "exit_code": 0
   },
   "scx_sdt": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpjs9nyt_u.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpt_nc0h5o.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_sdt",
     "exit_code": 0
   },
   "scx_simple": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpjtgi3zb4.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpkg62p5j1.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_simple",
     "exit_code": 0
   },
   "scx_tickless": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp1ailfd9q.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmph_2b3i6b.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_tickless",
     "exit_code": 0
   },
   "scx_userland": {
     "error": "No module named 'scheduler'",
-    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmp7fv_i4ss.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
+    "traceback": "Traceback (most recent call last):\n  File \"/tmp/tmpaxe6y5jw.py\", line 16, in <module>\n    from scheduler import SchedulerRunner, SchedulerBenchmark\nModuleNotFoundError: No module named 'scheduler'\n",
     "scheduler": "scx_userland",
     "exit_code": 0
   }
