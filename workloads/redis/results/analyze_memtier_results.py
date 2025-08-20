@@ -17,156 +17,26 @@ def load_results(csv_file='memtier_scheduler_results.csv'):
         sys.exit(1)
     
     df = pd.read_csv(csv_file)
+    
+    # Fix total metrics if they are zero but GET/SET metrics exist
+    df['total_ops_per_sec'] = df.apply(
+        lambda row: row['gets_ops_per_sec'] + row['sets_ops_per_sec'] 
+        if row['total_ops_per_sec'] == 0 else row['total_ops_per_sec'], axis=1)
+    
+    # Use average of GET/SET latencies if total is zero
+    df['total_p50_latency_ms'] = df.apply(
+        lambda row: (row['gets_p50_latency_ms'] + row['sets_p50_latency_ms']) / 2 
+        if row['total_p50_latency_ms'] == 0 and (row['gets_p50_latency_ms'] > 0 or row['sets_p50_latency_ms'] > 0)
+        else row['total_p50_latency_ms'], axis=1)
+    
+    df['total_p99_latency_ms'] = df.apply(
+        lambda row: (row['gets_p99_latency_ms'] + row['sets_p99_latency_ms']) / 2 
+        if row['total_p99_latency_ms'] == 0 and (row['gets_p99_latency_ms'] > 0 or row['sets_p99_latency_ms'] > 0)
+        else row['total_p99_latency_ms'], axis=1)
+    
     print(f"Loaded {len(df)} rows from {csv_file}")
     print(f"Schedulers found: {df['scheduler'].unique()}")
     return df
-
-def create_comparison_plots(df):
-    """Create subplot for each scheduler comparing with default"""
-    
-    # Get unique schedulers (excluding default)
-    schedulers = [s for s in df['scheduler'].unique() if s != 'default']
-    
-    if len(schedulers) == 0:
-        print("No schedulers to compare (only default found)")
-        return
-    
-    # Get default data
-    default_data = df[df['scheduler'] == 'default']
-    
-    # Test cases
-    test_cases = ['mixed_1_10', 'mixed_10_1', 'pipeline_16', 
-                  'sequential_pattern', 'gaussian_pattern', 'advanced_gaussian_random']
-    test_labels = ['Test 1:\nmixed_1_10', 'Test 2:\nmixed_10_1', 'Test 3:\npipeline_16',
-                   'Test 4:\nsequential', 'Test 5:\ngaussian', 'Test 6:\nadv_gaussian']
-    
-    # Create figure with subplots for each scheduler
-    n_schedulers = len(schedulers)
-    fig = plt.figure(figsize=(20, 6 * n_schedulers))
-    
-    for idx, scheduler in enumerate(schedulers):
-        scheduler_data = df[df['scheduler'] == scheduler]
-        
-        # Create 3 subplots for this scheduler: throughput, latency, bandwidth
-        ax1 = plt.subplot(n_schedulers, 3, idx * 3 + 1)
-        ax2 = plt.subplot(n_schedulers, 3, idx * 3 + 2)
-        ax3 = plt.subplot(n_schedulers, 3, idx * 3 + 3)
-        
-        # Prepare data for plotting
-        x = np.arange(len(test_cases))
-        width = 0.35
-        
-        # Extract metrics for each test case
-        default_throughput = []
-        scheduler_throughput = []
-        default_latency_p99 = []
-        scheduler_latency_p99 = []
-        default_bandwidth = []
-        scheduler_bandwidth = []
-        
-        for test in test_cases:
-            # Default metrics
-            default_test = default_data[default_data['test_case'] == test]
-            if not default_test.empty:
-                default_throughput.append(default_test['total_ops_per_sec'].values[0])
-                default_latency_p99.append(default_test['total_p99_latency_ms'].values[0])
-                default_bandwidth.append(default_test['bandwidth_kb_sec'].values[0])
-            else:
-                default_throughput.append(0)
-                default_latency_p99.append(0)
-                default_bandwidth.append(0)
-            
-            # Scheduler metrics
-            sched_test = scheduler_data[scheduler_data['test_case'] == test]
-            if not sched_test.empty:
-                scheduler_throughput.append(sched_test['total_ops_per_sec'].values[0])
-                scheduler_latency_p99.append(sched_test['total_p99_latency_ms'].values[0])
-                scheduler_bandwidth.append(sched_test['bandwidth_kb_sec'].values[0])
-            else:
-                scheduler_throughput.append(0)
-                scheduler_latency_p99.append(0)
-                scheduler_bandwidth.append(0)
-        
-        # Plot throughput comparison
-        bars1 = ax1.bar(x - width/2, default_throughput, width, label='Default', color='skyblue', alpha=0.8)
-        bars2 = ax1.bar(x + width/2, scheduler_throughput, width, label=scheduler, color='coral', alpha=0.8)
-        
-        ax1.set_xlabel('Test Cases')
-        ax1.set_ylabel('Throughput (ops/sec)')
-        ax1.set_title(f'{scheduler} vs Default - Throughput')
-        ax1.set_xticks(x)
-        ax1.set_xticklabels(test_labels, rotation=0, fontsize=8)
-        ax1.legend()
-        ax1.grid(True, alpha=0.3)
-        
-        # Add value labels on bars
-        for bar in bars1:
-            height = bar.get_height()
-            if height > 0:
-                ax1.text(bar.get_x() + bar.get_width()/2., height,
-                        f'{height:.0f}', ha='center', va='bottom', fontsize=7)
-        for bar in bars2:
-            height = bar.get_height()
-            if height > 0:
-                ax1.text(bar.get_x() + bar.get_width()/2., height,
-                        f'{height:.0f}', ha='center', va='bottom', fontsize=7)
-        
-        # Plot P99 latency comparison
-        bars3 = ax2.bar(x - width/2, default_latency_p99, width, label='Default', color='lightgreen', alpha=0.8)
-        bars4 = ax2.bar(x + width/2, scheduler_latency_p99, width, label=scheduler, color='salmon', alpha=0.8)
-        
-        ax2.set_xlabel('Test Cases')
-        ax2.set_ylabel('P99 Latency (ms)')
-        ax2.set_title(f'{scheduler} vs Default - P99 Latency (Lower is Better)')
-        ax2.set_xticks(x)
-        ax2.set_xticklabels(test_labels, rotation=0, fontsize=8)
-        ax2.legend()
-        ax2.grid(True, alpha=0.3)
-        
-        # Add value labels on bars
-        for bar in bars3:
-            height = bar.get_height()
-            if height > 0:
-                ax2.text(bar.get_x() + bar.get_width()/2., height,
-                        f'{height:.2f}', ha='center', va='bottom', fontsize=7)
-        for bar in bars4:
-            height = bar.get_height()
-            if height > 0:
-                ax2.text(bar.get_x() + bar.get_width()/2., height,
-                        f'{height:.2f}', ha='center', va='bottom', fontsize=7)
-        
-        # Plot bandwidth comparison
-        bars5 = ax3.bar(x - width/2, default_bandwidth, width, label='Default', color='mediumpurple', alpha=0.8)
-        bars6 = ax3.bar(x + width/2, scheduler_bandwidth, width, label=scheduler, color='gold', alpha=0.8)
-        
-        ax3.set_xlabel('Test Cases')
-        ax3.set_ylabel('Bandwidth (KB/sec)')
-        ax3.set_title(f'{scheduler} vs Default - Bandwidth')
-        ax3.set_xticks(x)
-        ax3.set_xticklabels(test_labels, rotation=0, fontsize=8)
-        ax3.legend()
-        ax3.grid(True, alpha=0.3)
-        
-        # Add value labels on bars
-        for bar in bars5:
-            height = bar.get_height()
-            if height > 0:
-                ax3.text(bar.get_x() + bar.get_width()/2., height,
-                        f'{height:.0f}', ha='center', va='bottom', fontsize=7)
-        for bar in bars6:
-            height = bar.get_height()
-            if height > 0:
-                ax3.text(bar.get_x() + bar.get_width()/2., height,
-                        f'{height:.0f}', ha='center', va='bottom', fontsize=7)
-    
-    plt.suptitle('Memtier Benchmark: Scheduler vs Default Comparison', fontsize=16, y=1.02)
-    plt.tight_layout()
-    
-    # Save figure
-    output_file = 'memtier_scheduler_comparison.png'
-    plt.savefig(output_file, dpi=150, bbox_inches='tight')
-    print(f"Comparison plot saved to {output_file}")
-    plt.show()
 
 def create_detailed_comparison(df):
     """Create detailed GET/SET comparison for each scheduler"""
@@ -291,62 +161,213 @@ def create_detailed_comparison(df):
     print(f"Detailed comparison plot saved to {output_file}")
     plt.show()
 
-def print_performance_summary(df):
-    """Print performance summary table"""
+def create_scx_nest_comparison(df):
+    """Create scx_nest vs default comparison with throughput and latency subplots"""
     
+    # Check if both scx_nest and default exist
+    if 'scx_nest' not in df['scheduler'].unique() or 'default' not in df['scheduler'].unique():
+        print("Skipping scx_nest comparison - scx_nest or default not found in data")
+        return
+    
+    # Get data for scx_nest and default
+    scx_nest_data = df[df['scheduler'] == 'scx_nest']
+    default_data = df[df['scheduler'] == 'default']
+    
+    # Test cases
+    test_cases = ['mixed_1_10', 'mixed_10_1', 'pipeline_16', 
+                  'sequential_pattern', 'advanced_gaussian_random']
+    
+    # Better names for display
+    test_labels = ['Read Heavy', 'Write Heavy', 'Balance Pipeline', 'Balance Sequential', 'Balance Random']
+    
+    # Create figure with 2 subplots (throughput and latency)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7))
+    
+    x = np.arange(len(test_cases))
+    width = 0.35
+    
+    # Extract metrics
+    default_throughput = []
+    scx_nest_throughput = []
+    default_p99 = []
+    scx_nest_p99 = []
+    
+    for test in test_cases:
+        # Default metrics
+        default_test = default_data[default_data['test_case'] == test]
+        if not default_test.empty:
+            default_throughput.append(default_test['total_ops_per_sec'].values[0])
+            default_p99.append(default_test['total_p99_latency_ms'].values[0])
+        else:
+            default_throughput.append(0)
+            default_p99.append(0)
+        
+        # scx_nest metrics
+        nest_test = scx_nest_data[scx_nest_data['test_case'] == test]
+        if not nest_test.empty:
+            scx_nest_throughput.append(nest_test['total_ops_per_sec'].values[0])
+            scx_nest_p99.append(nest_test['total_p99_latency_ms'].values[0])
+        else:
+            scx_nest_throughput.append(0)
+            scx_nest_p99.append(0)
+    
+    # Plot throughput comparison
+    bars1 = ax1.bar(x - width/2, default_throughput, width, label='Default', color='#4472C4', alpha=0.8)
+    bars2 = ax1.bar(x + width/2, scx_nest_throughput, width, label='DuplexOS', color='#ED7D31', alpha=0.8)
+    
+    ax1.set_xlabel('Test Cases', fontsize=20)
+    ax1.set_ylabel('Throughput (ops/sec)', fontsize=20)
+    ax1.set_title('Throughput Comparison', fontsize=20)
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(test_labels, rotation=15, fontsize=16)
+    ax1.tick_params(axis='y', labelsize=16)
+    ax1.grid(True, alpha=0.3, linestyle='--')
+    
+    # Add value labels on bars
+    for bar in bars1:
+        height = bar.get_height()
+        if height > 0:
+            ax1.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{height/1000:.0f}k' if height > 1000 else f'{height:.0f}',
+                    ha='center', va='bottom', fontsize=14)
+    
+    for bar in bars2:
+        height = bar.get_height()
+        if height > 0:
+            ax1.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{height/1000:.0f}k' if height > 1000 else f'{height:.0f}',
+                    ha='center', va='bottom', fontsize=14)
+    
+    # Plot P99 latency comparison (no labels since we'll use shared legend)
+    bars3 = ax2.bar(x - width/2, default_p99, width, color='#4472C4', alpha=0.8)
+    bars4 = ax2.bar(x + width/2, scx_nest_p99, width, color='#ED7D31', alpha=0.8)
+    
+    ax2.set_xlabel('Test Cases', fontsize=20)
+    ax2.set_ylabel('P99 Latency (ms)', fontsize=20)
+    ax2.set_title('P99 Latency Comparison', fontsize=20)
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(test_labels, rotation=15, fontsize=16)
+    ax2.tick_params(axis='y', labelsize=16)
+    ax2.grid(True, alpha=0.3, linestyle='--')
+    
+    # Add value labels on bars
+    for bar in bars3:
+        height = bar.get_height()
+        if height > 0:
+            ax2.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{height:.2f}',
+                    ha='center', va='bottom', fontsize=14)
+    
+    for bar in bars4:
+        height = bar.get_height()
+        if height > 0:
+            ax2.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{height:.2f}',
+                    ha='center', va='bottom', fontsize=14)
+    
+    # Single legend for both subplots at the top center
+    handles, labels = ax1.get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper center', ncol=2, fontsize=18,
+               bbox_to_anchor=(0.5, 0.98), frameon=False)
+    
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.88)  # Make room for legend
+    
+    # Save as PDF
+    output_file = 'redis_comparison.pdf'
+    plt.savefig(output_file, format='pdf', dpi=300, bbox_inches='tight')
+    print(f"scx_nest vs default comparison saved to {output_file}")
+    
+    # Print detailed comparison summary
     print("\n" + "="*100)
-    print("PERFORMANCE SUMMARY")
+    print("DETAILED COMPARISON: DEFAULT vs DUPLEXOS (scx_nest)")
     print("="*100)
     
-    schedulers = df['scheduler'].unique()
-    test_cases = df['test_case'].unique()
-    
-    for scheduler in schedulers:
-        scheduler_data = df[df['scheduler'] == scheduler]
-        
-        print(f"\n{scheduler.upper()}")
+    for i, test in enumerate(test_cases):
+        print(f"\n{test_labels[i]} ({test}):")
         print("-" * 50)
         
-        # Calculate averages
-        avg_throughput = scheduler_data['total_ops_per_sec'].mean()
-        avg_p99_latency = scheduler_data['total_p99_latency_ms'].mean()
-        avg_bandwidth = scheduler_data['bandwidth_kb_sec'].mean()
+        # Throughput comparison
+        default_tput = default_throughput[i]
+        nest_tput = scx_nest_throughput[i]
+        if default_tput > 0:
+            tput_diff = ((nest_tput - default_tput) / default_tput) * 100
+            print(f"  Throughput:")
+            print(f"    Default:  {default_tput:>10,.0f} ops/sec")
+            print(f"    DuplexOS: {nest_tput:>10,.0f} ops/sec")
+            print(f"    Difference: {tput_diff:+.1f}% {'(better)' if tput_diff > 0 else '(worse)'}")
         
-        print(f"  Average Throughput: {avg_throughput:,.0f} ops/sec")
-        print(f"  Average P99 Latency: {avg_p99_latency:.3f} ms")
-        print(f"  Average Bandwidth: {avg_bandwidth:,.0f} KB/sec")
+        # P99 Latency comparison
+        default_lat = default_p99[i]
+        nest_lat = scx_nest_p99[i]
+        if default_lat > 0:
+            lat_diff = ((nest_lat - default_lat) / default_lat) * 100
+            print(f"  P99 Latency:")
+            print(f"    Default:  {default_lat:>8.2f} ms")
+            print(f"    DuplexOS: {nest_lat:>8.2f} ms")
+            print(f"    Difference: {lat_diff:+.1f}% {'(worse)' if lat_diff > 0 else '(better)'}")
+            
+        # Get GET/SET metrics for more detail
+        default_test_data = default_data[default_data['test_case'] == test]
+        nest_test_data = scx_nest_data[scx_nest_data['test_case'] == test]
         
-        # Best and worst test cases
-        best_throughput = scheduler_data.loc[scheduler_data['total_ops_per_sec'].idxmax()]
-        worst_throughput = scheduler_data.loc[scheduler_data['total_ops_per_sec'].idxmin()]
-        
-        print(f"  Best Throughput: {best_throughput['test_case']} ({best_throughput['total_ops_per_sec']:,.0f} ops/sec)")
-        print(f"  Worst Throughput: {worst_throughput['test_case']} ({worst_throughput['total_ops_per_sec']:,.0f} ops/sec)")
+        if not default_test_data.empty and not nest_test_data.empty:
+            # GET operations
+            default_gets = default_test_data['gets_ops_per_sec'].values[0]
+            nest_gets = nest_test_data['gets_ops_per_sec'].values[0]
+            if default_gets > 0:
+                gets_diff = ((nest_gets - default_gets) / default_gets) * 100
+                print(f"  GET Operations:")
+                print(f"    Default:  {default_gets:>10,.0f} ops/sec")
+                print(f"    DuplexOS: {nest_gets:>10,.0f} ops/sec")
+                print(f"    Difference: {gets_diff:+.1f}%")
+            
+            # SET operations
+            default_sets = default_test_data['sets_ops_per_sec'].values[0]
+            nest_sets = nest_test_data['sets_ops_per_sec'].values[0]
+            if default_sets > 0:
+                sets_diff = ((nest_sets - default_sets) / default_sets) * 100
+                print(f"  SET Operations:")
+                print(f"    Default:  {default_sets:>10,.0f} ops/sec")
+                print(f"    DuplexOS: {nest_sets:>10,.0f} ops/sec")
+                print(f"    Difference: {sets_diff:+.1f}%")
     
-    # Comparison with default
-    if 'default' in schedulers:
-        default_data = df[df['scheduler'] == 'default']
-        default_avg_throughput = default_data['total_ops_per_sec'].mean()
-        default_avg_p99 = default_data['total_p99_latency_ms'].mean()
+    # Overall summary
+    print("\n" + "="*100)
+    print("OVERALL SUMMARY")
+    print("="*100)
+    
+    # Calculate averages
+    avg_default_tput = np.mean([t for t in default_throughput if t > 0])
+    avg_nest_tput = np.mean([t for t in scx_nest_throughput if t > 0])
+    avg_default_p99 = np.mean([l for l in default_p99 if l > 0])
+    avg_nest_p99 = np.mean([l for l in scx_nest_p99 if l > 0])
+    
+    avg_tput_diff = ((avg_nest_tput - avg_default_tput) / avg_default_tput) * 100
+    avg_lat_diff = ((avg_nest_p99 - avg_default_p99) / avg_default_p99) * 100
+    
+    print(f"\nAverage Throughput:")
+    print(f"  Default:  {avg_default_tput:>10,.0f} ops/sec")
+    print(f"  DuplexOS: {avg_nest_tput:>10,.0f} ops/sec")
+    print(f"  Difference: {avg_tput_diff:+.1f}% {'(better)' if avg_tput_diff > 0 else '(worse)'}")
+    
+    print(f"\nAverage P99 Latency:")
+    print(f"  Default:  {avg_default_p99:>8.2f} ms")
+    print(f"  DuplexOS: {avg_nest_p99:>8.2f} ms")
+    print(f"  Difference: {avg_lat_diff:+.1f}% {'(worse)' if avg_lat_diff > 0 else '(better)'}")
+    
+    # Find best and worst cases for DuplexOS
+    improvements = [(test_labels[i], ((scx_nest_throughput[i] - default_throughput[i]) / default_throughput[i]) * 100) 
+                    for i in range(len(test_cases)) if default_throughput[i] > 0]
+    
+    if improvements:
+        best_case = max(improvements, key=lambda x: x[1])
+        worst_case = min(improvements, key=lambda x: x[1])
         
-        print("\n" + "="*100)
-        print("COMPARISON WITH DEFAULT")
-        print("="*100)
-        
-        for scheduler in schedulers:
-            if scheduler == 'default':
-                continue
-            
-            scheduler_data = df[df['scheduler'] == scheduler]
-            avg_throughput = scheduler_data['total_ops_per_sec'].mean()
-            avg_p99 = scheduler_data['total_p99_latency_ms'].mean()
-            
-            throughput_diff = ((avg_throughput - default_avg_throughput) / default_avg_throughput) * 100
-            latency_diff = ((avg_p99 - default_avg_p99) / default_avg_p99) * 100
-            
-            print(f"\n{scheduler}:")
-            print(f"  Throughput: {throughput_diff:+.1f}% vs default")
-            print(f"  P99 Latency: {latency_diff:+.1f}% vs default (lower is better)")
+        print(f"\nBest improvement for DuplexOS: {best_case[0]} ({best_case[1]:+.1f}% throughput)")
+        print(f"Worst performance for DuplexOS: {worst_case[0]} ({worst_case[1]:+.1f}% throughput)")
+    
+    plt.show()
 
 def main():
     """Main function"""
@@ -355,17 +376,14 @@ def main():
     
     # Load results
     df = load_results()
-    
-    # Print summary
-    print_performance_summary(df)
-    
-    # Create comparison plots
-    print("\nGenerating comparison plots...")
-    create_comparison_plots(df)
-    
+        
     # Create detailed GET/SET plots
     print("\nGenerating detailed GET/SET plots...")
     create_detailed_comparison(df)
+    
+    # Create scx_nest vs default comparison
+    print("\nGenerating scx_nest vs default comparison...")
+    create_scx_nest_comparison(df)
     
     print("\nAnalysis complete!")
 

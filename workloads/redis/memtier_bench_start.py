@@ -952,13 +952,13 @@ def main():
                        help="Test only production schedulers")
     parser.add_argument("--clients", type=int, default=10, 
                        help="Number of clients per thread")
-    parser.add_argument("--threads", type=int, default=24,
+    parser.add_argument("--threads", type=int, default=32,
                        help="Number of threads")
     parser.add_argument("--requests", type=int, default=10000, 
                        help="Number of requests per client")
     parser.add_argument("--data-size", type=int, default=32,
                        help="Data size in bytes")
-    parser.add_argument("--pipeline", type=int, default=16,
+    parser.add_argument("--pipeline", type=int, default=1,
                        help="Pipeline requests")
     parser.add_argument("--ratio", default="1:1",
                        help="SET:GET ratio")
