@@ -24,14 +24,16 @@ def plot_bandwidth_vs_datasize():
     
     # Define file paths and labels
     numa_configs = [
-        {'file': 'cxl_perf_parameter_sweep_numactl0.csv', 'label': 'NUMA Node 0 (DDR5)', 'interleave': '0'},
-        {'file': 'cxl_perf_parameter_sweep_numactl2.csv', 'label': 'NUMA Node 2 (CXL 256GB)', 'interleave': '2'},
-        {'file': 'cxl_perf_parameter_sweep_numactl3.csv', 'label': 'NUMA Node 3 (CXL 512GB)', 'interleave': '3'}
+        {'file': 'cxl_perf_parameter_sweep_numactl0.csv', 'label': 'NUMA Node 0 (DDR5) random access', 'interleave': '0'},
+        {'file': 'cxl_perf_parameter_sweep_numactl2.csv', 'label': 'NUMA Node 2 (CXL 256GB) random access', 'interleave': '2'},
+        {'file': 'cxl_perf_parameter_sweep_numactl3.csv', 'label': 'NUMA Node 3 (CXL 512GB) random access', 'interleave': '3'},
+        {'file': 'cxl_perf_parameter_sweep_numactl2_seq.csv', 'label': 'NUMA Node 2 (CXL 256GB) sequential', 'interleave': '2_seq'},
+        {'file': 'cxl_perf_parameter_sweep_numactl3_seq.csv', 'label': 'NUMA Node 3 (CXL 512GB) sequential', 'interleave': '3_seq'},
     ]
     
-    # Create figure with subplots
-    fig, axes = plt.subplots(1, 3, figsize=(20, 6))
-    fig.suptitle('Random Access Total Bandwidth vs Read Ratio (Thread Count = 172)', fontsize=20, fontweight='bold')
+    # Create figure with subplots (5 configs now in one row)
+    fig, axes = plt.subplots(1, 5, figsize=(30, 6))
+    fig.suptitle('Total Bandwidth vs Read Ratio (Thread Count = 172)', fontsize=20, fontweight='bold')
     
     # Color palette for different data sizes
     colors = plt.cm.viridis(np.linspace(0, 1, 10))
@@ -104,7 +106,7 @@ def plot_bandwidth_vs_datasize():
     
     # Add a single legend for all subplots
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 0), 
+    fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, -0.05), 
                ncol=5, fontsize=14, title_fontsize=14)
     
     plt.tight_layout()
@@ -119,14 +121,16 @@ def plot_bandwidth_comparison():
     
     # Define file paths and labels
     numa_configs = [
-        {'file': 'cxl_perf_parameter_sweep_numactl0.csv', 'label': 'NUMA Node 0 (DDR5)', 'interleave': '0'},
-        {'file': 'cxl_perf_parameter_sweep_numactl2.csv', 'label': 'NUMA Node 2 (CXL 256GB)', 'interleave': '2'},
-        {'file': 'cxl_perf_parameter_sweep_numactl3.csv', 'label': 'NUMA Node 3 (CXL 512GB)', 'interleave': '3'}
+        {'file': 'cxl_perf_parameter_sweep_numactl0.csv', 'label': 'NUMA Node 0 (DDR5) random', 'interleave': '0'},
+        {'file': 'cxl_perf_parameter_sweep_numactl2.csv', 'label': 'NUMA Node 2 (CXL 256GB) random', 'interleave': '2'},
+        {'file': 'cxl_perf_parameter_sweep_numactl3.csv', 'label': 'NUMA Node 3 (CXL 512GB) random', 'interleave': '3'},
+        {'file': 'cxl_perf_parameter_sweep_numactl2_seq.csv', 'label': 'NUMA Node 2 (CXL 256GB) sequential', 'interleave': '2_seq'},
+        {'file': 'cxl_perf_parameter_sweep_numactl3_seq.csv', 'label': 'NUMA Node 3 (CXL 512GB) sequential', 'interleave': '3_seq'}
     ]
     
-    # Create figure with subplots
-    fig, axes = plt.subplots(1, 3, figsize=(20, 6))
-    fig.suptitle('Random Access Total Bandwidth vs Read Ratio (Buffer Size = 64GB)', fontsize=20, fontweight='bold')
+    # Create figure with subplots (5 configs now in one row)
+    fig, axes = plt.subplots(1, 5, figsize=(30, 6))
+    fig.suptitle('Total Bandwidth vs Read Ratio (Buffer Size = 64GB)', fontsize=20, fontweight='bold')
     
     # Color palette for different thread counts
     colors = plt.cm.tab10(np.linspace(0, 0.8, 10))
@@ -196,7 +200,7 @@ def plot_bandwidth_comparison():
     
     # Add a single legend for all subplots
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, 0), 
+    fig.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, -0.05), 
                ncol=5, fontsize=14, title_fontsize=14)
     
     plt.tight_layout()
@@ -215,14 +219,14 @@ def create_combined_plot(numa_configs):
     """Create a single plot with all NUMA configurations overlaid"""
     
     fig, ax = plt.subplots(figsize=(12, 8))
-    fig.suptitle('Random Access Total Bandwidth Comparison Across NUMA Configurations\n(Buffer Size = 64GB, Threads = 172)', 
+    fig.suptitle('Total Bandwidth Comparison Across NUMA Configurations\n(Buffer Size = 64GB, Threads = 172)', 
                  fontsize=20, fontweight='bold')
     
     # Use different line styles for different NUMA configs
-    line_styles = ['-', '--', '-.']
+    line_styles = ['-', '--', '-.', ':', '-']
     # Use different colors for each config
-    colors = ['blue', 'red', 'green']
-    markers = ['o', 's', '^']
+    colors = ['blue', 'red', 'green', 'orange', 'purple']
+    markers = ['o', 's', '^', 'D', 'v']
     
     for config_idx, config in enumerate(numa_configs):
         if not os.path.exists(config['file']):
@@ -283,9 +287,11 @@ def print_summary_statistics():
     """Print summary statistics for each configuration"""
     
     numa_configs = [
-        {'file': 'cxl_perf_parameter_sweep_numactl0.csv', 'label': 'NUMA Node 0 (DDR5)', 'interleave': '0'},
-        {'file': 'cxl_perf_parameter_sweep_numactl2.csv', 'label': 'NUMA Node 2 (CXL 256GB)', 'interleave': '2'},
-        {'file': 'cxl_perf_parameter_sweep_numactl3.csv', 'label': 'NUMA Node 3 (CXL 512GB)', 'interleave': '3'}
+        {'file': 'cxl_perf_parameter_sweep_numactl0.csv', 'label': 'NUMA Node 0 (DDR5) random', 'interleave': '0'},
+        {'file': 'cxl_perf_parameter_sweep_numactl2.csv', 'label': 'NUMA Node 2 (CXL 256GB) random', 'interleave': '2'},
+        {'file': 'cxl_perf_parameter_sweep_numactl3.csv', 'label': 'NUMA Node 3 (CXL 512GB) random', 'interleave': '3'},
+        {'file': 'cxl_perf_parameter_sweep_numactl2_seq.csv', 'label': 'NUMA Node 2 (CXL 256GB) sequential', 'interleave': '2_seq'},
+        {'file': 'cxl_perf_parameter_sweep_numactl3_seq.csv', 'label': 'NUMA Node 3 (CXL 512GB) sequential', 'interleave': '3_seq'}
     ]
     
     # First print thread scaling analysis
