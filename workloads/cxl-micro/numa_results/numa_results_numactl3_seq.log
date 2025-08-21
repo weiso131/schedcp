@@ -662,3 +662,831 @@ Running command: sudo perf stat -e instructions,cycles,cache-references,cache-mi
 Test 110/240: buffer_size=4.0GB, threads=256, read_ratio=0.15
 Running perf + double_bandwidth
 Parameters: buffer_size=4294967296, threads=256, duration=20, read_ratio=0.15
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 4294967296 --threads 256 --duration 20 --read-ratio 0.15 --json --sequential
+  App Bandwidth: 114537.0 MB/s, Cache Refs: 39628.9 MB/s
+
+Test 111/240: buffer_size=4.0GB, threads=256, read_ratio=0.25
+Running perf + double_bandwidth
+Parameters: buffer_size=4294967296, threads=256, duration=20, read_ratio=0.25
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 4294967296 --threads 256 --duration 20 --read-ratio 0.25 --json --sequential
+  App Bandwidth: 98546.4 MB/s, Cache Refs: 28674.4 MB/s
+
+Test 112/240: buffer_size=4.0GB, threads=256, read_ratio=0.35
+Running perf + double_bandwidth
+Parameters: buffer_size=4294967296, threads=256, duration=20, read_ratio=0.35
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 4294967296 --threads 256 --duration 20 --read-ratio 0.35 --json --sequential
+  App Bandwidth: 114269.0 MB/s, Cache Refs: 49782.3 MB/s
+
+Test 113/240: buffer_size=4.0GB, threads=256, read_ratio=0.45
+Running perf + double_bandwidth
+Parameters: buffer_size=4294967296, threads=256, duration=20, read_ratio=0.45
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 4294967296 --threads 256 --duration 20 --read-ratio 0.45 --json --sequential
+  App Bandwidth: 114942.0 MB/s, Cache Refs: 51234.1 MB/s
+
+Test 114/240: buffer_size=4.0GB, threads=256, read_ratio=0.50
+Running perf + double_bandwidth
+Parameters: buffer_size=4294967296, threads=256, duration=20, read_ratio=0.5
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 4294967296 --threads 256 --duration 20 --read-ratio 0.5 --json --sequential
+  App Bandwidth: 122947.0 MB/s, Cache Refs: 58924.7 MB/s
+
+Test 115/240: buffer_size=4.0GB, threads=256, read_ratio=0.55
+Running perf + double_bandwidth
+Parameters: buffer_size=4294967296, threads=256, duration=20, read_ratio=0.55
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 4294967296 --threads 256 --duration 20 --read-ratio 0.55 --json --sequential
+  App Bandwidth: 111320.0 MB/s, Cache Refs: 57771.9 MB/s
+
+Test 116/240: buffer_size=4.0GB, threads=256, read_ratio=0.65
+Running perf + double_bandwidth
+Parameters: buffer_size=4294967296, threads=256, duration=20, read_ratio=0.65
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 4294967296 --threads 256 --duration 20 --read-ratio 0.65 --json --sequential
+  App Bandwidth: 146719.0 MB/s, Cache Refs: 89517.5 MB/s
+
+Test 117/240: buffer_size=4.0GB, threads=256, read_ratio=0.75
+Running perf + double_bandwidth
+Parameters: buffer_size=4294967296, threads=256, duration=20, read_ratio=0.75
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 4294967296 --threads 256 --duration 20 --read-ratio 0.75 --json --sequential
+  App Bandwidth: 195935.0 MB/s, Cache Refs: 134495.8 MB/s
+
+Test 118/240: buffer_size=4.0GB, threads=256, read_ratio=0.85
+Running perf + double_bandwidth
+Parameters: buffer_size=4294967296, threads=256, duration=20, read_ratio=0.85
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 4294967296 --threads 256 --duration 20 --read-ratio 0.85 --json --sequential
+  App Bandwidth: 354882.0 MB/s, Cache Refs: 266546.9 MB/s
+
+Test 119/240: buffer_size=4.0GB, threads=256, read_ratio=0.95
+Running perf + double_bandwidth
+Parameters: buffer_size=4294967296, threads=256, duration=20, read_ratio=0.95
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 4294967296 --threads 256 --duration 20 --read-ratio 0.95 --json --sequential
+  App Bandwidth: 506773.0 MB/s, Cache Refs: 387005.7 MB/s
+
+Test 120/240: buffer_size=4.0GB, threads=256, read_ratio=1.00
+Running perf + double_bandwidth
+Parameters: buffer_size=4294967296, threads=256, duration=20, read_ratio=1
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 4294967296 --threads 256 --duration 20 --read-ratio 1 --json --sequential
+  App Bandwidth: 590775.0 MB/s, Cache Refs: 452495.0 MB/s
+
+Test 121/240: buffer_size=16.0GB, threads=4, read_ratio=0.00
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=4, duration=20, read_ratio=0
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 4 --duration 20 --read-ratio 0 --json --sequential
+  App Bandwidth: 9595.2 MB/s, Cache Refs: 5084.0 MB/s
+
+Test 122/240: buffer_size=16.0GB, threads=4, read_ratio=0.15
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=4, duration=20, read_ratio=0.15
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 4 --duration 20 --read-ratio 0.15 --json --sequential
+  App Bandwidth: 9686.9 MB/s, Cache Refs: 5097.3 MB/s
+
+Test 123/240: buffer_size=16.0GB, threads=4, read_ratio=0.25
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=4, duration=20, read_ratio=0.25
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 4 --duration 20 --read-ratio 0.25 --json --sequential
+  App Bandwidth: 10763.7 MB/s, Cache Refs: 6726.9 MB/s
+
+Test 124/240: buffer_size=16.0GB, threads=4, read_ratio=0.35
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=4, duration=20, read_ratio=0.35
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 4 --duration 20 --read-ratio 0.35 --json --sequential
+  App Bandwidth: 10962.0 MB/s, Cache Refs: 6839.0 MB/s
+
+Test 125/240: buffer_size=16.0GB, threads=4, read_ratio=0.45
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=4, duration=20, read_ratio=0.45
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 4 --duration 20 --read-ratio 0.45 --json --sequential
+  App Bandwidth: 10975.4 MB/s, Cache Refs: 6820.2 MB/s
+
+Test 126/240: buffer_size=16.0GB, threads=4, read_ratio=0.50
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=4, duration=20, read_ratio=0.5
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 4 --duration 20 --read-ratio 0.5 --json --sequential
+  App Bandwidth: 11811.6 MB/s, Cache Refs: 8243.9 MB/s
+
+Test 127/240: buffer_size=16.0GB, threads=4, read_ratio=0.55
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=4, duration=20, read_ratio=0.55
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 4 --duration 20 --read-ratio 0.55 --json --sequential
+  App Bandwidth: 11797.9 MB/s, Cache Refs: 8837.9 MB/s
+
+Test 128/240: buffer_size=16.0GB, threads=4, read_ratio=0.65
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=4, duration=20, read_ratio=0.65
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 4 --duration 20 --read-ratio 0.65 --json --sequential
+  App Bandwidth: 11919.2 MB/s, Cache Refs: 8869.8 MB/s
+
+Test 129/240: buffer_size=16.0GB, threads=4, read_ratio=0.75
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=4, duration=20, read_ratio=0.75
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 4 --duration 20 --read-ratio 0.75 --json --sequential
+  App Bandwidth: 16358.6 MB/s, Cache Refs: 7956.1 MB/s
+
+Test 130/240: buffer_size=16.0GB, threads=4, read_ratio=0.85
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=4, duration=20, read_ratio=0.85
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 4 --duration 20 --read-ratio 0.85 --json --sequential
+  App Bandwidth: 16232.6 MB/s, Cache Refs: 7906.1 MB/s
+
+Test 131/240: buffer_size=16.0GB, threads=4, read_ratio=0.95
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=4, duration=20, read_ratio=0.95
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 4 --duration 20 --read-ratio 0.95 --json --sequential
+  App Bandwidth: 16428.0 MB/s, Cache Refs: 8026.3 MB/s
+
+Test 132/240: buffer_size=16.0GB, threads=4, read_ratio=1.00
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=4, duration=20, read_ratio=1
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 4 --duration 20 --read-ratio 1 --json --sequential
+  App Bandwidth: 19767.9 MB/s, Cache Refs: 9503.9 MB/s
+
+Test 133/240: buffer_size=16.0GB, threads=16, read_ratio=0.00
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=16, duration=20, read_ratio=0
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 16 --duration 20 --read-ratio 0 --json --sequential
+  App Bandwidth: 36766.6 MB/s, Cache Refs: 18731.4 MB/s
+
+Test 134/240: buffer_size=16.0GB, threads=16, read_ratio=0.15
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=16, duration=20, read_ratio=0.15
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 16 --duration 20 --read-ratio 0.15 --json --sequential
+  App Bandwidth: 37272.9 MB/s, Cache Refs: 22983.1 MB/s
+
+Test 135/240: buffer_size=16.0GB, threads=16, read_ratio=0.25
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=16, duration=20, read_ratio=0.25
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 16 --duration 20 --read-ratio 0.25 --json --sequential
+  App Bandwidth: 40532.6 MB/s, Cache Refs: 26341.1 MB/s
+
+Test 136/240: buffer_size=16.0GB, threads=16, read_ratio=0.35
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=16, duration=20, read_ratio=0.35
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 16 --duration 20 --read-ratio 0.35 --json --sequential
+  App Bandwidth: 50278.8 MB/s, Cache Refs: 27533.6 MB/s
+
+Test 137/240: buffer_size=16.0GB, threads=16, read_ratio=0.45
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=16, duration=20, read_ratio=0.45
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 16 --duration 20 --read-ratio 0.45 --json --sequential
+  App Bandwidth: 56267.8 MB/s, Cache Refs: 29670.1 MB/s
+
+Test 138/240: buffer_size=16.0GB, threads=16, read_ratio=0.50
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=16, duration=20, read_ratio=0.5
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 16 --duration 20 --read-ratio 0.5 --json --sequential
+  App Bandwidth: 61309.6 MB/s, Cache Refs: 32882.1 MB/s
+
+Test 139/240: buffer_size=16.0GB, threads=16, read_ratio=0.55
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=16, duration=20, read_ratio=0.55
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 16 --duration 20 --read-ratio 0.55 --json --sequential
+  App Bandwidth: 64986.4 MB/s, Cache Refs: 31346.7 MB/s
+
+Test 140/240: buffer_size=16.0GB, threads=16, read_ratio=0.65
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=16, duration=20, read_ratio=0.65
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 16 --duration 20 --read-ratio 0.65 --json --sequential
+  App Bandwidth: 74160.7 MB/s, Cache Refs: 36082.4 MB/s
+
+Test 141/240: buffer_size=16.0GB, threads=16, read_ratio=0.75
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=16, duration=20, read_ratio=0.75
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 16 --duration 20 --read-ratio 0.75 --json --sequential
+  App Bandwidth: 82500.2 MB/s, Cache Refs: 39561.7 MB/s
+
+Test 142/240: buffer_size=16.0GB, threads=16, read_ratio=0.85
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=16, duration=20, read_ratio=0.85
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 16 --duration 20 --read-ratio 0.85 --json --sequential
+  App Bandwidth: 88042.9 MB/s, Cache Refs: 41563.2 MB/s
+
+Test 143/240: buffer_size=16.0GB, threads=16, read_ratio=0.95
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=16, duration=20, read_ratio=0.95
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 16 --duration 20 --read-ratio 0.95 --json --sequential
+  App Bandwidth: 96915.7 MB/s, Cache Refs: 45155.5 MB/s
+
+Test 144/240: buffer_size=16.0GB, threads=16, read_ratio=1.00
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=16, duration=20, read_ratio=1
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 16 --duration 20 --read-ratio 1 --json --sequential
+  App Bandwidth: 101127.0 MB/s, Cache Refs: 47081.3 MB/s
+
+Test 145/240: buffer_size=16.0GB, threads=64, read_ratio=0.00
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=64, duration=20, read_ratio=0
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 64 --duration 20 --read-ratio 0 --json --sequential
+  App Bandwidth: 49701.5 MB/s, Cache Refs: 5187.6 MB/s
+
+Test 146/240: buffer_size=16.0GB, threads=64, read_ratio=0.15
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=64, duration=20, read_ratio=0.15
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 64 --duration 20 --read-ratio 0.15 --json --sequential
+  App Bandwidth: 63762.3 MB/s, Cache Refs: 14584.5 MB/s
+
+Test 147/240: buffer_size=16.0GB, threads=64, read_ratio=0.25
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=64, duration=20, read_ratio=0.25
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 64 --duration 20 --read-ratio 0.25 --json --sequential
+  App Bandwidth: 53753.9 MB/s, Cache Refs: 7276.1 MB/s
+
+Test 148/240: buffer_size=16.0GB, threads=64, read_ratio=0.35
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=64, duration=20, read_ratio=0.35
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 64 --duration 20 --read-ratio 0.35 --json --sequential
+  App Bandwidth: 62511.1 MB/s, Cache Refs: 12198.9 MB/s
+
+Test 149/240: buffer_size=16.0GB, threads=64, read_ratio=0.45
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=64, duration=20, read_ratio=0.45
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 64 --duration 20 --read-ratio 0.45 --json --sequential
+  App Bandwidth: 65615.6 MB/s, Cache Refs: 15004.5 MB/s
+
+Test 150/240: buffer_size=16.0GB, threads=64, read_ratio=0.50
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=64, duration=20, read_ratio=0.5
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 64 --duration 20 --read-ratio 0.5 --json --sequential
+  App Bandwidth: 91829.4 MB/s, Cache Refs: 28078.8 MB/s
+
+Test 151/240: buffer_size=16.0GB, threads=64, read_ratio=0.55
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=64, duration=20, read_ratio=0.55
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 64 --duration 20 --read-ratio 0.55 --json --sequential
+  App Bandwidth: 90235.7 MB/s, Cache Refs: 29820.3 MB/s
+
+Test 152/240: buffer_size=16.0GB, threads=64, read_ratio=0.65
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=64, duration=20, read_ratio=0.65
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 64 --duration 20 --read-ratio 0.65 --json --sequential
+  App Bandwidth: 130085.0 MB/s, Cache Refs: 52433.1 MB/s
+
+Test 153/240: buffer_size=16.0GB, threads=64, read_ratio=0.75
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=64, duration=20, read_ratio=0.75
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 64 --duration 20 --read-ratio 0.75 --json --sequential
+  App Bandwidth: 277553.0 MB/s, Cache Refs: 126295.7 MB/s
+
+Test 154/240: buffer_size=16.0GB, threads=64, read_ratio=0.85
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=64, duration=20, read_ratio=0.85
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 64 --duration 20 --read-ratio 0.85 --json --sequential
+  App Bandwidth: 332436.0 MB/s, Cache Refs: 155267.3 MB/s
+
+Test 155/240: buffer_size=16.0GB, threads=64, read_ratio=0.95
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=64, duration=20, read_ratio=0.95
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 64 --duration 20 --read-ratio 0.95 --json --sequential
+  App Bandwidth: 381958.0 MB/s, Cache Refs: 175337.6 MB/s
+
+Test 156/240: buffer_size=16.0GB, threads=64, read_ratio=1.00
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=64, duration=20, read_ratio=1
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 64 --duration 20 --read-ratio 1 --json --sequential
+  App Bandwidth: 404656.0 MB/s, Cache Refs: 182038.5 MB/s
+
+Test 157/240: buffer_size=16.0GB, threads=172, read_ratio=0.00
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=172, duration=20, read_ratio=0
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 172 --duration 20 --read-ratio 0 --json --sequential
+  App Bandwidth: 77483.9 MB/s, Cache Refs: 9465.0 MB/s
+
+Test 158/240: buffer_size=16.0GB, threads=172, read_ratio=0.15
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=172, duration=20, read_ratio=0.15
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 172 --duration 20 --read-ratio 0.15 --json --sequential
+  App Bandwidth: 93744.8 MB/s, Cache Refs: 16868.1 MB/s
+
+Test 159/240: buffer_size=16.0GB, threads=172, read_ratio=0.25
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=172, duration=20, read_ratio=0.25
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 172 --duration 20 --read-ratio 0.25 --json --sequential
+  App Bandwidth: 100064.0 MB/s, Cache Refs: 24900.5 MB/s
+
+Test 160/240: buffer_size=16.0GB, threads=172, read_ratio=0.35
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=172, duration=20, read_ratio=0.35
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 172 --duration 20 --read-ratio 0.35 --json --sequential
+  App Bandwidth: 79609.7 MB/s, Cache Refs: 17939.4 MB/s
+
+Test 161/240: buffer_size=16.0GB, threads=172, read_ratio=0.45
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=172, duration=20, read_ratio=0.45
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 172 --duration 20 --read-ratio 0.45 --json --sequential
+  App Bandwidth: 114488.0 MB/s, Cache Refs: 34735.8 MB/s
+
+Test 162/240: buffer_size=16.0GB, threads=172, read_ratio=0.50
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=172, duration=20, read_ratio=0.5
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 172 --duration 20 --read-ratio 0.5 --json --sequential
+  App Bandwidth: 78839.1 MB/s, Cache Refs: 20235.1 MB/s
+
+Test 163/240: buffer_size=16.0GB, threads=172, read_ratio=0.55
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=172, duration=20, read_ratio=0.55
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 172 --duration 20 --read-ratio 0.55 --json --sequential
+  App Bandwidth: 132184.0 MB/s, Cache Refs: 45858.9 MB/s
+
+Test 164/240: buffer_size=16.0GB, threads=172, read_ratio=0.65
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=172, duration=20, read_ratio=0.65
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 172 --duration 20 --read-ratio 0.65 --json --sequential
+  App Bandwidth: 200058.0 MB/s, Cache Refs: 79199.5 MB/s
+
+Test 165/240: buffer_size=16.0GB, threads=172, read_ratio=0.75
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=172, duration=20, read_ratio=0.75
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 172 --duration 20 --read-ratio 0.75 --json --sequential
+  App Bandwidth: 325208.0 MB/s, Cache Refs: 136220.9 MB/s
+
+Test 166/240: buffer_size=16.0GB, threads=172, read_ratio=0.85
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=172, duration=20, read_ratio=0.85
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 172 --duration 20 --read-ratio 0.85 --json --sequential
+  App Bandwidth: 463768.0 MB/s, Cache Refs: 202033.4 MB/s
+
+Test 167/240: buffer_size=16.0GB, threads=172, read_ratio=0.95
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=172, duration=20, read_ratio=0.95
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 172 --duration 20 --read-ratio 0.95 --json --sequential
+  App Bandwidth: 534236.0 MB/s, Cache Refs: 239688.6 MB/s
+
+Test 168/240: buffer_size=16.0GB, threads=172, read_ratio=1.00
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=172, duration=20, read_ratio=1
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 172 --duration 20 --read-ratio 1 --json --sequential
+  App Bandwidth: 514823.0 MB/s, Cache Refs: 228725.7 MB/s
+
+Test 169/240: buffer_size=16.0GB, threads=256, read_ratio=0.00
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=256, duration=20, read_ratio=0
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 256 --duration 20 --read-ratio 0 --json --sequential
+  App Bandwidth: 159767.0 MB/s, Cache Refs: 43212.9 MB/s
+
+Test 170/240: buffer_size=16.0GB, threads=256, read_ratio=0.15
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=256, duration=20, read_ratio=0.15
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 256 --duration 20 --read-ratio 0.15 --json --sequential
+  App Bandwidth: 111923.0 MB/s, Cache Refs: 21480.8 MB/s
+
+Test 171/240: buffer_size=16.0GB, threads=256, read_ratio=0.25
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=256, duration=20, read_ratio=0.25
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 256 --duration 20 --read-ratio 0.25 --json --sequential
+  App Bandwidth: 141050.0 MB/s, Cache Refs: 36314.1 MB/s
+
+Test 172/240: buffer_size=16.0GB, threads=256, read_ratio=0.35
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=256, duration=20, read_ratio=0.35
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 256 --duration 20 --read-ratio 0.35 --json --sequential
+  App Bandwidth: 111345.0 MB/s, Cache Refs: 30035.3 MB/s
+
+Test 173/240: buffer_size=16.0GB, threads=256, read_ratio=0.45
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=256, duration=20, read_ratio=0.45
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 256 --duration 20 --read-ratio 0.45 --json --sequential
+  App Bandwidth: 115532.0 MB/s, Cache Refs: 31027.4 MB/s
+
+Test 174/240: buffer_size=16.0GB, threads=256, read_ratio=0.50
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=256, duration=20, read_ratio=0.5
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 256 --duration 20 --read-ratio 0.5 --json --sequential
+  App Bandwidth: 112548.0 MB/s, Cache Refs: 32404.1 MB/s
+
+Test 175/240: buffer_size=16.0GB, threads=256, read_ratio=0.55
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=256, duration=20, read_ratio=0.55
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 256 --duration 20 --read-ratio 0.55 --json --sequential
+  App Bandwidth: 132342.0 MB/s, Cache Refs: 44896.0 MB/s
+
+Test 176/240: buffer_size=16.0GB, threads=256, read_ratio=0.65
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=256, duration=20, read_ratio=0.65
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 256 --duration 20 --read-ratio 0.65 --json --sequential
+  App Bandwidth: 156332.0 MB/s, Cache Refs: 59773.1 MB/s
+
+Test 177/240: buffer_size=16.0GB, threads=256, read_ratio=0.75
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=256, duration=20, read_ratio=0.75
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 256 --duration 20 --read-ratio 0.75 --json --sequential
+  App Bandwidth: 208882.0 MB/s, Cache Refs: 88267.8 MB/s
+
+Test 178/240: buffer_size=16.0GB, threads=256, read_ratio=0.85
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=256, duration=20, read_ratio=0.85
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 256 --duration 20 --read-ratio 0.85 --json --sequential
+  App Bandwidth: 307651.0 MB/s, Cache Refs: 137228.6 MB/s
+
+Test 179/240: buffer_size=16.0GB, threads=256, read_ratio=0.95
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=256, duration=20, read_ratio=0.95
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 256 --duration 20 --read-ratio 0.95 --json --sequential
+  App Bandwidth: 451798.0 MB/s, Cache Refs: 218823.6 MB/s
+
+Test 180/240: buffer_size=16.0GB, threads=256, read_ratio=1.00
+Running perf + double_bandwidth
+Parameters: buffer_size=17179869184, threads=256, duration=20, read_ratio=1
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 17179869184 --threads 256 --duration 20 --read-ratio 1 --json --sequential
+  App Bandwidth: 290317.0 MB/s, Cache Refs: 132393.2 MB/s
+
+Test 181/240: buffer_size=64.0GB, threads=4, read_ratio=0.00
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=4, duration=20, read_ratio=0
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 4 --duration 20 --read-ratio 0 --json --sequential
+  App Bandwidth: 9662.2 MB/s, Cache Refs: 2444.6 MB/s
+
+Test 182/240: buffer_size=64.0GB, threads=4, read_ratio=0.15
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=4, duration=20, read_ratio=0.15
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 4 --duration 20 --read-ratio 0.15 --json --sequential
+  App Bandwidth: 9479.6 MB/s, Cache Refs: 2672.2 MB/s
+
+Test 183/240: buffer_size=64.0GB, threads=4, read_ratio=0.25
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=4, duration=20, read_ratio=0.25
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 4 --duration 20 --read-ratio 0.25 --json --sequential
+  App Bandwidth: 10797.4 MB/s, Cache Refs: 3360.0 MB/s
+
+Test 184/240: buffer_size=64.0GB, threads=4, read_ratio=0.35
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=4, duration=20, read_ratio=0.35
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 4 --duration 20 --read-ratio 0.35 --json --sequential
+  App Bandwidth: 11004.5 MB/s, Cache Refs: 3434.1 MB/s
+
+Test 185/240: buffer_size=64.0GB, threads=4, read_ratio=0.45
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=4, duration=20, read_ratio=0.45
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 4 --duration 20 --read-ratio 0.45 --json --sequential
+  App Bandwidth: 11017.4 MB/s, Cache Refs: 3376.0 MB/s
+
+Test 186/240: buffer_size=64.0GB, threads=4, read_ratio=0.50
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=4, duration=20, read_ratio=0.5
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 4 --duration 20 --read-ratio 0.5 --json --sequential
+  App Bandwidth: 11515.8 MB/s, Cache Refs: 3861.2 MB/s
+
+Test 187/240: buffer_size=64.0GB, threads=4, read_ratio=0.55
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=4, duration=20, read_ratio=0.55
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 4 --duration 20 --read-ratio 0.55 --json --sequential
+  App Bandwidth: 11917.2 MB/s, Cache Refs: 3827.5 MB/s
+
+Test 188/240: buffer_size=64.0GB, threads=4, read_ratio=0.65
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=4, duration=20, read_ratio=0.65
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 4 --duration 20 --read-ratio 0.65 --json --sequential
+  App Bandwidth: 11890.7 MB/s, Cache Refs: 3982.2 MB/s
+
+Test 189/240: buffer_size=64.0GB, threads=4, read_ratio=0.75
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=4, duration=20, read_ratio=0.75
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 4 --duration 20 --read-ratio 0.75 --json --sequential
+  App Bandwidth: 16295.6 MB/s, Cache Refs: 3674.9 MB/s
+
+Test 190/240: buffer_size=64.0GB, threads=4, read_ratio=0.85
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=4, duration=20, read_ratio=0.85
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 4 --duration 20 --read-ratio 0.85 --json --sequential
+  App Bandwidth: 16051.2 MB/s, Cache Refs: 3663.1 MB/s
+
+Test 191/240: buffer_size=64.0GB, threads=4, read_ratio=0.95
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=4, duration=20, read_ratio=0.95
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 4 --duration 20 --read-ratio 0.95 --json --sequential
+  App Bandwidth: 16720.8 MB/s, Cache Refs: 3750.7 MB/s
+
+Test 192/240: buffer_size=64.0GB, threads=4, read_ratio=1.00
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=4, duration=20, read_ratio=1
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 4 --duration 20 --read-ratio 1 --json --sequential
+  App Bandwidth: 19541.8 MB/s, Cache Refs: 4173.5 MB/s
+
+Test 193/240: buffer_size=64.0GB, threads=16, read_ratio=0.00
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=16, duration=20, read_ratio=0
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 16 --duration 20 --read-ratio 0 --json --sequential
+  App Bandwidth: 37059.5 MB/s, Cache Refs: 8068.9 MB/s
+
+Test 194/240: buffer_size=64.0GB, threads=16, read_ratio=0.15
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=16, duration=20, read_ratio=0.15
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 16 --duration 20 --read-ratio 0.15 --json --sequential
+  App Bandwidth: 36500.5 MB/s, Cache Refs: 8998.8 MB/s
+
+Test 195/240: buffer_size=64.0GB, threads=16, read_ratio=0.25
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=16, duration=20, read_ratio=0.25
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 16 --duration 20 --read-ratio 0.25 --json --sequential
+  App Bandwidth: 47728.1 MB/s, Cache Refs: 9896.8 MB/s
+
+Test 196/240: buffer_size=64.0GB, threads=16, read_ratio=0.35
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=16, duration=20, read_ratio=0.35
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 16 --duration 20 --read-ratio 0.35 --json --sequential
+  App Bandwidth: 52420.2 MB/s, Cache Refs: 10469.5 MB/s
+
+Test 197/240: buffer_size=64.0GB, threads=16, read_ratio=0.45
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=16, duration=20, read_ratio=0.45
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 16 --duration 20 --read-ratio 0.45 --json --sequential
+  App Bandwidth: 59222.1 MB/s, Cache Refs: 12560.9 MB/s
+
+Test 198/240: buffer_size=64.0GB, threads=16, read_ratio=0.50
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=16, duration=20, read_ratio=0.5
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 16 --duration 20 --read-ratio 0.5 --json --sequential
+  App Bandwidth: 55813.2 MB/s, Cache Refs: 12704.6 MB/s
+
+Test 199/240: buffer_size=64.0GB, threads=16, read_ratio=0.55
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=16, duration=20, read_ratio=0.55
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 16 --duration 20 --read-ratio 0.55 --json --sequential
+  App Bandwidth: 63420.5 MB/s, Cache Refs: 13711.5 MB/s
+
+Test 200/240: buffer_size=64.0GB, threads=16, read_ratio=0.65
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=16, duration=20, read_ratio=0.65
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 16 --duration 20 --read-ratio 0.65 --json --sequential
+  App Bandwidth: 68483.0 MB/s, Cache Refs: 15208.2 MB/s
+
+Test 201/240: buffer_size=64.0GB, threads=16, read_ratio=0.75
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=16, duration=20, read_ratio=0.75
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 16 --duration 20 --read-ratio 0.75 --json --sequential
+  App Bandwidth: 83143.3 MB/s, Cache Refs: 15888.8 MB/s
+
+Test 202/240: buffer_size=64.0GB, threads=16, read_ratio=0.85
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=16, duration=20, read_ratio=0.85
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 16 --duration 20 --read-ratio 0.85 --json --sequential
+  App Bandwidth: 89443.2 MB/s, Cache Refs: 18284.7 MB/s
+
+Test 203/240: buffer_size=64.0GB, threads=16, read_ratio=0.95
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=16, duration=20, read_ratio=0.95
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 16 --duration 20 --read-ratio 0.95 --json --sequential
+  App Bandwidth: 95788.5 MB/s, Cache Refs: 20219.8 MB/s
+
+Test 204/240: buffer_size=64.0GB, threads=16, read_ratio=1.00
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=16, duration=20, read_ratio=1
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 16 --duration 20 --read-ratio 1 --json --sequential
+  App Bandwidth: 104618.0 MB/s, Cache Refs: 21915.0 MB/s
+
+Test 205/240: buffer_size=64.0GB, threads=64, read_ratio=0.00
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=64, duration=20, read_ratio=0
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 64 --duration 20 --read-ratio 0 --json --sequential
+  App Bandwidth: 45387.6 MB/s, Cache Refs: 2374.8 MB/s
+
+Test 206/240: buffer_size=64.0GB, threads=64, read_ratio=0.15
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=64, duration=20, read_ratio=0.15
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 64 --duration 20 --read-ratio 0.15 --json --sequential
+  App Bandwidth: 48666.4 MB/s, Cache Refs: 3758.0 MB/s
+
+Test 207/240: buffer_size=64.0GB, threads=64, read_ratio=0.25
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=64, duration=20, read_ratio=0.25
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 64 --duration 20 --read-ratio 0.25 --json --sequential
+  App Bandwidth: 62056.1 MB/s, Cache Refs: 6164.1 MB/s
+
+Test 208/240: buffer_size=64.0GB, threads=64, read_ratio=0.35
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=64, duration=20, read_ratio=0.35
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 64 --duration 20 --read-ratio 0.35 --json --sequential
+  App Bandwidth: 66838.3 MB/s, Cache Refs: 6091.8 MB/s
+
+Test 209/240: buffer_size=64.0GB, threads=64, read_ratio=0.45
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=64, duration=20, read_ratio=0.45
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 64 --duration 20 --read-ratio 0.45 --json --sequential
+  App Bandwidth: 84345.9 MB/s, Cache Refs: 11404.3 MB/s
+
+Test 210/240: buffer_size=64.0GB, threads=64, read_ratio=0.50
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=64, duration=20, read_ratio=0.5
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 64 --duration 20 --read-ratio 0.5 --json --sequential
+  App Bandwidth: 74636.2 MB/s, Cache Refs: 8667.6 MB/s
+
+Test 211/240: buffer_size=64.0GB, threads=64, read_ratio=0.55
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=64, duration=20, read_ratio=0.55
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 64 --duration 20 --read-ratio 0.55 --json --sequential
+  App Bandwidth: 119784.0 MB/s, Cache Refs: 18603.5 MB/s
+
+Test 212/240: buffer_size=64.0GB, threads=64, read_ratio=0.65
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=64, duration=20, read_ratio=0.65
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 64 --duration 20 --read-ratio 0.65 --json --sequential
+  App Bandwidth: 135027.0 MB/s, Cache Refs: 21611.9 MB/s
+
+Test 213/240: buffer_size=64.0GB, threads=64, read_ratio=0.75
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=64, duration=20, read_ratio=0.75
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 64 --duration 20 --read-ratio 0.75 --json --sequential
+  App Bandwidth: 272505.0 MB/s, Cache Refs: 48262.7 MB/s
+
+Test 214/240: buffer_size=64.0GB, threads=64, read_ratio=0.85
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=64, duration=20, read_ratio=0.85
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 64 --duration 20 --read-ratio 0.85 --json --sequential
+  App Bandwidth: 312460.0 MB/s, Cache Refs: 55311.8 MB/s
+
+Test 215/240: buffer_size=64.0GB, threads=64, read_ratio=0.95
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=64, duration=20, read_ratio=0.95
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 64 --duration 20 --read-ratio 0.95 --json --sequential
+  App Bandwidth: 350674.0 MB/s, Cache Refs: 60633.3 MB/s
+
+Test 216/240: buffer_size=64.0GB, threads=64, read_ratio=1.00
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=64, duration=20, read_ratio=1
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 64 --duration 20 --read-ratio 1 --json --sequential
+  App Bandwidth: 392281.0 MB/s, Cache Refs: 74574.3 MB/s
+
+Test 217/240: buffer_size=64.0GB, threads=172, read_ratio=0.00
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=172, duration=20, read_ratio=0
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 172 --duration 20 --read-ratio 0 --json --sequential
+  App Bandwidth: 79132.5 MB/s, Cache Refs: 5243.3 MB/s
+
+Test 218/240: buffer_size=64.0GB, threads=172, read_ratio=0.15
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=172, duration=20, read_ratio=0.15
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 172 --duration 20 --read-ratio 0.15 --json --sequential
+  App Bandwidth: 77758.9 MB/s, Cache Refs: 5844.0 MB/s
+
+Test 219/240: buffer_size=64.0GB, threads=172, read_ratio=0.25
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=172, duration=20, read_ratio=0.25
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 172 --duration 20 --read-ratio 0.25 --json --sequential
+  App Bandwidth: 78505.4 MB/s, Cache Refs: 6496.4 MB/s
+
+Test 220/240: buffer_size=64.0GB, threads=172, read_ratio=0.35
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=172, duration=20, read_ratio=0.35
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 172 --duration 20 --read-ratio 0.35 --json --sequential
+  App Bandwidth: 82302.8 MB/s, Cache Refs: 8627.9 MB/s
+
+Test 221/240: buffer_size=64.0GB, threads=172, read_ratio=0.45
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=172, duration=20, read_ratio=0.45
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 172 --duration 20 --read-ratio 0.45 --json --sequential
+  App Bandwidth: 108200.0 MB/s, Cache Refs: 13018.5 MB/s
+
+Test 222/240: buffer_size=64.0GB, threads=172, read_ratio=0.50
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=172, duration=20, read_ratio=0.5
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 172 --duration 20 --read-ratio 0.5 --json --sequential
+  App Bandwidth: 96356.9 MB/s, Cache Refs: 12039.2 MB/s
+
+Test 223/240: buffer_size=64.0GB, threads=172, read_ratio=0.55
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=172, duration=20, read_ratio=0.55
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 172 --duration 20 --read-ratio 0.55 --json --sequential
+  App Bandwidth: 105508.0 MB/s, Cache Refs: 14656.6 MB/s
+
+Test 224/240: buffer_size=64.0GB, threads=172, read_ratio=0.65
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=172, duration=20, read_ratio=0.65
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 172 --duration 20 --read-ratio 0.65 --json --sequential
+  App Bandwidth: 144470.0 MB/s, Cache Refs: 20780.7 MB/s
+
+Test 225/240: buffer_size=64.0GB, threads=172, read_ratio=0.75
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=172, duration=20, read_ratio=0.75
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 172 --duration 20 --read-ratio 0.75 --json --sequential
+  App Bandwidth: 262697.0 MB/s, Cache Refs: 43809.2 MB/s
+
+Test 226/240: buffer_size=64.0GB, threads=172, read_ratio=0.85
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=172, duration=20, read_ratio=0.85
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 172 --duration 20 --read-ratio 0.85 --json --sequential
+  App Bandwidth: 342092.0 MB/s, Cache Refs: 65162.5 MB/s
+
+Test 227/240: buffer_size=64.0GB, threads=172, read_ratio=0.95
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=172, duration=20, read_ratio=0.95
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 172 --duration 20 --read-ratio 0.95 --json --sequential
+  App Bandwidth: 486309.0 MB/s, Cache Refs: 89917.5 MB/s
+
+Test 228/240: buffer_size=64.0GB, threads=172, read_ratio=1.00
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=172, duration=20, read_ratio=1
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 172 --duration 20 --read-ratio 1 --json --sequential
+  App Bandwidth: 504435.0 MB/s, Cache Refs: 89597.2 MB/s
+
+Test 229/240: buffer_size=64.0GB, threads=256, read_ratio=0.00
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=256, duration=20, read_ratio=0
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 256 --duration 20 --read-ratio 0 --json --sequential
+  App Bandwidth: 80949.8 MB/s, Cache Refs: 4590.2 MB/s
+
+Test 230/240: buffer_size=64.0GB, threads=256, read_ratio=0.15
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=256, duration=20, read_ratio=0.15
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 256 --duration 20 --read-ratio 0.15 --json --sequential
+  App Bandwidth: 116333.0 MB/s, Cache Refs: 10789.0 MB/s
+
+Test 231/240: buffer_size=64.0GB, threads=256, read_ratio=0.25
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=256, duration=20, read_ratio=0.25
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 256 --duration 20 --read-ratio 0.25 --json --sequential
+  App Bandwidth: 101458.0 MB/s, Cache Refs: 10226.3 MB/s
+
+Test 232/240: buffer_size=64.0GB, threads=256, read_ratio=0.35
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=256, duration=20, read_ratio=0.35
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 256 --duration 20 --read-ratio 0.35 --json --sequential
+  App Bandwidth: 106718.0 MB/s, Cache Refs: 12810.2 MB/s
+
+Test 233/240: buffer_size=64.0GB, threads=256, read_ratio=0.45
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=256, duration=20, read_ratio=0.45
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 256 --duration 20 --read-ratio 0.45 --json --sequential
+  App Bandwidth: 136645.0 MB/s, Cache Refs: 17097.1 MB/s
+
+Test 234/240: buffer_size=64.0GB, threads=256, read_ratio=0.50
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=256, duration=20, read_ratio=0.5
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 256 --duration 20 --read-ratio 0.5 --json --sequential
+  App Bandwidth: 104483.0 MB/s, Cache Refs: 13413.8 MB/s
+
+Test 235/240: buffer_size=64.0GB, threads=256, read_ratio=0.55
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=256, duration=20, read_ratio=0.55
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 256 --duration 20 --read-ratio 0.55 --json --sequential
+  App Bandwidth: 145737.0 MB/s, Cache Refs: 21108.6 MB/s
+
+Test 236/240: buffer_size=64.0GB, threads=256, read_ratio=0.65
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=256, duration=20, read_ratio=0.65
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 256 --duration 20 --read-ratio 0.65 --json --sequential
+  App Bandwidth: 140526.0 MB/s, Cache Refs: 20732.2 MB/s
+
+Test 237/240: buffer_size=64.0GB, threads=256, read_ratio=0.75
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=256, duration=20, read_ratio=0.75
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 256 --duration 20 --read-ratio 0.75 --json --sequential
+  App Bandwidth: 191882.0 MB/s, Cache Refs: 32730.5 MB/s
+
+Test 238/240: buffer_size=64.0GB, threads=256, read_ratio=0.85
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=256, duration=20, read_ratio=0.85
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 256 --duration 20 --read-ratio 0.85 --json --sequential
+  App Bandwidth: 296119.0 MB/s, Cache Refs: 55610.3 MB/s
+
+Test 239/240: buffer_size=64.0GB, threads=256, read_ratio=0.95
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=256, duration=20, read_ratio=0.95
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 256 --duration 20 --read-ratio 0.95 --json --sequential
+  App Bandwidth: 407345.0 MB/s, Cache Refs: 75837.8 MB/s
+
+Test 240/240: buffer_size=64.0GB, threads=256, read_ratio=1.00
+Running perf + double_bandwidth
+Parameters: buffer_size=68719476736, threads=256, duration=20, read_ratio=1
+Running command: sudo perf stat -e instructions,cycles,cache-references,cache-misses,longest_lat_cache.miss,mem_inst_retired.all_loads,mem_inst_retired.all_stores,mem_load_retired.l3_hit,mem_load_retired.l3_miss,offcore_requests.l3_miss_demand_data_rd,offcore_requests.demand_data_rd,offcore_requests.demand_rfo,uncore_imc/cas_count_read/,uncore_imc/cas_count_write/,cycle_activity.stalls_l3_miss,memory_activity.stalls_l3_miss /root/yunwei37/ai-os/workloads/cxl-micro/double_bandwidth --buffer-size 68719476736 --threads 256 --duration 20 --read-ratio 1 --json --sequential
+  App Bandwidth: 461142.0 MB/s, Cache Refs: 82404.6 MB/s
+Parameter sweep results saved to CSV: results/cxl_perf_parameter_sweep.csv
+Parameter sweep results saved to JSON: results/cxl_perf_parameter_sweep.json
+
+================================================================================
+CXL PERF BANDWIDTH PARAMETER SWEEP SUMMARY
+================================================================================
+
+Successful tests: 240/240
+
+TOP 5 CONFIGURATIONS BY APPLICATION BANDWIDTH:
+------------------------------------------------------------
+     1GB, 172 threads, ratio 1.00: 629560.0 MB/s
+     1GB, 256 threads, ratio 1.00: 618497.0 MB/s
+     1GB, 172 threads, ratio 0.95: 591521.0 MB/s
+     4GB, 256 threads, ratio 1.00: 590775.0 MB/s
+     1GB, 256 threads, ratio 0.95: 575566.0 MB/s
+
+TOP 5 CONFIGURATIONS BY CACHE REFERENCES BANDWIDTH:
+------------------------------------------------------------
+     1GB, 256 threads, ratio 1.00: 574664.5 MB/s
+     1GB, 172 threads, ratio 1.00: 574373.2 MB/s
+     1GB, 172 threads, ratio 0.95: 542964.9 MB/s
+     1GB, 256 threads, ratio 0.95: 536079.4 MB/s
+     1GB, 172 threads, ratio 0.85: 495906.4 MB/s
+
+SUMMARY STATISTICS:
+----------------------------------------
+Application Bandwidth (MB/s):
+  Mean:    139692.7
+  Median:   92629.3
+  Max:     629560.0
+  Min:       9392.7
+
+Cache References Bandwidth (MB/s):
+  Mean:     75346.0
+  Median:   33809.0
+  Max:     574664.5
+  Min:       2374.8
+
+Cache Miss Rate (%):
+  Mean:       59.93
+  Median:     58.40
+  Max:        86.40
+  Min:        50.34
+
+Parameter sweep complete!
