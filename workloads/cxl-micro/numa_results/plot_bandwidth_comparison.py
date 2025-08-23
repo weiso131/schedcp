@@ -24,15 +24,16 @@ def plot_bandwidth_vs_datasize():
     
     # Define file paths and labels
     numa_configs = [
-        {'file': 'cxl_perf_parameter_sweep_numactl0.csv', 'label': 'NUMA Node 0 (DDR5) random access', 'interleave': '0'},
-        {'file': 'cxl_perf_parameter_sweep_numactl2.csv', 'label': 'NUMA Node 2 (CXL 256GB) random access', 'interleave': '2'},
-        {'file': 'cxl_perf_parameter_sweep_numactl3.csv', 'label': 'NUMA Node 3 (CXL 512GB) random access', 'interleave': '3'},
+        {'file': 'cxl_perf_parameter_sweep_numactl0.csv', 'label': 'NUMA Node 0 (DDR5) random', 'interleave': '0'},
+        {'file': 'cxl_perf_parameter_sweep_numactl0_seq.csv', 'label': 'NUMA Node 0 (DDR5) sequential', 'interleave': '0_seq'},
+        {'file': 'cxl_perf_parameter_sweep_numactl2.csv', 'label': 'NUMA Node 2 (CXL 256GB) random', 'interleave': '2'},
         {'file': 'cxl_perf_parameter_sweep_numactl2_seq.csv', 'label': 'NUMA Node 2 (CXL 256GB) sequential', 'interleave': '2_seq'},
+        {'file': 'cxl_perf_parameter_sweep_numactl3.csv', 'label': 'NUMA Node 3 (CXL 512GB) random', 'interleave': '3'},
         {'file': 'cxl_perf_parameter_sweep_numactl3_seq.csv', 'label': 'NUMA Node 3 (CXL 512GB) sequential', 'interleave': '3_seq'},
     ]
     
-    # Create figure with subplots (5 configs now in one row)
-    fig, axes = plt.subplots(1, 5, figsize=(30, 6))
+    # Create figure with subplots (6 configs now in one row)
+    fig, axes = plt.subplots(1, 6, figsize=(36, 6))
     fig.suptitle('Total Bandwidth vs Read Ratio (Thread Count = 172)', fontsize=20, fontweight='bold')
     
     # Color palette for different data sizes
@@ -122,14 +123,15 @@ def plot_bandwidth_comparison():
     # Define file paths and labels
     numa_configs = [
         {'file': 'cxl_perf_parameter_sweep_numactl0.csv', 'label': 'NUMA Node 0 (DDR5) random', 'interleave': '0'},
+        {'file': 'cxl_perf_parameter_sweep_numactl0_seq.csv', 'label': 'NUMA Node 0 (DDR5) sequential', 'interleave': '0_seq'},
         {'file': 'cxl_perf_parameter_sweep_numactl2.csv', 'label': 'NUMA Node 2 (CXL 256GB) random', 'interleave': '2'},
-        {'file': 'cxl_perf_parameter_sweep_numactl3.csv', 'label': 'NUMA Node 3 (CXL 512GB) random', 'interleave': '3'},
         {'file': 'cxl_perf_parameter_sweep_numactl2_seq.csv', 'label': 'NUMA Node 2 (CXL 256GB) sequential', 'interleave': '2_seq'},
+        {'file': 'cxl_perf_parameter_sweep_numactl3.csv', 'label': 'NUMA Node 3 (CXL 512GB) random', 'interleave': '3'},
         {'file': 'cxl_perf_parameter_sweep_numactl3_seq.csv', 'label': 'NUMA Node 3 (CXL 512GB) sequential', 'interleave': '3_seq'}
     ]
     
-    # Create figure with subplots (5 configs now in one row)
-    fig, axes = plt.subplots(1, 5, figsize=(30, 6))
+    # Create figure with subplots (6 configs now in one row)
+    fig, axes = plt.subplots(1, 6, figsize=(36, 6))
     fig.suptitle('Total Bandwidth vs Read Ratio (Buffer Size = 64GB)', fontsize=20, fontweight='bold')
     
     # Color palette for different thread counts
@@ -223,10 +225,10 @@ def create_combined_plot(numa_configs):
                  fontsize=20, fontweight='bold')
     
     # Use different line styles for different NUMA configs
-    line_styles = ['-', '--', '-.', ':', '-']
+    line_styles = ['-', '--', '-.', ':', '-', '--']
     # Use different colors for each config
-    colors = ['blue', 'red', 'green', 'orange', 'purple']
-    markers = ['o', 's', '^', 'D', 'v']
+    colors = ['blue', 'cyan', 'red', 'orange', 'green', 'purple']
+    markers = ['o', 's', '^', 'D', 'v', 'p']
     
     for config_idx, config in enumerate(numa_configs):
         if not os.path.exists(config['file']):
@@ -288,9 +290,10 @@ def print_summary_statistics():
     
     numa_configs = [
         {'file': 'cxl_perf_parameter_sweep_numactl0.csv', 'label': 'NUMA Node 0 (DDR5) random', 'interleave': '0'},
+        {'file': 'cxl_perf_parameter_sweep_numactl0_seq.csv', 'label': 'NUMA Node 0 (DDR5) sequential', 'interleave': '0_seq'},
         {'file': 'cxl_perf_parameter_sweep_numactl2.csv', 'label': 'NUMA Node 2 (CXL 256GB) random', 'interleave': '2'},
-        {'file': 'cxl_perf_parameter_sweep_numactl3.csv', 'label': 'NUMA Node 3 (CXL 512GB) random', 'interleave': '3'},
         {'file': 'cxl_perf_parameter_sweep_numactl2_seq.csv', 'label': 'NUMA Node 2 (CXL 256GB) sequential', 'interleave': '2_seq'},
+        {'file': 'cxl_perf_parameter_sweep_numactl3.csv', 'label': 'NUMA Node 3 (CXL 512GB) random', 'interleave': '3'},
         {'file': 'cxl_perf_parameter_sweep_numactl3_seq.csv', 'label': 'NUMA Node 3 (CXL 512GB) sequential', 'interleave': '3_seq'}
     ]
     
