@@ -16,7 +16,7 @@ class NginxBenchmark:
         self.nginx_dir = nginx_dir
         self.wrk2_dir = wrk2_dir
         self.results_dir = results_dir
-        self.nginx_binary = "./nginx-bin"
+        self.nginx_binary = os.path.join(nginx_dir, "objs", "nginx")
         self.nginx_config = os.path.abspath("nginx-local.conf")
         self.wrk2_binary = os.path.join(wrk2_dir, "wrk")
         
@@ -58,10 +58,13 @@ class NginxBenchmark:
             print(f"✓ wrk2 binary found at {self.wrk2_binary}")
         
         # Check HTML directory
-        html_dir = "/home/yunwei37/ai-os/workloads/nginx/html"
+        html_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "html")
         if not os.path.exists(html_dir):
-            print(f"ERROR: HTML directory not found at {html_dir}")
-            sys.exit(1)
+            print(f"WARNING: HTML directory not found at {html_dir}")
+            print("Creating HTML directory...")
+            os.makedirs(html_dir, exist_ok=True)
+            with open(os.path.join(html_dir, "index.html"), "w") as f:
+                f.write("<html><body><h1>Nginx Benchmark Test Page</h1></body></html>")
         else:
             print(f"✓ HTML directory found at {html_dir}")
         
@@ -393,6 +396,7 @@ class NginxBenchmark:
 
 def main():
     try:
+        print("Initializing NginxBenchmark...")
         benchmark = NginxBenchmark()
         
         print("Starting Nginx benchmark suite with wrk2...")
@@ -443,4 +447,18 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "--test":
+        # Simple test mode
+        print("Testing nginx_benchmark.py...")
+        benchmark = NginxBenchmark()
+        print("✓ Benchmark object created successfully")
+        print("Testing nginx startup...")
+        if benchmark.start_nginx():
+            print("✓ Nginx started successfully")
+            benchmark.stop_nginx()
+            print("✓ Nginx stopped successfully")
+        else:
+            print("✗ Failed to start nginx")
+    else:
+        main()

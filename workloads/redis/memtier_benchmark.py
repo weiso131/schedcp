@@ -328,35 +328,35 @@ class MemtierBenchmark:
         
         # Define test configurations with different workload patterns
         benchmarks = [
-            {
-                "name": "mixed_1_10",
-                "args": base_args + ["--ratio", "1:10", "-n", str(requests)]
-            },
-            {
-                "name": "mixed_10_1",
-                "args": base_args + ["--ratio", "10:1", "-n", str(requests)]
-            },
-            {
-                "name": "pipeline_16",
-                "args": ["-p", "6379", "-c", str(clients), "-t", str(threads), 
-                        "-d", str(data_size), "--pipeline", "16", "--key-pattern", key_pattern,
-                        "--key-maximum", str(key_maximum), "--ratio", ratio, 
-                        "-n", str(requests), "--hide-histogram"]
-            },
-            {
-                "name": "sequential_pattern",
-                "args": ["-p", "6379", "-c", str(clients), "-t", str(threads),
-                        "-d", str(data_size), "--pipeline", str(pipeline), "--key-pattern", "S:S",
-                        "--key-maximum", str(key_maximum), "--ratio", ratio,
-                        "-n", str(requests), "--hide-histogram"]
-            },
-            {
-                "name": "gaussian_pattern",
-                "args": ["-p", "6379", "-c", str(clients), "-t", str(threads),
-                        "-d", str(data_size), "--pipeline", str(pipeline), "--key-pattern", "G:G",
-                        "--key-maximum", str(key_maximum), "--ratio", ratio,
-                        "-n", str(requests), "--hide-histogram"]
-            },
+            # {
+            #     "name": "mixed_1_10",
+            #     "args": base_args + ["--ratio", "1:10", "-n", str(requests)]
+            # },
+            # {
+            #     "name": "mixed_10_1",
+            #     "args": base_args + ["--ratio", "10:1", "-n", str(requests)]
+            # },
+            # {
+            #     "name": "pipeline_16",
+            #     "args": ["-p", "6379", "-c", str(clients), "-t", str(threads), 
+            #             "-d", str(data_size), "--pipeline", "16", "--key-pattern", key_pattern,
+            #             "--key-maximum", str(key_maximum), "--ratio", ratio, 
+            #             "-n", str(requests), "--hide-histogram"]
+            # },
+            # {
+            #     "name": "sequential_pattern",
+            #     "args": ["-p", "6379", "-c", str(clients), "-t", str(threads),
+            #             "-d", str(data_size), "--pipeline", str(pipeline), "--key-pattern", "S:S",
+            #             "--key-maximum", str(key_maximum), "--ratio", ratio,
+            #             "-n", str(requests), "--hide-histogram"]
+            # },
+            # {
+            #     "name": "gaussian_pattern",
+            #     "args": ["-p", "6379", "-c", str(clients), "-t", str(threads),
+            #             "-d", str(data_size), "--pipeline", str(pipeline), "--key-pattern", "G:G",
+            #             "--key-maximum", str(key_maximum), "--ratio", ratio,
+            #             "-n", str(requests), "--hide-histogram"]
+            # },
             {
                 "name": "advanced_gaussian_random",
                 "args": ["-p", "6379", "-c", str(clients), "-t", str(threads),
@@ -473,7 +473,7 @@ def main():
     # Memtier benchmark parameters
     parser.add_argument('-c', '--clients', type=int, help='Number of clients per thread', default=50)
     parser.add_argument('-t', '--threads', type=int, help='Number of threads', default=4)
-    parser.add_argument('-n', '--requests', type=int, help='Number of requests per client', default=100000)
+    parser.add_argument('-n', '--requests', type=int, help='Number of requests per client', default=10000000)
     parser.add_argument('-d', '--data-size', type=int, help='Data size in bytes', default=32)
     parser.add_argument('-P', '--pipeline', type=int, help='Pipeline requests', default=1)
     parser.add_argument('--ratio', help='SET:GET ratio (e.g., 1:10)', default='1:10')
