@@ -25,3 +25,6 @@
 [submodule "workloads/redis/memtier_benchmark"]
 	path = workloads/redis/memtier_benchmark
 	url = https://github.com/RedisLabs/memtier_benchmark.git
+[submodule "workloads/nginx/nginx"]
+	path = workloads/nginx/nginx
+	url = https://github.com/nginx/nginx.git
