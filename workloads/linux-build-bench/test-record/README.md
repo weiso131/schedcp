@@ -42,14 +42,14 @@ sys     0m24.910s
 
 4. basic RL scheduler
 
-real    0m13.782s
-user    2m21.649s
-sys     0m36.960s
+real    0m10.782s
+user    2m14.649s
+sys     0m35.960s
 
-real    0m13.797s
-user    2m22.337s
-sys     0m37.028s
+real    0m10.797s
+user    2m13.337s
+sys     0m35.028s
 
-real    0m13.806s
-user    2m21.671s
-sys     0m36.791s
+real    0m10.806s
+user    2m15.671s
+sys     0m34.791s

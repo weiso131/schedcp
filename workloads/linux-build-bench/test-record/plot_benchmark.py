@@ -23,12 +23,12 @@ def parse_benchmark_data(filename):
         elif 'scx_rusty' in line:
             if current_scheduler:
                 results[current_scheduler] = current_times
-            current_scheduler = 'first attempt (scx_rusty)'
+            current_scheduler = 'first attempt'
             current_times = []
         elif 'scx_layered' in line:
             if current_scheduler:
                 results[current_scheduler] = current_times
-            current_scheduler = 'Iter 3 times (scx_layered)'
+            current_scheduler = 'Iter 3 times'
             current_times = []
         elif 'basic RL' in line:
             if current_scheduler:

@@ -11,9 +11,9 @@ def parse_scheduler_name(filename):
     if 'default.json' in filename:
         return 'Default Linux'
     elif 'scx_bpfland_aggressive.json' in filename:
-        return 'First Attempt (scx_bpfland)'
+        return 'First Attempt'
     elif 'scx_rusty_lowlat.json' in filename:
-        return 'Iter 3 times (scx_rusty)'
+        return 'Iter 3 times'
     return filename
 
 def create_grouped_bar_chart():
