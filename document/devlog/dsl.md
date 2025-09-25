@@ -56,10 +56,10 @@
 *For everyday tuning, stick with sysctl / cgroups or a daemon like ananicy‑cpp.*
 If you need *new* policies, today’s practical path is: **write an eBPF scheduler with sched\_ext**. A true, high‑level, declarative DSL is still a research topic—Bossa shows it’s doable, but nobody has carried a DSL into mainline yet.
 
-[1]: https://docs.kernel.org/scheduler/sched-ext.html?utm_source=chatgpt.com "Extensible Scheduler Class - The Linux Kernel documentation"
-[2]: https://www.litmus-rt.org/create_plugin/create_plugin.html?utm_source=chatgpt.com "Writing a LITMUS^RT Scheduler Plugin"
-[3]: https://github.com/nefelim4ag/Ananicy?utm_source=chatgpt.com "Ananicy - is Another auto nice daemon, with community rules ..."
-[4]: https://github.com/arighi/scx_rust_scheduler?utm_source=chatgpt.com "arighi/scx_rust_scheduler: Template to implement Linux kernel ..."
+[1]: https://docs.kernel.org/scheduler/sched-ext.html "Extensible Scheduler Class - The Linux Kernel documentation"
+[2]: https://www.litmus-rt.org/create_plugin/create_plugin.html "Writing a LITMUS^RT Scheduler Plugin"
+[3]: https://github.com/nefelim4ag/Ananicy "Ananicy - is Another auto nice daemon, with community rules ..."
+[4]: https://github.com/arighi/scx_rust_scheduler "arighi/scx_rust_scheduler: Template to implement Linux kernel ..."
 
 #### Quick background
 
