@@ -1,6 +1,8 @@
 # SchedCP - MCP Server for Linux Scheduler Management
 
-> WIP, not finished yet 
+> WIP, not finished yet
+>
+> We are building a benchmark for evaluation the optimizations for OS!
 
 SchedCP is a Model Context Protocol (MCP) server that enables AI assistants to intelligently manage Linux kernel schedulers through the sched-ext framework. It provides AI-powered scheduler selection, workload profiling, and real-time performance optimization.
 
