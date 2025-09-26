@@ -1,26 +1,35 @@
 use crate::workload_profile::WorkloadStore;
 use anyhow::Result;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::fs;
 use tracing::{info, error, warn};
 
 const STORAGE_FILE: &str = "schedcp_workloads.json";
 
 pub struct PersistentStorage {
-    file_path: String,
+    file_path: PathBuf,
 }
 
 impl PersistentStorage {
     pub fn new() -> Self {
+        let home_dir = std::env::var("HOME")
+            .unwrap_or_else(|_| ".".to_string());
+        let schedcp_dir = Path::new(&home_dir).join(".schedcp");
+        
+        // Ensure the directory exists
+        if let Err(e) = fs::create_dir_all(&schedcp_dir) {
+            error!("Failed to create ~/.schedcp directory: {}", e);
+        }
+        
         Self {
-            file_path: STORAGE_FILE.to_string(),
+            file_path: schedcp_dir.join(STORAGE_FILE),
         }
     }
 
     #[allow(dead_code)]
     pub fn with_path<P: AsRef<Path>>(path: P) -> Self {
         Self {
-            file_path: path.as_ref().to_string_lossy().to_string(),
+            file_path: path.as_ref().to_path_buf(),
         }
     }
 
@@ -33,7 +42,7 @@ impl PersistentStorage {
         let data = fs::read_to_string(&self.file_path)?;
         match serde_json::from_str(&data) {
             Ok(store) => {
-                info!("Loaded workload store from {}", self.file_path);
+                info!("Loaded workload store from {}", self.file_path.display());
                 Ok(store)
             }
             Err(e) => {
@@ -41,11 +50,13 @@ impl PersistentStorage {
                 warn!("Creating backup and starting with new store");
                 
                 // Create backup of corrupted file
-                let backup_path = format!("{}.backup.{}", self.file_path, 
-                    std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .unwrap()
-                        .as_secs()
+                let backup_path = self.file_path.with_extension(
+                    format!("backup.{}",
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs()
+                    )
                 );
                 fs::copy(&self.file_path, &backup_path)?;
                 
@@ -63,13 +74,13 @@ impl PersistentStorage {
         }
         
         // Write to temporary file first
-        let temp_path = format!("{}.tmp", self.file_path);
+        let temp_path = self.file_path.with_extension("tmp");
         fs::write(&temp_path, data)?;
         
         // Atomic rename
         fs::rename(&temp_path, &self.file_path)?;
         
-        info!("Saved workload store to {}", self.file_path);
+        info!("Saved workload store to {}", self.file_path.display());
         Ok(())
     }
 }

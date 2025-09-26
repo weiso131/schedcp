@@ -255,7 +255,9 @@ fn setup_logging() -> Result<()> {
     use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Layer};
     
     let app_name = "schedcp";
-    let log_dir = format!("/tmp/{}_logs", app_name);
+    let home_dir = std::env::var("HOME")
+        .unwrap_or_else(|_| ".".to_string());
+    let log_dir = std::path::Path::new(&home_dir).join(".schedcp").join("logs");
     std::fs::create_dir_all(&log_dir)?;
     
     let file_appender = tracing_appender::rolling::daily(&log_dir, format!("{}.log", app_name));
@@ -283,7 +285,7 @@ fn setup_logging() -> Result<()> {
         .with(stderr_layer)
         .init();
     
-    info!("Logging initialized. Logs will be written to: {}", log_dir);
+    info!("Logging initialized. Logs will be written to: {}", log_dir.display());
     
     Ok(())
 }
