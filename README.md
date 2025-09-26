@@ -37,6 +37,7 @@ The MCP server allows AI assistants to:
 - Clang/LLVM >= 16 (17 recommended)  
 - Rust toolchain >= 1.82
 - libbpf >= 1.2.2
+- meson installed
 
 ### Building schedcp
 

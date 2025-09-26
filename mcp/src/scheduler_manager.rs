@@ -3,16 +3,14 @@ use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::path::Path;
 use tokio::sync::Mutex;
 use process_manager::{
     BinaryExtractor, ProcessManager, ProcessConfig, ProcessStatus
 };
 use uuid::Uuid;
 
-#[derive(RustEmbed)]
-#[folder = "../scheduler/sche_bin/"]
-pub struct SchedulerBinaries;
-
+// Only embed the JSON configuration, not the binaries
 #[derive(RustEmbed)]
 #[folder = "../scheduler/"]
 #[include = "schedulers.json"]
@@ -77,21 +75,55 @@ impl SchedulerManager {
         let config: SchedulersConfig = serde_json::from_str(config_str)
             .map_err(|e| anyhow!("Failed to parse schedulers.json: {}", e))?;
 
-        // Create binary extractor
+        // Create binary extractor that loads from external directory
         let mut extractor = BinaryExtractor::new()
             .map_err(|e| anyhow!("Failed to create binary extractor: {}", e))?;
 
-        // Extract all scheduler binaries
-        for file in SchedulerBinaries::iter() {
-            let file_name = file.as_ref();
-            // Only extract main binaries (skip hash-suffixed versions)
-            if file_name.starts_with("scx_") && !file_name.contains('-') {
-                if let Some(data) = SchedulerBinaries::get(&file) {
-                    extractor.add_binary(file_name, &data.data)
-                        .map_err(|e| anyhow!("Failed to extract {}: {}", file_name, e))?;
-                }
+        // Get the scheduler binary directory
+        let home_dir = std::env::var("HOME")
+            .map_err(|_| anyhow!("HOME environment variable not set"))?;
+        let scx_bin_dir = Path::new(&home_dir).join(".schedcp").join("scxbin");
+        
+        // Check if directory exists
+        if !scx_bin_dir.exists() {
+            return Err(anyhow!(
+                "Scheduler binary directory not found at {}. Please run 'make install' in the scheduler directory first.",
+                scx_bin_dir.display()
+            ));
+        }
+        
+        // Load binaries from external directory
+        let entries = std::fs::read_dir(&scx_bin_dir)
+            .map_err(|e| anyhow!("Failed to read directory {}: {}", scx_bin_dir.display(), e))?;
+        
+        let mut binary_count = 0;
+        for entry in entries {
+            let entry = entry?;
+            let path = entry.path();
+            let file_name = entry.file_name().to_string_lossy().to_string();
+            
+            // Only include files that start with "scx_" and are not hash-suffixed versions
+            if file_name.starts_with("scx_") && !file_name.contains('-') && path.is_file() {
+                // Read the binary data
+                let binary_data = std::fs::read(&path)
+                    .map_err(|e| anyhow!("Failed to read {}: {}", path.display(), e))?;
+                
+                extractor.add_binary(&file_name, &binary_data)
+                    .map_err(|e| anyhow!("Failed to add {}: {}", file_name, e))?;
+                
+                log::info!("Loaded scheduler binary: {} from {}", file_name, path.display());
+                binary_count += 1;
             }
         }
+        
+        if binary_count == 0 {
+            return Err(anyhow!(
+                "No scheduler binaries found in {}. Please run 'make install' in the scheduler directory.",
+                scx_bin_dir.display()
+            ));
+        }
+        
+        log::info!("Loaded {} scheduler binaries from {}", binary_count, scx_bin_dir.display());
 
         let process_manager = Arc::new(ProcessManager::new(extractor));
 

@@ -1,6 +1,6 @@
 # Makefile for building SCX schedulers
 
-.PHONY: all build build-c build-rust build-tools clean help update doc deps install-deps
+.PHONY: all build build-c build-rust build-tools clean help update doc deps install-deps install
 
 # Default target
 all: build build-tools
@@ -241,6 +241,25 @@ doc:
 	@ls -1 sche_description/*.md 2>/dev/null | wc -l
 	@echo "files in sche_description/"
 
+# Install schedulers to ~/.schedcp/scxbin/
+install:
+	@echo "Installing schedulers to ~/.schedcp/scxbin/..."
+	@mkdir -p ~/.schedcp/scxbin
+	@if [ -d sche_bin ]; then \
+		echo "Copying schedulers from sche_bin/..."; \
+		cp sche_bin/scx_* ~/.schedcp/scxbin/ 2>/dev/null || true; \
+		echo "Setting executable permissions..."; \
+		chmod +x ~/.schedcp/scxbin/scx_* 2>/dev/null || true; \
+		echo "Installation complete!"; \
+		echo "Installed schedulers:"; \
+		ls -la ~/.schedcp/scxbin/ | grep -E "^-rwx" | wc -l; \
+		echo "schedulers in ~/.schedcp/scxbin/"; \
+	else \
+		echo "ERROR: sche_bin directory not found."; \
+		echo "Please run 'make build' first to build the schedulers."; \
+		exit 1; \
+	fi
+
 # Help target
 help:
 	@echo "Available targets:"
@@ -251,6 +270,7 @@ help:
 	@echo "  make build-rust - Build only Rust schedulers"
 	@echo "  make build-tools- Build tools (scx_loader, scxctl, scxtop) and copy to tools/"
 	@echo "  make doc        - Generate documentation for all schedulers in sche_description/"
+	@echo "  make install    - Install schedulers to ~/.schedcp/scxbin/"
 	@echo "  make clean      - Clean all build artifacts"
 	@echo "  make update     - Update SCX submodule to latest version"
 	@echo "  make help       - Show this help message"
