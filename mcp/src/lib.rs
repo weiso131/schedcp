@@ -16,7 +16,7 @@ pub mod storage;
 pub use storage::PersistentStorage;
 
 use anyhow::Result;
-use serde::{Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
     sync::Arc,
@@ -87,6 +87,38 @@ pub struct ListWorkloadProfilesRequest {
 pub struct GetWorkloadHistoryRequest {
     #[schemars(description = "Workload profile ID")]
     pub workload_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, schemars::JsonSchema)]
+#[serde(tag = "subcommand")]
+pub enum WorkloadCommand {
+    #[serde(rename = "create")]
+    Create {
+        #[schemars(description = "Natural language description of the workload")]
+        description: String,
+    },
+    #[serde(rename = "list")]
+    List,
+    #[serde(rename = "get_history")]
+    GetHistory {
+        #[schemars(description = "Workload profile ID")]
+        workload_id: String,
+    },
+    #[serde(rename = "add_history")]
+    AddHistory {
+        #[schemars(description = "Workload profile ID")]
+        workload_id: String,
+        #[schemars(description = "Execution ID from run_scheduler")]
+        execution_id: String,
+        #[schemars(description = "Natural language description of the result")]
+        result_description: String,
+    },
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct WorkloadRequest {
+    #[serde(flatten)]
+    pub command: WorkloadCommand,
 }
 
 impl SchedMcpServer {
@@ -334,6 +366,28 @@ impl SchedMcpServer {
             },
             "history": history_json
         }).to_string())
+    }
+
+    /// Unified workload command implementation
+    pub async fn workload_impl(&self, command: WorkloadCommand) -> Result<String, McpError> {
+        match command {
+            WorkloadCommand::Create { description } => {
+                self.create_workload_profile_impl(&description).await
+            },
+            WorkloadCommand::List => {
+                self.list_workload_profiles_impl().await
+            },
+            WorkloadCommand::GetHistory { workload_id } => {
+                self.get_workload_history_impl(&workload_id).await
+            },
+            WorkloadCommand::AddHistory { workload_id, execution_id, result_description } => {
+                self.add_execution_history_impl(AddExecutionHistoryRequest {
+                    workload_id,
+                    execution_id,
+                    result_description,
+                }).await
+            },
+        }
     }
 
     // Test helper methods that directly call the impl methods

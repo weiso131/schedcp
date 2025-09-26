@@ -1,8 +1,8 @@
 use anyhow::Result;
-use schedcp::*;
+use schedcp::{*, WorkloadCommand, WorkloadRequest};
 use rmcp::{
     handler::server::{router::tool::ToolRouter, tool::Parameters},
-    model::*,
+    model::{CallToolResult, Content, ErrorData as McpError, ServerInfo, ServerCapabilities, ProtocolVersion, Implementation},
     tool, tool_handler, tool_router,
     transport::stdio,
     ServerHandler, ServiceExt,
@@ -74,7 +74,7 @@ impl McpServer {
             
             loop {
                 sleep(cleanup_interval).await;
-                let mut manager = scheduler_manager_clone.lock().await;
+                let manager = scheduler_manager_clone.lock().await;
                 manager.cleanup_old_executions(max_age).await;
             }
         });
@@ -164,51 +164,28 @@ impl McpServer {
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 
-    #[tool(description = "Create a new workload profile with a natural language description. When you are asked to optimize scheduler for a specific workload, you should analyze the workload first and then use this tool to create a workload profile, like claude.md.")]
-    async fn create_workload_profile(
+    #[tool(description = "Manage workload profiles - create profiles, list profiles, get execution history, and add execution results. Use subcommands: 'create' to create a new workload profile, 'list' to list all profiles, 'get_history' to get a profile's execution history, 'add_history' to add execution results to a profile.")]
+    async fn workload(
         &self,
-        Parameters(CreateWorkloadProfileRequest { description }): Parameters<CreateWorkloadProfileRequest>,
+        Parameters(WorkloadRequest { command }): Parameters<WorkloadRequest>,
     ) -> Result<CallToolResult, McpError> {
-        info!("create_workload_profile called with description: {}", description);
+        match &command {
+            WorkloadCommand::Create { description } => {
+                info!("workload create called with description: {}", description);
+            },
+            WorkloadCommand::List => {
+                info!("workload list called");
+            },
+            WorkloadCommand::GetHistory { workload_id } => {
+                info!("workload get_history called for workload_id: {}", workload_id);
+            },
+            WorkloadCommand::AddHistory { workload_id, execution_id, .. } => {
+                info!("workload add_history called for workload_id: {}, execution_id: {}", 
+                      workload_id, execution_id);
+            },
+        }
         
-        let result = self.inner.create_workload_profile_impl(&description).await?;
-        
-        Ok(CallToolResult::success(vec![Content::text(result)]))
-    }
-
-    #[tool(description = "Add execution history to a workload profile. After execute the profile and collect the meaningful metrics, you should use this tool to add the history and the metrics (like end to end completion time, latency, etc.) to the workload profile.")]
-    async fn add_execution_history(
-        &self,
-        Parameters(request): Parameters<AddExecutionHistoryRequest>,
-    ) -> Result<CallToolResult, McpError> {
-        info!("add_execution_history called for workload_id: {}, execution_id: {}", 
-              request.workload_id, request.execution_id);
-        
-        let result = self.inner.add_execution_history_impl(request).await?;
-        
-        Ok(CallToolResult::success(vec![Content::text(result)]))
-    }
-
-    #[tool(description = "List all workload profiles")]
-    async fn list_workload_profiles(
-        &self,
-        Parameters(ListWorkloadProfilesRequest {}): Parameters<ListWorkloadProfilesRequest>,
-    ) -> Result<CallToolResult, McpError> {
-        info!("list_workload_profiles called");
-        
-        let result = self.inner.list_workload_profiles_impl().await?;
-        
-        Ok(CallToolResult::success(vec![Content::text(result)]))
-    }
-
-    #[tool(description = "Get workload profile with its execution history. When you need to create or select a new scheduler, you should use this tool to get the history of the workload profile to understand your previous experiments.")]
-    async fn get_workload_history(
-        &self,
-        Parameters(GetWorkloadHistoryRequest { workload_id }): Parameters<GetWorkloadHistoryRequest>,
-    ) -> Result<CallToolResult, McpError> {
-        info!("get_workload_history called for workload_id: {}", workload_id);
-        
-        let result = self.inner.get_workload_history_impl(&workload_id).await?;
+        let result = self.inner.workload_impl(command).await?;
         
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
