@@ -42,8 +42,13 @@ The MCP server allows AI assistants to:
 
 ```bash
 # Clone the repository
-git clone https://github.com/eunomia-bpf/schedcp
+git clone https://github.com/eunomia-bpf/schedcp --recursive
 cd schedcp
+
+# build the schedulers
+cd scheduler
+make
+cd ..
 
 # Build the MCP server and CLI
 cd mcp
