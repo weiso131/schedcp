@@ -1,5 +1,5 @@
 use anyhow::Result;
-use schedcp::{*, WorkloadCommand, WorkloadRequest};
+use schedcp::{*, WorkloadRequest};
 use rmcp::{
     handler::server::{router::tool::ToolRouter, tool::Parameters},
     model::{CallToolResult, Content, ErrorData as McpError, ServerInfo, ServerCapabilities, ProtocolVersion, Implementation},
@@ -164,28 +164,37 @@ impl McpServer {
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 
-    #[tool(description = "Manage workload profiles - create profiles, list profiles, get execution history, and add execution results. Use subcommands: 'create' to create a new workload profile, 'list' to list all profiles, 'get_history' to get a profile's execution history, 'add_history' to add execution results to a profile.")]
+    #[tool(description = "Manage workload profiles - create profiles, list profiles, get execution history, and add execution results. Use command: 'create' to create a new workload profile, 'list' to list all profiles, 'get_history' to get a profile's execution history, 'add_history' to add execution results to a profile.")]
     async fn workload(
         &self,
-        Parameters(WorkloadRequest { command }): Parameters<WorkloadRequest>,
+        Parameters(request): Parameters<WorkloadRequest>,
     ) -> Result<CallToolResult, McpError> {
-        match &command {
-            WorkloadCommand::Create { description } => {
-                info!("workload create called with description: {}", description);
+        match request.command.as_str() {
+            "create" => {
+                if let Some(description) = &request.description {
+                    info!("workload create called with description: {}", description);
+                }
             },
-            WorkloadCommand::List => {
+            "list" => {
                 info!("workload list called");
             },
-            WorkloadCommand::GetHistory { workload_id } => {
-                info!("workload get_history called for workload_id: {}", workload_id);
+            "get_history" => {
+                if let Some(workload_id) = &request.workload_id {
+                    info!("workload get_history called for workload_id: {}", workload_id);
+                }
             },
-            WorkloadCommand::AddHistory { workload_id, execution_id, .. } => {
-                info!("workload add_history called for workload_id: {}, execution_id: {}", 
-                      workload_id, execution_id);
+            "add_history" => {
+                if let (Some(workload_id), Some(execution_id)) = (&request.workload_id, &request.execution_id) {
+                    info!("workload add_history called for workload_id: {}, execution_id: {}", 
+                          workload_id, execution_id);
+                }
             },
+            _ => {
+                info!("workload unknown command: {}", request.command);
+            }
         }
         
-        let result = self.inner.workload_impl(command).await?;
+        let result = self.inner.workload_impl(request).await?;
         
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }

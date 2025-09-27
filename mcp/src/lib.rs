@@ -90,35 +90,31 @@ pub struct GetWorkloadHistoryRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize, schemars::JsonSchema)]
-#[serde(tag = "subcommand")]
-pub enum WorkloadCommand {
-    #[serde(rename = "create")]
-    Create {
-        #[schemars(description = "Natural language description of the workload")]
-        description: String,
-    },
-    #[serde(rename = "list")]
-    List,
-    #[serde(rename = "get_history")]
-    GetHistory {
-        #[schemars(description = "Workload profile ID")]
-        workload_id: String,
-    },
-    #[serde(rename = "add_history")]
-    AddHistory {
-        #[schemars(description = "Workload profile ID")]
-        workload_id: String,
-        #[schemars(description = "Execution ID from run_scheduler")]
-        execution_id: String,
-        #[schemars(description = "Natural language description of the result")]
-        result_description: String,
-    },
+pub struct WorkloadCommand {
+    #[schemars(description = "Command to execute: 'create', 'list', 'get_history', or 'add_history'")]
+    pub command: String,
+    #[schemars(description = "Description for create command")]
+    pub description: Option<String>,
+    #[schemars(description = "Workload ID for get_history and add_history commands")]
+    pub workload_id: Option<String>,
+    #[schemars(description = "Execution ID for add_history command")]
+    pub execution_id: Option<String>,
+    #[schemars(description = "Result description for add_history command")]
+    pub result_description: Option<String>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub struct WorkloadRequest {
-    #[serde(flatten)]
-    pub command: WorkloadCommand,
+    #[schemars(description = "Command to execute: 'create', 'list', 'get_history', or 'add_history'")]
+    pub command: String,
+    #[schemars(description = "Description for create command")]
+    pub description: Option<String>,
+    #[schemars(description = "Workload ID for get_history and add_history commands")]
+    pub workload_id: Option<String>,
+    #[schemars(description = "Execution ID for add_history command")]
+    pub execution_id: Option<String>,
+    #[schemars(description = "Result description for add_history command")]
+    pub result_description: Option<String>,
 }
 
 impl SchedMcpServer {
@@ -369,24 +365,53 @@ impl SchedMcpServer {
     }
 
     /// Unified workload command implementation
-    pub async fn workload_impl(&self, command: WorkloadCommand) -> Result<String, McpError> {
-        match command {
-            WorkloadCommand::Create { description } => {
+    pub async fn workload_impl(&self, request: WorkloadRequest) -> Result<String, McpError> {
+        match request.command.as_str() {
+            "create" => {
+                let description = request.description
+                    .ok_or_else(|| McpError::invalid_params(
+                        "description is required for create command".to_string(),
+                        None,
+                    ))?;
                 self.create_workload_profile_impl(&description).await
             },
-            WorkloadCommand::List => {
+            "list" => {
                 self.list_workload_profiles_impl().await
             },
-            WorkloadCommand::GetHistory { workload_id } => {
+            "get_history" => {
+                let workload_id = request.workload_id
+                    .ok_or_else(|| McpError::invalid_params(
+                        "workload_id is required for get_history command".to_string(),
+                        None,
+                    ))?;
                 self.get_workload_history_impl(&workload_id).await
             },
-            WorkloadCommand::AddHistory { workload_id, execution_id, result_description } => {
+            "add_history" => {
+                let workload_id = request.workload_id
+                    .ok_or_else(|| McpError::invalid_params(
+                        "workload_id is required for add_history command".to_string(),
+                        None,
+                    ))?;
+                let execution_id = request.execution_id
+                    .ok_or_else(|| McpError::invalid_params(
+                        "execution_id is required for add_history command".to_string(),
+                        None,
+                    ))?;
+                let result_description = request.result_description
+                    .ok_or_else(|| McpError::invalid_params(
+                        "result_description is required for add_history command".to_string(),
+                        None,
+                    ))?;
                 self.add_execution_history_impl(AddExecutionHistoryRequest {
                     workload_id,
                     execution_id,
                     result_description,
                 }).await
             },
+            _ => Err(McpError::invalid_params(
+                format!("Unknown command: {}", request.command),
+                None,
+            ))
         }
     }
 
