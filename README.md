@@ -1,6 +1,6 @@
 # SchedCP - MCP Server for Linux Scheduler Management
 
-> WIP, not finished yet
+> WIP, not finished yet. coming soon!
 >
 > We are building a benchmark for evaluating the optimizations for OS!
 
