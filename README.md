@@ -1,10 +1,24 @@
 # SchedCP - MCP Server for Linux Scheduler Management
 
-> WIP, not finished yet. coming soon!
->
-> We are building a benchmark for evaluating the optimizations for OS!
+> WIP: We are building a benchmark for evaluating the optimizations for OS!
 
-SchedCP is a Model Context Protocol (MCP) server that enables AI assistants to intelligently manage Linux kernel schedulers through the sched-ext framework. It provides AI-powered scheduler selection, workload profiling, and real-time performance optimization.
+SchedCP is a Model Context Protocol (MCP) server and control plane that enables AI assistants to intelligently optimize Linux kernel schedulers through the sched-ext framework. It provides AI-powered scheduler selection/generation, workload profiling, and real-time performance optimization.
+
+See the paper: [SchedCP: Towards Agentic OS](https://arxiv.org/abs/2509.18256) for more details!
+
+## Demo
+
+Start optimize any workload with AI by simply run:
+
+```sh
+autotune/target/release/autotune cc "<your workload command>"
+# example for linux build
+autotune/target/release/autotune cc "make -C workloads/linux-build-bench/linux clean -j && make -C workloads/linux-build-bench/linux -j" 
+# example for schbench
+autotune/target/release/autotune cc  workloads/basic/schbench/schbench
+```
+
+![document/schbench-optimize.gif](document/schbench-optimize.gif)
 
 ## Overview
 
