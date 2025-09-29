@@ -4,6 +4,7 @@ use tokio::net::UnixStream;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use clap::{Parser, Subcommand};
 use tokio::net::UnixListener;
+use autotune::prompt;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -60,7 +61,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             run_command(command.join(" ").as_str(), *interactive).await?
         },
         Commands::Cc { command } => {
-            run_command(command.join(" ").as_str(), true).await?
+            run_cc_command(command.join(" ").as_str()).await?
         },
         Commands::Submit { interactive, command } => {
             submit_to_daemon(command.join(" ").as_str(), *interactive).await?
@@ -153,6 +154,30 @@ async fn submit_to_daemon(command: &str, interactive: bool) -> Result<(), Box<dy
     stream.read_to_string(&mut response).await?;
     
     println!("{}", response);
+    Ok(())
+}
+
+/// Run a command with the cc subcommand (special prompt for scheduler optimization)
+async fn run_cc_command(command: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let pwd = env::current_dir()?.to_string_lossy().into_owned();
+    
+    println!("Command: {} in {}", command, pwd);
+    println!("Starting interactive session with Claude for scheduler optimization...");
+    
+    // Create the special prompt for Claude
+    let cc_prompt = prompt::create_cc_prompt(command);
+    
+    // Call Claude directly with the custom prompt using the daemon's function
+    match autotune::daemon::call_claude_with_prompt(&cc_prompt, true) {
+        Ok(_) => {
+            println!("\nInteractive session ended.");
+        },
+        Err(e) => {
+            eprintln!("Error starting interactive session: {}", e);
+            std::process::exit(1);
+        }
+    }
+    
     Ok(())
 }
 

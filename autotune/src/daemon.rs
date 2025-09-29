@@ -144,7 +144,7 @@ pub fn run_command_with_optimization(cmd: &str, pwd: &str) -> (String, String) {
 
 /// Helper function to call Claude CLI with a prompt
 /// If interactive is true, will connect stdin/stdout/stderr for direct interaction
-fn call_claude_with_prompt(prompt: &str, interactive: bool) -> Result<Output, std::io::Error> {
+pub fn call_claude_with_prompt(prompt: &str, interactive: bool) -> Result<Output, std::io::Error> {
     // Use a direct path to Claude CLI that we know works
     let claude_path = "/usr/local/bin/claude";
     
