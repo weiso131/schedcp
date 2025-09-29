@@ -14,7 +14,9 @@
       "mcp__schedcp__run_scheduler",
       "mcp__schedcp__stop_scheduler",
       "mcp__schedcp__get_execution_status",
-      "Bash(time bash -c:*)"
+      "Bash(time bash -c:*)",
+      "Bash(nproc)",
+      "Bash(time make:*)"
     ],
     "deny": []
   }
