@@ -12,13 +12,5 @@ chrono = "0.4"
 anyhow = "1.0"
 
 [[bin]]
-name = "autotune-daemon"
-path = "src/bin/daemon.rs"
-
-[[bin]]
 name = "autotune"
 path = "src/bin/cli.rs"
-
-[[bin]]
-name = "test-daemon"
-path = "src/bin/test_daemon.rs"

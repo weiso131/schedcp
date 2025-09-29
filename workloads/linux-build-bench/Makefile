@@ -36,25 +36,3 @@ distclean:
 	@echo "Deep cleaning Linux build..."
 	@cd $(LINUX_DIR) && make distclean
 	@echo "Distclean complete."
-
-# Show kernel version
-version:
-	@cd $(LINUX_DIR) && make kernelversion
-
-help:
-	@echo "Linux Build Benchmark Makefile"
-	@echo "Usage: make [target]"
-	@echo ""
-	@echo "Targets:"
-	@echo "  all         - Configure kernel with default config"
-	@echo "  config      - Configure kernel with defconfig"
-	@echo "  tinyconfig  - Configure with minimal tinyconfig"
-	@echo "  allnoconfig - Configure with allnoconfig (smallest)"
-	@echo "  clean       - Clean build artifacts"
-	@echo "  distclean   - Clean everything including config"
-	@echo "  version     - Show kernel version"
-	@echo "  help        - Show this help message"
-	@echo ""
-	@echo "Variables:"
-	@echo "  CONFIG=<config> - Kernel config to use (default: defconfig)"
-	@echo "  JOBS=<n>        - Number of parallel jobs (default: nproc)"

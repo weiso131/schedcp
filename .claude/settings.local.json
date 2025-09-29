@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(chmod:*)",
+      "Bash(ls:*)",
+      "Bash(make:*)",
+      "Bash(cargo build:*)",
+      "Bash(./target/release/schedcp-cli:*)",
+      "Bash(cargo test:*)",
+      "mcp__schedcp__list_schedulers",
+      "mcp__schedcp__workload",
+      "mcp__schedcp__run_scheduler",
+      "mcp__schedcp__stop_scheduler",
+      "mcp__schedcp__get_execution_status",
+      "Bash(time bash -c:*)"
+    ],
+    "deny": []
+  }
+}
