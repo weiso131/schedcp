@@ -16,5 +16,11 @@ fn main() {
     let (prompt, response) = autotune::daemon::run_command_with_optimization(&command, &pwd);
     
     println!("\n--- Would send to Claude ---\n{}\n--- End prompt ---\n", prompt);
-    println!("{}", response);
+    
+    // Check if response contains "Error" and handle appropriately
+    if response.contains("Error") {
+        eprintln!("Error: {}", response);
+    } else {
+        println!("{}", response);
+    }
 }

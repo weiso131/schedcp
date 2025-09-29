@@ -99,11 +99,25 @@ fn call_claude_with_prompt(prompt: &str) -> Result<Output, std::io::Error> {
     let claude_path = claude_cmd.unwrap_or("claude");
     println!("[DEBUG] Using Claude at: {}", claude_path);
     
-    let output = Command::new(claude_path)
-        .arg("--print")  // Non-interactive mode
-        .arg(prompt)
-        .output()?;
+    // Print the full command for debugging
+    println!("[DEBUG] Running command: {} --print \"{}\"", claude_path, prompt.replace("\"", "\\\""));
     
-    println!("[DEBUG] Claude command completed with status: {}", output.status);
-    Ok(output)
+    let mut command = Command::new(claude_path);
+    command.arg("--print");  // Non-interactive mode
+    command.arg(prompt);
+    
+    // Try to execute with detailed error capture
+    match command.output() {
+        Ok(output) => {
+            println!("[DEBUG] Claude command completed with status: {}", output.status);
+            if !output.status.success() {
+                println!("[DEBUG] Claude stderr: {}", String::from_utf8_lossy(&output.stderr));
+            }
+            Ok(output)
+        },
+        Err(e) => {
+            println!("[ERROR] Failed to execute Claude command: {}", e);
+            Err(e)
+        }
+    }
 }
