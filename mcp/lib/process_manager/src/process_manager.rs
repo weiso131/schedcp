@@ -1,6 +1,6 @@
 use crate::binary_extractor::BinaryExtractor;
 use crate::process_runner::{ProcessRunner, OutputStream};
-use crate::types::{ProcessConfig, ProcessError, ProcessInfo};
+use crate::types::{ProcessConfig, ProcessError, ProcessInfo, ProcessStatus};
 use dashmap::DashMap;
 use std::sync::Arc;
 use uuid::Uuid;

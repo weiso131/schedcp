@@ -29,21 +29,7 @@
       "Bash(timeout:*)",
       "Bash(sudo cargo test --test scheduler_generator_test test_execution_verify_real_scheduler -- --ignored --nocapture --test-threads=1)",
       "Bash(sudo cargo test --test scheduler_generator_test test_execute_real_scheduler -- --ignored --nocapture --test-threads=1)",
-      "Bash(sudo:*)",
-      "Bash(echo \"Exit code: $?\")",
-      "Read(//sys/kernel/sched_ext/**)",
-      "Bash(cat:*)",
-      "mcp__schedcp__create_and_verify_scheduler",
-      "Bash(test:*)",
-      "Read(//home/yunwei37/.schedcp/logs/**)",
-      "Read(///**)",
-      "Read(//tmp/**)",
-      "Bash(git init:*)",
-      "Bash(/home/yunwei37/schedcp/mcp/target/release/schedcp-cli list)",
-      "Bash(./mcp/target/release/schedcp-cli:*)",
-      "Read(//home/yunwei37/.schedcp/scxbin/**)",
-      "Bash(echo $HOME)",
-      "Bash(pkill:*)"
+      "Bash(grep:*)"
     ],
     "deny": []
   },

@@ -137,24 +137,10 @@ impl SchedulerGenerator {
         Ok(())
     }
 
-    /// Create and compile a scheduler in one step
-    ///
-    /// # Arguments
-    /// * `name` - Name of the scheduler
-    /// * `source_code` - The BPF C source code
-    ///
-    /// # Returns
-    /// Ok(()) if creation and compilation succeeded
-    pub fn create_and_compile(&self, name: &str, source_code: &str) -> Result<()> {
-        self.create_scheduler(name, source_code)?;
-        self.compile_scheduler(name)?;
-        Ok(())
-    }
-
-    /// Execute (verify) a scheduler by name
+    /// Verify and run a scheduler by name
     ///
     /// Loads and runs the scheduler in the kernel for the specified duration,
-    /// then stops it. This verifies the scheduler can load and run.
+    /// then stops it. This verifies the scheduler can load and run successfully.
     ///
     /// # Arguments
     /// * `name` - Name of the scheduler
@@ -162,7 +148,7 @@ impl SchedulerGenerator {
     ///
     /// # Returns
     /// Ok(String) with execution details if successful
-    pub async fn execute_scheduler(&self, name: &str, duration: Option<Duration>) -> Result<String> {
+    pub async fn verify_scheduler(&self, name: &str, duration: Option<Duration>) -> Result<String> {
         let object_path = self.get_object_path(name);
 
         if !object_path.exists() {
@@ -224,14 +210,14 @@ impl SchedulerGenerator {
         Ok(())
     }
 
-    /// Check if a scheduler exists
+    /// Get a scheduler by name
     ///
     /// # Arguments
     /// * `name` - Name of the scheduler
     ///
     /// # Returns
     /// SchedulerInfo with existence details
-    pub fn scheduler_exists(&self, name: &str) -> SchedulerInfo {
+    pub fn get_scheduler(&self, name: &str) -> SchedulerInfo {
         let source_path = self.get_source_path(name);
         let object_path = self.get_object_path(name);
 
@@ -436,14 +422,14 @@ impl SchedulerGenerator {
     // Internal Implementation Methods
     // ============================================================================
 
-    /// Compile a BPF scheduler from a .bpf.c file
+    /// Compile a BPF scheduler from a .bpf.c file (internal)
     ///
     /// # Arguments
     /// * `bpf_source` - Path to the .bpf.c source file
     ///
     /// # Returns
     /// Path to the compiled .bpf.o object file
-    pub fn compile_bpf_scheduler(&self, bpf_source: impl AsRef<Path>) -> Result<PathBuf> {
+    fn compile_bpf_scheduler(&self, bpf_source: impl AsRef<Path>) -> Result<PathBuf> {
         let bpf_source = bpf_source.as_ref();
 
         // Validate input file exists and has .bpf.c extension
@@ -560,7 +546,7 @@ impl SchedulerGenerator {
     }
 
 
-    /// Verify scheduler execution in kernel
+    /// Verify scheduler execution in kernel (internal)
     ///
     /// Loads the compiled BPF scheduler into the kernel, runs it for a specified
     /// duration, then stops it. This verifies that the scheduler can be loaded
@@ -572,7 +558,7 @@ impl SchedulerGenerator {
     ///
     /// # Returns
     /// Result with execution output
-    pub async fn execution_verify(
+    async fn execution_verify(
         &self,
         bpf_object: impl AsRef<Path>,
         duration: Option<Duration>,

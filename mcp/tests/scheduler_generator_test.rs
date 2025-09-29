@@ -66,7 +66,7 @@ fn test_create_scheduler() {
     assert!(result.is_ok(), "Failed to create scheduler");
 
     // Verify it exists
-    let info = generator.scheduler_exists("test_sched");
+    let info = generator.get_scheduler("test_sched");
     assert!(info.has_source);
     assert!(!info.has_object); // Not compiled yet
 }
@@ -85,7 +85,7 @@ fn test_compile_scheduler() {
 
     match result {
         Ok(_) => {
-            let info = generator.scheduler_exists("compile_test");
+            let info = generator.get_scheduler("compile_test");
             assert!(info.has_source);
             assert!(info.has_object);
         }
@@ -96,22 +96,27 @@ fn test_compile_scheduler() {
 }
 
 #[test]
-fn test_create_and_compile() {
+fn test_create_then_compile() {
     let temp_dir = TempDir::new().unwrap();
     let work_dir = temp_dir.path().join("new_sched");
     let generator = SchedulerGenerator::with_work_dir(&work_dir).unwrap();
 
     let source_code = create_test_bpf_source("full_workflow");
-    let result = generator.create_and_compile("full_workflow", &source_code);
+
+    // Create first
+    generator.create_scheduler("full_workflow", &source_code).unwrap();
+
+    // Then compile
+    let result = generator.compile_scheduler("full_workflow");
 
     match result {
         Ok(_) => {
-            let info = generator.scheduler_exists("full_workflow");
+            let info = generator.get_scheduler("full_workflow");
             assert!(info.has_source);
             assert!(info.has_object);
         }
         Err(e) => {
-            eprintln!("Create and compile failed (may be expected in test env): {}", e);
+            eprintln!("Compilation failed (may be expected in test env): {}", e);
         }
     }
 }
@@ -139,14 +144,14 @@ fn test_delete_scheduler() {
     generator.create_scheduler("delete_test", &source_code).unwrap();
 
     // Verify it exists
-    let info = generator.scheduler_exists("delete_test");
+    let info = generator.get_scheduler("delete_test");
     assert!(info.has_source);
 
     // Delete it
     generator.delete_scheduler("delete_test").unwrap();
 
     // Verify it's gone
-    let info = generator.scheduler_exists("delete_test");
+    let info = generator.get_scheduler("delete_test");
     assert!(!info.has_source);
     assert!(!info.has_object);
 }
@@ -176,13 +181,13 @@ fn test_list_schedulers() {
 }
 
 #[test]
-fn test_scheduler_exists() {
+fn test_get_scheduler() {
     let temp_dir = TempDir::new().unwrap();
     let work_dir = temp_dir.path().join("new_sched");
     let generator = SchedulerGenerator::with_work_dir(&work_dir).unwrap();
 
     // Non-existent scheduler
-    let info = generator.scheduler_exists("nonexistent");
+    let info = generator.get_scheduler("nonexistent");
     assert!(!info.has_source);
     assert!(!info.has_object);
 
@@ -190,7 +195,7 @@ fn test_scheduler_exists() {
     let source_code = create_test_bpf_source("exists_test");
     generator.create_scheduler("exists_test", &source_code).unwrap();
 
-    let info = generator.scheduler_exists("exists_test");
+    let info = generator.get_scheduler("exists_test");
     assert!(info.has_source);
     assert!(!info.has_object);
 }
@@ -212,7 +217,7 @@ async fn test_execute_nonexistent() {
     let work_dir = temp_dir.path().join("new_sched");
     let generator = SchedulerGenerator::with_work_dir(&work_dir).unwrap();
 
-    let result = generator.execute_scheduler("nonexistent", Some(Duration::from_secs(1))).await;
+    let result = generator.verify_scheduler("nonexistent", Some(Duration::from_secs(1))).await;
     assert!(result.is_err());
     assert!(result.unwrap_err().to_string().contains("object not found"));
 }
@@ -226,7 +231,7 @@ async fn test_execute_not_compiled() {
     let source_code = create_test_bpf_source("not_compiled");
     generator.create_scheduler("not_compiled", &source_code).unwrap();
 
-    let result = generator.execute_scheduler("not_compiled", Some(Duration::from_secs(1))).await;
+    let result = generator.verify_scheduler("not_compiled", Some(Duration::from_secs(1))).await;
     assert!(result.is_err());
     assert!(result.unwrap_err().to_string().contains("object not found"));
 }
@@ -238,14 +243,14 @@ async fn test_execute_real_scheduler() {
     let generator = SchedulerGenerator::new().unwrap();
 
     // Check if vruntime scheduler exists
-    let info = generator.scheduler_exists("vruntime");
+    let info = generator.get_scheduler("vruntime");
     if !info.has_object {
         eprintln!("Skipping test: vruntime.bpf.o not found. Run 'make' in new_sched first.");
         return;
     }
 
     // Try to run for 3 seconds
-    let result = generator.execute_scheduler("vruntime", Some(Duration::from_secs(3))).await;
+    let result = generator.verify_scheduler("vruntime", Some(Duration::from_secs(3))).await;
 
     match result {
         Ok(output) => {
@@ -260,29 +265,33 @@ async fn test_execute_real_scheduler() {
 
 #[tokio::test]
 #[ignore] // This test requires compilation and sudo access
-async fn test_full_workflow_create_compile_execute() {
+async fn test_full_workflow_create_compile_verify() {
     let generator = SchedulerGenerator::new().unwrap();
 
     let source_code = create_test_bpf_source("workflow_test");
     let name = "workflow_test";
 
-    // Create and compile
-    let result = generator.create_and_compile(name, &source_code);
+    // Create
+    generator.create_scheduler(name, &source_code).unwrap();
+    println!("Created scheduler '{}'", name);
 
-    match result {
+    // Compile
+    let compile_result = generator.compile_scheduler(name);
+
+    match compile_result {
         Ok(_) => {
-            println!("Created and compiled scheduler '{}'", name);
+            println!("Compiled scheduler '{}'", name);
 
             // Verify execution
-            let exec_result = generator.execute_scheduler(name, Some(Duration::from_secs(2))).await;
+            let verify_result = generator.verify_scheduler(name, Some(Duration::from_secs(2))).await;
 
-            match exec_result {
+            match verify_result {
                 Ok(output) => {
-                    println!("Execution output:\n{}", output);
+                    println!("Verification output:\n{}", output);
                     assert!(output.contains("Scheduler verification successful") || output.contains("PID"));
                 }
                 Err(e) => {
-                    eprintln!("Execution failed (may be expected without sudo): {}", e);
+                    eprintln!("Verification failed (may be expected without sudo): {}", e);
                 }
             }
 
@@ -290,7 +299,7 @@ async fn test_full_workflow_create_compile_execute() {
             generator.delete_scheduler(name).unwrap();
         }
         Err(e) => {
-            eprintln!("Create and compile failed (may be expected in test env): {}", e);
+            eprintln!("Compilation failed (may be expected in test env): {}", e);
         }
     }
 }
