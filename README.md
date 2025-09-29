@@ -18,6 +18,8 @@ The MCP server allows AI assistants to:
 - Track scheduler performance across different workloads
 - Make data-driven scheduler recommendations based on execution history
 
+git submodule update --init --recursive scheduler/scx
+
 ## Features
 
 - **AI-Powered Scheduler Selection**: Natural language workload descriptions for intelligent scheduler recommendations

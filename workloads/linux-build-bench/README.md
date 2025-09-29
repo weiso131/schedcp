@@ -197,6 +197,6 @@ python linux_build_bench_start.py \
    - Monitor for thermal throttling
    - Ensure sufficient RAM for parallel builds
 
-for the command "cd /home/yunwei37/schedcp/workloads/linux-build-bench/linux && make clean -j16 && make tinyconfig -j16 && make -j16", optimize the scheduler with the schedcp mcp tools.
+for the command "cd workloads/linux-build-bench/linux && make clean -j$(nproc) && make tinyconfig -j$(nproc) && make -j$(nproc)", optimize the scheduler with the schedcp mcp tools.
 
-
+'cd workloads/linux-build-bench/linux && make clean -j && make -j'

@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "schedcp": {
+      "type": "stdio",
+      "command": "mcp/target/release/schedcp",
+      "args": [],
+      "env": {}
+    }
+  }
+}

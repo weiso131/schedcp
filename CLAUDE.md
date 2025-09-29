@@ -116,16 +116,6 @@ python workloads/cxl-micro/cxl_micro_bench_start.py
    - Run benchmarks with different schedulers
    - Parse scheduler configuration from schedulers.json
 
-### Scheduler Types
-
-The project includes various scheduler types optimized for different workloads:
-- **scx_rusty**: General-purpose multi-domain scheduler (production-ready)
-- **scx_lavd**: Latency-aware scheduler for interactive workloads
-- **scx_layered**: Highly configurable multi-layer scheduler
-- **scx_bpfland**: Interactive workload prioritization
-- **scx_flash**: EDF-based scheduler for predictable latency
-- **scx_flatcg**: Cgroup-aware scheduler for containers
-
 ## Using the MCP Server with Claude
 
 The schedcp MCP server enables AI-assisted scheduler optimization. When integrated with Claude, you can:
@@ -154,7 +144,7 @@ The schedcp MCP server enables AI-assisted scheduler optimization. When integrat
 ./mcp/target/release/schedcp-cli list
 
 # Run a specific scheduler
-./mcp/target/release/schedcp-cli run scx_rusty --slice-us 20000
+./mcp/target/release/schedcp-cli run xxx
 
 # Check status
 ./mcp/target/release/schedcp-cli status
@@ -177,7 +167,7 @@ The schedcp MCP server enables AI-assisted scheduler optimization. When integrat
 python scheduler/scheduler_runner.py
 
 # Run a specific scheduler
-./scheduler/sche_bin/scx_rusty --slice-us 20000
+./scheduler/sche_bin/xxx
 
 # Monitor scheduler performance
 ./scheduler/tools/scxtop
