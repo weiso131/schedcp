@@ -16,9 +16,6 @@
 [submodule "workloads/llama.cpp/llama.cpp"]
 	path = workloads/llama.cpp/llama.cpp
 	url = https://github.com/ggerganov/llama.cpp.git
-[submodule "workloads/vllm/vllm"]
-	path = workloads/vllm/vllm
-	url = https://github.com/vllm-project/vllm/
 [submodule "workloads/redis/redis-src"]
 	path = workloads/redis/redis-src
 	url = https://github.com/redis/redis.git
