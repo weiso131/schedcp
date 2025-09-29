@@ -235,16 +235,119 @@ impl ProcessRunner {
     pub async fn stop(&mut self) -> Result<(), ProcessError> {
         log::info!("Stopping process: {} (pid: {:?})", self.info.name, self.info.pid);
         
-        self.child.kill().await
-            .map_err(|e| ProcessError::StopFailed(format!("Failed to kill process: {}", e)))?;
+        // First attempt: graceful termination with SIGTERM
+        log::debug!("Attempting graceful termination for process {} (pid: {:?})", self.info.name, self.info.pid);
         
-        self.child.wait().await
-            .map_err(|e| ProcessError::StopFailed(format!("Failed to wait for process: {}", e)))?;
+        if let Err(e) = self.child.kill().await {
+            log::warn!("Initial kill failed for process {}: {}", self.info.name, e);
+        }
+        
+        // Wait up to 5 seconds for graceful termination
+        let timeout = tokio::time::Duration::from_secs(3);
+        let wait_result = tokio::time::timeout(timeout, self.child.wait()).await;
+        
+        match wait_result {
+            Ok(Ok(_)) => {
+                log::info!("Process {} stopped gracefully", self.info.name);
+                self.info.status = ProcessStatus::Stopped;
+                self.info.stopped_at = Some(chrono::Utc::now());
+                return Ok(());
+            }
+            Ok(Err(e)) => {
+                log::warn!("Wait failed for process {}: {}", self.info.name, e);
+            }
+            Err(_) => {
+                log::warn!("Timeout waiting for process {} to stop gracefully", self.info.name);
+            }
+        }
+        
+        // Check if process still exists and force kill if needed
+        if let Some(pid) = self.info.pid {
+            match Self::check_process_exists(Some(pid)).await {
+                Ok(exists) => {
+                    if exists {
+                        log::warn!("Process {} (pid: {}) still running after SIGTERM", self.info.name, pid);
+                        
+                        // Force kill with SIGKILL
+                        log::info!("Force killing process {} (pid: {}) with SIGKILL", self.info.name, pid);
+                        match Self::force_kill_process(Some(pid)).await {
+                            Ok(_) => {
+                                log::info!("Successfully force killed process {} (pid: {})", self.info.name, pid);
+                                
+                                // Verify it's actually gone
+                                tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+                                match Self::check_process_exists(Some(pid)).await {
+                                    Ok(still_exists) => {
+                                        if still_exists {
+                                            log::error!("Process {} (pid: {}) still exists after SIGKILL!", self.info.name, pid);
+                                            return Err(ProcessError::StopFailed(format!("Process {} refuses to die", pid)));
+                                        } else {
+                                            log::info!("Confirmed process {} (pid: {}) is terminated", self.info.name, pid);
+                                        }
+                                    }
+                                    Err(e) => {
+                                        log::warn!("Failed to verify process termination: {}", e);
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                log::error!("Failed to force kill process {}: {}", self.info.name, e);
+                                return Err(ProcessError::StopFailed(format!("Force kill failed: {}", e)));
+                            }
+                        }
+                    } else {
+                        log::info!("Process {} (pid: {}) no longer exists", self.info.name, pid);
+                    }
+                }
+                Err(e) => {
+                    log::warn!("Failed to check process status: {}", e);
+                }
+            }
+        }
         
         self.info.status = ProcessStatus::Stopped;
         self.info.stopped_at = Some(chrono::Utc::now());
+        log::info!("Process {} marked as stopped", self.info.name);
         
         Ok(())
+    }
+    
+    // Helper method to check if a process exists
+    async fn check_process_exists(pid: Option<u32>) -> Result<bool, ProcessError> {
+        if let Some(pid) = pid {
+            let output = tokio::process::Command::new("ps")
+                .arg("-p")
+                .arg(pid.to_string())
+                .output()
+                .await
+                .map_err(|e| ProcessError::StopFailed(format!("Failed to execute ps: {}", e)))?;
+            
+            // ps returns success and outputs the process info if it exists
+            Ok(output.status.success() && !output.stdout.is_empty())
+        } else {
+            Ok(false)
+        }
+    }
+    
+    // Helper method to force kill a process
+    async fn force_kill_process(pid: Option<u32>) -> Result<(), ProcessError> {
+        if let Some(pid) = pid {
+            let output = tokio::process::Command::new("kill")
+                .arg("-9")
+                .arg(pid.to_string())
+                .output()
+                .await
+                .map_err(|e| ProcessError::StopFailed(format!("Failed to execute kill: {}", e)))?;
+            
+            if output.status.success() {
+                Ok(())
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                Err(ProcessError::StopFailed(format!("kill -9 failed: {}", stderr)))
+            }
+        } else {
+            Err(ProcessError::StopFailed("No PID available".to_string()))
+        }
     }
     
     pub fn get_output_stream(&mut self) -> Option<OutputStream> {
