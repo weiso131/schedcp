@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::Duration;
 use tokio::time::timeout;
+use tokio::io::AsyncWriteExt;
 
 /// Information about a managed scheduler
 #[derive(Debug, Clone)]
@@ -303,6 +304,100 @@ impl SchedulerGenerator {
     }
 
     // ============================================================================
+    // Internal Helper Methods
+    // ============================================================================
+
+    /// Get and validate the loader binary path
+    fn get_loader_path(&self) -> Result<PathBuf> {
+        let loader_path = self.work_dir.join("loader");
+        if !loader_path.exists() {
+            anyhow::bail!(
+                "Loader binary not found at {}. Run 'make' in new_sched directory first.",
+                loader_path.display()
+            );
+        }
+        Ok(loader_path)
+    }
+
+    /// Spawn a sudo command with the given arguments
+    ///
+    /// Handles password injection if SCHEDCP_SUDO_PASSWORD is set
+    async fn spawn_with_sudo(
+        &self,
+        args: Vec<String>,
+    ) -> Result<tokio::process::Child> {
+        let sudo_password = std::env::var("SCHEDCP_SUDO_PASSWORD").ok();
+
+        let mut cmd = if sudo_password.is_some() {
+            let mut c = tokio::process::Command::new("sudo");
+            c.arg("-S"); // Read password from stdin
+            c.args(&args);
+            c.stdin(Stdio::piped());
+            c
+        } else {
+            let mut c = tokio::process::Command::new("sudo");
+            c.args(&args);
+            c
+        };
+
+        cmd.stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .current_dir(&self.work_dir);
+
+        let mut child = cmd.spawn()
+            .context("Failed to spawn scheduler process")?;
+
+        // Write password if provided
+        if let Some(ref password) = sudo_password {
+            if let Some(mut stdin) = child.stdin.take() {
+                stdin.write_all(format!("{}\n", password).as_bytes()).await
+                    .context("Failed to write sudo password")?;
+            }
+        }
+
+        Ok(child)
+    }
+
+    /// Run a custom scheduler persistently (returns child process handle)
+    ///
+    /// This directly spawns the loader process and returns a tokio::process::Child
+    /// for the caller to manage.
+    ///
+    /// # Arguments
+    /// * `name` - Name of the scheduler
+    /// * `args` - Additional arguments for the scheduler
+    ///
+    /// # Returns
+    /// A tokio Child process handle
+    pub async fn run_scheduler_process(
+        &self,
+        name: &str,
+        args: Vec<String>,
+    ) -> Result<tokio::process::Child> {
+        let object_path = self.get_object_path(name);
+
+        if !object_path.exists() {
+            anyhow::bail!("Scheduler '{}' object not found. Compile it first.", name);
+        }
+
+        let loader_path = self.get_loader_path()?;
+
+        // Build command args
+        let mut cmd_args = vec![
+            loader_path.to_string_lossy().to_string(),
+            object_path.to_string_lossy().to_string()
+        ];
+        cmd_args.extend(args);
+
+        // Start the scheduler process with sudo
+        let child = self.spawn_with_sudo(cmd_args).await?;
+
+        log::info!("Started custom scheduler '{}' with PID: {:?}", name, child.id());
+
+        Ok(child)
+    }
+
+    // ============================================================================
     // Internal Implementation Methods
     // ============================================================================
 
@@ -459,57 +554,17 @@ impl SchedulerGenerator {
             anyhow::bail!("File must be a .bpf.o object file");
         }
 
-        // Use the loader binary from new_sched directory
-        let loader_path = self.work_dir.join("loader");
-        if !loader_path.exists() {
-            anyhow::bail!(
-                "Loader binary not found at {}. Run 'make' in new_sched directory first.",
-                loader_path.display()
-            );
-        }
+        let loader_path = self.get_loader_path()?;
 
         log::info!("Starting scheduler verification for: {}", bpf_object.display());
         log::info!("Test duration: {} seconds", duration.as_secs());
 
-        // Check if we need sudo
-        let sudo_password = std::env::var("SCHEDCP_SUDO_PASSWORD").ok();
-
-        // Start the scheduler process
-        let mut child = if sudo_password.is_some() {
-            // With sudo
-            let mut cmd = tokio::process::Command::new("sudo");
-            cmd.arg("-S") // Read password from stdin
-                .arg(&loader_path)
-                .arg(bpf_object)
-                .stdin(Stdio::piped())
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .current_dir(&self.work_dir);
-
-            let mut child = cmd.spawn()
-                .context("Failed to spawn scheduler process with sudo")?;
-
-            // Write password to stdin if provided
-            if let Some(ref password) = sudo_password {
-                if let Some(mut stdin) = child.stdin.take() {
-                    use tokio::io::AsyncWriteExt;
-                    stdin.write_all(format!("{}\n", password).as_bytes()).await
-                        .context("Failed to write sudo password")?;
-                }
-            }
-
-            child
-        } else {
-            // Without sudo (for testing or if passwordless sudo is configured)
-            tokio::process::Command::new("sudo")
-                .arg(&loader_path)
-                .arg(bpf_object)
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .current_dir(&self.work_dir)
-                .spawn()
-                .context("Failed to spawn scheduler process")?
-        };
+        // Start the scheduler process with sudo
+        let cmd_args = vec![
+            loader_path.to_string_lossy().to_string(),
+            bpf_object.to_string_lossy().to_string(),
+        ];
+        let mut child = self.spawn_with_sudo(cmd_args).await?;
 
         let pid = child.id().context("Failed to get child process ID")?;
         log::info!("Scheduler started with PID: {}", pid);

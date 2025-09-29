@@ -1,5 +1,5 @@
 use anyhow::Result;
-use schedcp::{*, WorkloadRequest};
+use schedcp::{*, WorkloadRequest, CreateSchedulerRequest};
 use rmcp::{
     handler::server::{router::tool::ToolRouter, tool::Parameters},
     model::{CallToolResult, Content, ErrorData as McpError, ServerInfo, ServerCapabilities, ProtocolVersion, Implementation},
@@ -185,7 +185,7 @@ impl McpServer {
             },
             "add_history" => {
                 if let (Some(workload_id), Some(execution_id)) = (&request.workload_id, &request.execution_id) {
-                    info!("workload add_history called for workload_id: {}, execution_id: {}", 
+                    info!("workload add_history called for workload_id: {}, execution_id: {}",
                           workload_id, execution_id);
                 }
             },
@@ -193,9 +193,22 @@ impl McpServer {
                 info!("workload unknown command: {}", request.command);
             }
         }
-        
+
         let result = self.inner.workload_impl(request).await?;
-        
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
+
+    #[tool(description = "Create and verify a custom BPF scheduler. This tool will compile the provided source code, load it into the kernel for verification, and return the result. The scheduler will be available for later use with run_scheduler.")]
+    async fn create_and_verify_scheduler(
+        &self,
+        Parameters(request): Parameters<CreateSchedulerRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        info!("create_and_verify_scheduler called for scheduler '{}' (algorithm: {:?})",
+              request.name, request.algorithm);
+
+        let result = self.inner.create_and_verify_scheduler_impl(request).await?;
+
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 }

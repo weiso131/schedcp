@@ -120,6 +120,26 @@ pub struct WorkloadRequest {
     pub result_description: Option<String>,
 }
 
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct CreateSchedulerRequest {
+    #[schemars(description = "Name for the custom scheduler")]
+    pub name: String,
+    #[schemars(description = "BPF C source code for the scheduler")]
+    pub source_code: String,
+    #[schemars(description = "Description of what the scheduler does")]
+    pub description: String,
+    #[schemars(description = "Algorithm type (e.g., 'vruntime-based', 'EDF', 'FIFO', 'Custom')")]
+    pub algorithm: String,
+    #[schemars(description = "Use cases for this scheduler")]
+    pub use_cases: Vec<String>,
+    #[schemars(description = "Key characteristics of the scheduler")]
+    pub characteristics: String,
+    #[schemars(description = "Known limitations of the scheduler")]
+    pub limitations: String,
+    #[schemars(description = "Performance profile (e.g., 'Low latency', 'High throughput', 'Balanced')")]
+    pub performance_profile: String,
+}
+
 impl SchedMcpServer {
     /// Create a new server for testing with a custom storage path
     pub async fn new_with_storage(storage_path: String) -> Result<Self> {
@@ -365,6 +385,33 @@ impl SchedMcpServer {
             },
             "history": history_json
         }).to_string())
+    }
+
+    /// Core implementation for create_and_verify_scheduler
+    pub async fn create_and_verify_scheduler_impl(&self, request: CreateSchedulerRequest) -> Result<String, McpError> {
+        let manager = self.scheduler_manager.lock().await;
+
+        // Create scheduler info from request
+        let info = scheduler_manager::SchedulerInfo {
+            name: request.name.clone(),
+            production_ready: false, // Custom schedulers are not production ready by default
+            description: request.description,
+            use_cases: request.use_cases,
+            algorithm: request.algorithm,
+            characteristics: request.characteristics,
+            tuning_parameters: std::collections::HashMap::new(), // No tuning parameters for now
+            limitations: request.limitations,
+            performance_profile: request.performance_profile,
+        };
+
+        // Create, compile, and verify the scheduler
+        let result = manager.create_and_verify_scheduler(info, &request.source_code).await
+            .map_err(|e| McpError::invalid_params(
+                e.to_string(),
+                None,
+            ))?;
+
+        Ok(result)
     }
 
     /// Unified workload command implementation
