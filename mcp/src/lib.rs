@@ -15,6 +15,9 @@ pub use workload_profile::{WorkloadProfile, ExecutionHistory, WorkloadStore};
 pub mod storage;
 pub use storage::PersistentStorage;
 
+pub mod scheduler_generator;
+pub use scheduler_generator::SchedulerGenerator;
+
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
