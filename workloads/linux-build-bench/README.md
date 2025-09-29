@@ -199,4 +199,10 @@ python linux_build_bench_start.py \
 
 for the command "cd workloads/linux-build-bench/linux && make clean -j$(nproc) && make tinyconfig -j$(nproc) && make -j$(nproc)", optimize the scheduler with the schedcp mcp tools.
 
-'cd workloads/linux-build-bench/linux && make clean -j && make -j'
+'make -C workloads/linux-build-bench/linux clean -j && make -C workloads/linux-build-bench/linux -j'
+
+
+autotune/target/release/autotune cc 'make -C workloads/linux-build-bench/linux clean -j && make -C workloads/linux-build-bench/linux -j'
+
+
+
