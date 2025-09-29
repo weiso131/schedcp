@@ -278,6 +278,30 @@ impl SchedulerGenerator {
         Ok(result)
     }
 
+    /// Get the object file path for a compiled scheduler
+    ///
+    /// This allows external code (like SchedulerManager) to get the path
+    /// to run the scheduler persistently.
+    ///
+    /// # Arguments
+    /// * `name` - Name of the scheduler
+    ///
+    /// # Returns
+    /// PathBuf to the .bpf.o file, or None if it doesn't exist
+    pub fn get_scheduler_object_path(&self, name: &str) -> Option<std::path::PathBuf> {
+        let object_path = self.get_object_path(name);
+        if object_path.exists() {
+            Some(object_path)
+        } else {
+            None
+        }
+    }
+
+    /// Get the work directory where schedulers are stored
+    pub fn work_dir(&self) -> &Path {
+        &self.work_dir
+    }
+
     // ============================================================================
     // Internal Implementation Methods
     // ============================================================================
