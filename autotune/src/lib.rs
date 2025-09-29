@@ -1,1 +1,2 @@
-// Empty lib.rs for the binary crate
+pub mod prompt;
+pub mod daemon;
