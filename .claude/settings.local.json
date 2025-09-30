@@ -40,7 +40,10 @@
       "Read(//tmp/**)",
       "Bash(git init:*)",
       "Bash(/home/yunwei37/schedcp/mcp/target/release/schedcp-cli list)",
-      "Bash(./mcp/target/release/schedcp-cli:*)"
+      "Bash(./mcp/target/release/schedcp-cli:*)",
+      "Read(//home/yunwei37/.schedcp/scxbin/**)",
+      "Bash(echo $HOME)",
+      "Bash(pkill:*)"
     ],
     "deny": []
   },

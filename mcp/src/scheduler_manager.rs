@@ -261,16 +261,63 @@ impl SchedulerManager {
         let execution_id = format!("custom_{}", uuid::Uuid::new_v4().to_string()[..8].to_string());
 
         // Run custom scheduler using the generator
-        let child = self.generator.run_scheduler_process(name, args.clone())
+        let mut child = self.generator.run_scheduler_process(name, args.clone())
             .await
             .map_err(|e| anyhow!("Failed to start custom scheduler: {}", e))?;
 
         let pid = child.id();
 
-        // Note: We're not tracking this in executions map for now
-        // The child process handle is dropped, but the process continues running
-        // This is intentional for custom schedulers to keep running
-        std::mem::forget(child); // Prevent child from being killed on drop
+        // Create a dummy process_id for tracking purposes
+        let process_id = Uuid::new_v4();
+
+        // Create execution record
+        let execution = SchedulerExecution {
+            execution_id: execution_id.clone(),
+            process_id,
+            scheduler_name: name.to_string(),
+            command: format!("custom:{}", name),
+            args: args.clone(),
+            start_time: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            output_buffer: Arc::new(Mutex::new(Vec::new())),
+        };
+
+        // Start output capture task
+        let output_buffer = execution.output_buffer.clone();
+
+        tokio::spawn(async move {
+            // Capture stdout
+            if let Some(mut stdout) = child.stdout.take() {
+                use tokio::io::AsyncBufReadExt;
+                let mut reader = tokio::io::BufReader::new(stdout);
+                let mut line = String::new();
+
+                loop {
+                    line.clear();
+                    match reader.read_line(&mut line).await {
+                        Ok(0) => break, // EOF
+                        Ok(_) => {
+                            let mut buffer = output_buffer.lock().await;
+                            buffer.push(format!("[STDOUT] {}", line.trim_end()));
+                            // Keep only last 1000 lines
+                            if buffer.len() > 1000 {
+                                buffer.drain(0..500);
+                            }
+                        }
+                        Err(_) => break,
+                    }
+                }
+            }
+
+            // Keep the child process running
+            std::mem::forget(child);
+        });
+
+        // Store execution
+        let mut executions = self.executions.lock().await;
+        executions.insert(execution_id.clone(), execution);
 
         log::info!("Started custom scheduler '{}' with PID {:?}, execution_id: {}", name, pid, execution_id);
 
@@ -280,28 +327,45 @@ impl SchedulerManager {
     pub async fn get_execution(&self, execution_id: &str) -> Option<SchedulerExecutionStatus> {
         let executions = self.executions.lock().await;
         if let Some(exec) = executions.get(execution_id) {
-            // Get process info from process manager
-            if let Some(process_info) = self.process_manager.get_process_info(exec.process_id) {
-                let output = exec.output_buffer.lock().await.clone();
-                
+            let output = exec.output_buffer.lock().await.clone();
+
+            // Check if this is a custom scheduler (has "custom:" prefix in command)
+            if exec.command.starts_with("custom:") {
+                // For custom schedulers, we don't have ProcessManager tracking
+                // Return basic status based on execution record
                 Some(SchedulerExecutionStatus {
                     execution_id: exec.execution_id.clone(),
                     scheduler_name: exec.scheduler_name.clone(),
                     command: exec.command.clone(),
                     args: exec.args.clone(),
-                    status: match process_info.status {
-                        ProcessStatus::Pending => "pending",
-                        ProcessStatus::Running => "running",
-                        ProcessStatus::Stopped => "stopped",
-                        ProcessStatus::Failed => "failed",
-                    }.to_string(),
-                    pid: process_info.pid,
+                    status: "running".to_string(), // Assume running since we can't track easily
+                    pid: None, // PID not tracked for custom schedulers
                     start_time: exec.start_time,
-                    end_time: process_info.stopped_at.map(|t| t.timestamp() as u64),
+                    end_time: None,
                     output,
                 })
             } else {
-                None
+                // For built-in schedulers, get process info from process manager
+                if let Some(process_info) = self.process_manager.get_process_info(exec.process_id) {
+                    Some(SchedulerExecutionStatus {
+                        execution_id: exec.execution_id.clone(),
+                        scheduler_name: exec.scheduler_name.clone(),
+                        command: exec.command.clone(),
+                        args: exec.args.clone(),
+                        status: match process_info.status {
+                            ProcessStatus::Pending => "pending",
+                            ProcessStatus::Running => "running",
+                            ProcessStatus::Stopped => "stopped",
+                            ProcessStatus::Failed => "failed",
+                        }.to_string(),
+                        pid: process_info.pid,
+                        start_time: exec.start_time,
+                        end_time: process_info.stopped_at.map(|t| t.timestamp() as u64),
+                        output,
+                    })
+                } else {
+                    None
+                }
             }
         } else {
             None
@@ -312,8 +376,31 @@ impl SchedulerManager {
     pub async fn stop_scheduler(&self, execution_id: &str) -> Result<()> {
         let executions = self.executions.lock().await;
         if let Some(exec) = executions.get(execution_id) {
-            self.process_manager.stop_process(exec.process_id).await
-                .map_err(|e| anyhow!("Failed to stop scheduler: {}", e))
+            // Check if this is a custom scheduler
+            if exec.command.starts_with("custom:") {
+                // For custom schedulers, we need to kill the process by name
+                // since we don't track it in ProcessManager
+                let scheduler_name = &exec.scheduler_name;
+
+                // Try to find and kill the loader process
+                let output = tokio::process::Command::new("pkill")
+                    .arg("-f")
+                    .arg(format!("{}.bpf.o", scheduler_name))
+                    .output()
+                    .await
+                    .map_err(|e| anyhow!("Failed to execute pkill: {}", e))?;
+
+                if output.status.success() {
+                    log::info!("Stopped custom scheduler '{}'", scheduler_name);
+                    Ok(())
+                } else {
+                    Err(anyhow!("Failed to stop custom scheduler '{}': process may not be running", scheduler_name))
+                }
+            } else {
+                // For built-in schedulers, use ProcessManager
+                self.process_manager.stop_process(exec.process_id).await
+                    .map_err(|e| anyhow!("Failed to stop scheduler: {}", e))
+            }
         } else {
             Err(anyhow!("Execution not found"))
         }
