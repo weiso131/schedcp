@@ -41,6 +41,9 @@ impl SchedulerGenerator {
                 .trim()
         );
 
+        // Validate we're in the schedcp directory
+        Self::validate_schedcp_dir(&project_root)?;
+
         let work_dir = project_root.join("mcp/new_sched");
 
         // Create work directory if it doesn't exist
@@ -68,6 +71,9 @@ impl SchedulerGenerator {
                 .context("Invalid UTF-8 in project root path")?
                 .trim()
         );
+
+        // Validate we're in the schedcp directory
+        Self::validate_schedcp_dir(&project_root)?;
 
         // Create work directory if it doesn't exist
         fs::create_dir_all(&work_dir)
@@ -306,6 +312,35 @@ impl SchedulerGenerator {
     // ============================================================================
     // Internal Helper Methods
     // ============================================================================
+
+    /// Validate that we're in the schedcp project directory
+    fn validate_schedcp_dir(project_root: &Path) -> Result<()> {
+        // Check for key directories that should exist in schedcp
+        let mcp_dir = project_root.join("mcp");
+        let scheduler_dir = project_root.join("scheduler");
+
+        if !mcp_dir.exists() {
+            anyhow::bail!(
+                "Not in schedcp directory: 'mcp' directory not found at {}",
+                project_root.display()
+            );
+        }
+
+        if !scheduler_dir.exists() {
+            anyhow::bail!(
+                "Not in schedcp directory: 'scheduler' directory not found at {}",
+                project_root.display()
+            );
+        }
+
+        // Check for mcp/new_sched directory structure
+        let new_sched_dir = mcp_dir.join("new_sched");
+        if !new_sched_dir.exists() {
+            log::info!("Creating mcp/new_sched directory at {}", new_sched_dir.display());
+        }
+
+        Ok(())
+    }
 
     /// Get and validate the loader binary path
     fn get_loader_path(&self) -> Result<PathBuf> {

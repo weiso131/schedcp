@@ -200,15 +200,8 @@ impl SchedMcpServer {
     /// Core implementation for run_scheduler
     pub async fn run_scheduler_impl(&self, request: RunSchedulerRequest) -> Result<String, McpError> {
         let manager = self.scheduler_manager.lock().await;
-        
-        // Check if scheduler exists
-        if manager.get_scheduler(&request.name).is_none() {
-            return Err(McpError::invalid_params(
-                format!("Scheduler '{}' not found", request.name),
-                Some(json!({"scheduler": request.name})),
-            ));
-        }
 
+        // create_execution will handle both built-in and custom schedulers
         let execution_id = manager.create_execution(&request.name, request.args.clone())
             .await
             .map_err(|e| McpError::invalid_params(

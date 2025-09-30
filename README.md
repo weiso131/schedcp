@@ -2,7 +2,7 @@
 
 > WIP: We are building a benchmark for evaluating the optimizations for OS!
 
-SchedCP enables AI-assisted optimization of Linux kernel schedulers using the sched-ext framework. It provides automatic scheduler selection, workload profiling, and performance optimization.
+SchedCP is an `experimental` project that enables AI optimization of Linux kernel schedulers using the sched-ext framework. It provides e2e automatic scheduler selection/synthesis, workload profiling, and performance optimization without any human intervention or guidance.
 
 Paper: [SchedCP: Towards Agentic OS](https://arxiv.org/abs/2509.18256)
 
@@ -26,6 +26,8 @@ autotune/target/release/autotune cc  workloads/basic/schbench/schbench
 Allow LLM Agent to auto select and config the best scheduler:
 
 ![document/schbench-optimize.gif](document/schbench-optimize.gif)
+
+Allow LLM Agents to write new schedulers:
 
 ## Features & design
 

@@ -179,14 +179,26 @@ impl SchedulerManager {
     }
 
     pub async fn create_execution(&self, name: &str, args: Vec<String>) -> Result<String> {
-        // Check if scheduler exists
-        if self.get_scheduler(name).is_none() {
-            return Err(anyhow!("Scheduler '{}' not found", name));
+        // Check if it's a built-in scheduler
+        if self.get_scheduler(name).is_some() {
+            // Run built-in scheduler
+            return self.create_builtin_execution(name, args).await;
         }
 
+        // Check if it's a custom compiled scheduler
+        if self.generator.get_scheduler_object_path(name).is_some() {
+            // Run custom scheduler
+            return self.create_custom_execution(name, args).await;
+        }
+
+        // Scheduler not found
+        Err(anyhow!("Scheduler '{}' not found. Use list_schedulers to see available schedulers or create_and_verify_scheduler to create a custom one.", name))
+    }
+
+    async fn create_builtin_execution(&self, name: &str, args: Vec<String>) -> Result<String> {
         // Generate execution ID
         let execution_id = format!("sched_{}", uuid::Uuid::new_v4().to_string()[..8].to_string());
-        
+
         // Create process config
         let config = ProcessConfig {
             name: format!("{}_exec_{}", name, execution_id),
@@ -200,7 +212,7 @@ impl SchedulerManager {
         let sudo_password = self.sudo_password.as_ref()
             .map(|s| s.as_str())
             .unwrap_or("");
-        
+
         let process_id = self.process_manager.start_process_with_sudo(config, sudo_password).await
             .map_err(|e| anyhow!("Failed to start scheduler with sudo: {}", e))?;
 
@@ -240,7 +252,28 @@ impl SchedulerManager {
         // Store execution
         let mut executions = self.executions.lock().await;
         executions.insert(execution_id.clone(), execution);
-        
+
+        Ok(execution_id)
+    }
+
+    async fn create_custom_execution(&self, name: &str, args: Vec<String>) -> Result<String> {
+        // Generate execution ID
+        let execution_id = format!("custom_{}", uuid::Uuid::new_v4().to_string()[..8].to_string());
+
+        // Run custom scheduler using the generator
+        let child = self.generator.run_scheduler_process(name, args.clone())
+            .await
+            .map_err(|e| anyhow!("Failed to start custom scheduler: {}", e))?;
+
+        let pid = child.id();
+
+        // Note: We're not tracking this in executions map for now
+        // The child process handle is dropped, but the process continues running
+        // This is intentional for custom schedulers to keep running
+        std::mem::forget(child); // Prevent child from being killed on drop
+
+        log::info!("Started custom scheduler '{}' with PID {:?}, execution_id: {}", name, pid, execution_id);
+
         Ok(execution_id)
     }
 
@@ -433,10 +466,6 @@ impl SchedulerManager {
         ))
     }
 
-    /// Get the scheduler generator for direct access to custom scheduler management
-    pub fn generator(&self) -> &SchedulerGenerator {
-        &self.generator
-    }
 }
 
 #[derive(Debug, Clone, Serialize)]

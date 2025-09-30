@@ -32,7 +32,15 @@
       "Bash(sudo:*)",
       "Bash(echo \"Exit code: $?\")",
       "Read(//sys/kernel/sched_ext/**)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "mcp__schedcp__create_and_verify_scheduler",
+      "Bash(test:*)",
+      "Read(//home/yunwei37/.schedcp/logs/**)",
+      "Read(///**)",
+      "Read(//tmp/**)",
+      "Bash(git init:*)",
+      "Bash(/home/yunwei37/schedcp/mcp/target/release/schedcp-cli list)",
+      "Bash(./mcp/target/release/schedcp-cli:*)"
     ],
     "deny": []
   },

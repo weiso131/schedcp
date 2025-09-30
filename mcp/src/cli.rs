@@ -77,14 +77,26 @@ async fn main() -> Result<()> {
             // If --sudo flag is set or no flag (default), use sudo
             // Empty string means passwordless sudo
             let sudo_password = if sudo {
-                env::var("SCHEDCP_SUDO_PASSWORD").ok()
+                env::var("SCHEDCP_SUDO_PASSWORD").ok().unwrap_or_default()
             } else {
                 // Even without --sudo flag, still use passwordless sudo for schedulers
-                Some("".to_string())
+                String::new()
             };
 
-            // Run the scheduler
-            manager.run_scheduler(&scheduler, args, sudo_password.as_deref()).await?;
+            manager.set_sudo_password(sudo_password);
+
+            // Run the scheduler using create_execution API (handles both built-in and custom)
+            println!("Starting scheduler: {}", scheduler);
+            let execution_id = manager.create_execution(&scheduler, args).await?;
+            println!("Scheduler started with execution ID: {}", execution_id);
+
+            // Keep the process running until interrupted
+            println!("\nPress Ctrl+C to stop the scheduler...");
+            tokio::signal::ctrl_c().await?;
+
+            println!("\nStopping scheduler...");
+            manager.stop_scheduler(&execution_id).await?;
+            println!("Scheduler stopped");
         }
 
         Commands::CreateAndRun { source } => {
@@ -111,31 +123,31 @@ async fn main() -> Result<()> {
             let info = SchedulerInfo {
                 name: name.clone(),
                 production_ready: false,
-                description: String::new(),
-                use_cases: Vec::new(),
-                algorithm: String::new(),
-                characteristics: String::new(),
+                description: format!("Custom scheduler compiled from {}", source),
+                use_cases: vec!["Custom workload".to_string()],
+                algorithm: "Custom".to_string(),
+                characteristics: "User-provided BPF scheduler".to_string(),
                 tuning_parameters: HashMap::new(),
-                limitations: String::new(),
-                performance_profile: String::new(),
+                limitations: "Not verified for production use".to_string(),
+                performance_profile: "Unknown".to_string(),
             };
 
-            println!("Creating and compiling custom scheduler: {}", name);
+            println!("Creating and verifying custom scheduler: {}", name);
 
-            // Create and compile the scheduler (skip verification, we'll run it directly)
-            manager.generator().create_and_compile(&name, &source_code)?;
-            println!("Scheduler compiled successfully!");
+            // Create and verify the scheduler through the manager
+            let result = manager.create_and_verify_scheduler(info, &source_code).await?;
+            println!("{}", result);
 
             println!("\nStarting custom scheduler...");
-            let mut child = manager.generator().run_scheduler_process(&name, vec![]).await?;
-            println!("Custom scheduler started with PID: {:?}", child.id());
+            let execution_id = manager.create_execution(&name, vec![]).await?;
+            println!("Custom scheduler started with execution ID: {}", execution_id);
 
             // Keep the process running until interrupted
             println!("\nPress Ctrl+C to stop the scheduler...");
             tokio::signal::ctrl_c().await?;
 
             println!("\nStopping scheduler...");
-            child.kill().await?;
+            manager.stop_scheduler(&execution_id).await?;
             println!("Scheduler stopped");
         }
     }
