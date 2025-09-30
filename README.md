@@ -38,7 +38,7 @@ Allow LLM Agents to write new schedulers:
 
 ![document/design.png](document/design.png)
 
-The MCP tools include:
+The current MCP tools include:
 
 - **list_schedulers** - Get detailed information about all available schedulers
 - **run_scheduler** - Start schedulers with custom configurations
