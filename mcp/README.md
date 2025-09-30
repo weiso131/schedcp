@@ -21,8 +21,10 @@ The MCP server allows AI assistants to:
 - **Smart Filtering**: Filter schedulers by name or production readiness
 - **AI Integration**: MCP server enables AI assistants to help with scheduler selection and tuning
 - **Production Ready**: Clear indication of which schedulers are ready for production use
+- **Custom Schedulers**: Create, compile, and verify custom BPF schedulers from source code
 - **Workload Profiles**: Create and manage workload profiles with natural language descriptions
 - **Execution History**: Track scheduler performance history for different workloads
+- **System Monitoring**: Real-time CPU, memory, and scheduler metrics collection
 - **Persistent Storage**: All workload profiles and history are saved to disk automatically
 - **Enhanced Logging**: Comprehensive logging to file (schedcp.log) for debugging and monitoring
 
@@ -73,6 +75,31 @@ export SCHEDCP_SUDO_PASSWORD="your_password"
 ./target/release/schedcp-cli run scx_rusty --sudo -- --slice-us-underutil 30000 --fifo-sched
 ```
 
+### Create and Run a Custom Scheduler
+
+```bash
+# Create and run a custom BPF scheduler from source
+./target/release/schedcp-cli create-and-run /path/to/my_scheduler.bpf.c
+```
+
+### Monitor System Metrics
+
+```bash
+# Monitor system metrics for default 10 seconds
+./target/release/schedcp-cli monitor
+
+# Monitor for custom duration
+./target/release/schedcp-cli monitor --duration 30
+
+# Short flag
+./target/release/schedcp-cli monitor -d 5
+```
+
+Output includes:
+- CPU utilization (average and maximum)
+- Memory usage (percentage and MB)
+- Scheduler statistics (timeslices and run time)
+
 ## schedcp MCP Server Usage
 
 ### Available Tools
@@ -87,15 +114,22 @@ export SCHEDCP_SUDO_PASSWORD="your_password"
 - **get_execution_status** - Get status of a scheduler execution (includes command and args)
   - Parameters: `execution_id` (required)
 
+#### Custom Scheduler Creation
+- **create_and_verify_scheduler** - Create, compile, and verify a custom BPF scheduler
+  - Parameters: `name` (required), `source_code` (required), `description`, `algorithm`, `use_cases`, `characteristics`, `limitations`, `performance_profile`
+
 #### Workload Profile Management
-- **create_workload_profile** - Create a new workload profile
-  - Parameters: `description` (required) - Natural language description of the workload
-- **add_execution_history** - Add execution history to a workload profile
-  - Parameters: `workload_id` (required), `execution_id` (required), `result_description` (required)
-- **list_workload_profiles** - List all workload profiles
-  - Parameters: none
-- **get_workload_history** - Get workload profile with its execution history
-  - Parameters: `workload_id` (required)
+- **workload** - Unified workload profile management command
+  - Commands: `create`, `list`, `get_history`, `add_history`
+  - Parameters vary by command
+
+#### System Monitoring
+- **system_monitor** - Collect CPU, memory, and scheduler metrics
+  - Commands: `start` (begin monitoring), `stop` (end and get summary)
+  - Collects samples every second including:
+    - CPU utilization percentages
+    - Memory usage (percent and MB)
+    - Scheduler statistics from /proc/schedstat
 
 ### Running the Server
 
@@ -155,7 +189,9 @@ The tools require sudo access to load kernel schedulers. Two options:
    # Add: your_username ALL=(ALL) NOPASSWD: /path/to/scheduler/binaries
    ```
 
-### Workload Profile Workflow Example
+### Workflow Examples
+
+#### Workload Profile Workflow
 
 ```bash
 # 1. Create a workload profile
@@ -172,6 +208,33 @@ The tools require sudo access to load kernel schedulers. Two options:
 ```
 
 The workload profiles and history are persisted in `schedcp_workloads.json` in the current directory.
+
+#### System Monitoring Workflow
+
+```bash
+# 1. Start monitoring
+# AI assistant starts monitoring with: {"command": "start"}
+
+# 2. Run workload/scheduler
+# Execute the workload or benchmark while monitoring is active
+
+# 3. Stop and get summary
+# AI assistant stops monitoring with: {"command": "stop"}
+# Receives comprehensive summary with CPU, memory, and scheduler metrics
+```
+
+#### Custom Scheduler Workflow
+
+```bash
+# 1. Create custom scheduler
+# AI assistant creates and verifies a custom BPF scheduler from source code
+
+# 2. Run custom scheduler
+# The custom scheduler is now available in the scheduler list
+
+# 3. Monitor performance
+# Use system_monitor to track performance of the custom scheduler
+```
 
 ## Architecture
 

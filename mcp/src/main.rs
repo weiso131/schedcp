@@ -1,5 +1,5 @@
 use anyhow::Result;
-use schedcp::{*, WorkloadRequest, CreateSchedulerRequest};
+use schedcp::{*, WorkloadRequest, CreateSchedulerRequest, SystemMonitorRequest};
 use rmcp::{
     handler::server::{router::tool::ToolRouter, tool::Parameters},
     model::{CallToolResult, Content, ErrorData as McpError, ServerInfo, ServerCapabilities, ProtocolVersion, Implementation},
@@ -64,6 +64,7 @@ impl McpServer {
             scheduler_manager: Arc::new(Mutex::new(scheduler_manager)),
             workload_store: Arc::new(Mutex::new(workload_store)),
             storage: storage.clone(),
+            system_monitor: Arc::new(SystemMonitor::new()),
         };
 
         // Start cleanup task
@@ -208,6 +209,18 @@ impl McpServer {
               request.name, request.algorithm);
 
         let result = self.inner.create_and_verify_scheduler_impl(request).await?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
+
+    #[tool(description = "Start or stop system monitoring to collect CPU, memory, and scheduler metrics. Use command 'start' to begin monitoring, 'stop' to end and receive a summary. Monitoring collects metrics every second including CPU utilization, memory usage, and scheduler statistics. Note: **You only use the tool if you find there is no other metrics you can measure. You should first check for any benchmark tools, check the output of the command, or measure the execution time, etc before use this.**")]
+    async fn system_monitor(
+        &self,
+        Parameters(request): Parameters<SystemMonitorRequest>,
+    ) -> Result<CallToolResult, McpError> {
+        info!("system_monitor called with command: {}", request.command);
+
+        let result = self.inner.system_monitor_impl(request).await?;
 
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }

@@ -38,6 +38,16 @@ Allow LLM Agents to write new schedulers:
 
 ![document/design.png](document/design.png)
 
+The MCP tools include:
+
+- **list_schedulers** - Get detailed information about all available schedulers
+- **run_scheduler** - Start schedulers with custom configurations
+- **stop_scheduler** - Stop running scheduler instances
+- **get_execution_status** - Monitor scheduler performance and output
+- **create_and_verify_scheduler** - Create custom BPF schedulers from source code
+- **system_monitor** - Collect real-time CPU, memory, and scheduler metrics
+- **workload** - Manage workload profiles and execution history
+
 ## Installation
 
 ### Requirements

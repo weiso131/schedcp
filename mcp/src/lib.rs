@@ -18,6 +18,9 @@ pub use storage::PersistentStorage;
 pub mod scheduler_generator;
 pub use scheduler_generator::SchedulerGenerator;
 
+pub mod system_monitor;
+pub use system_monitor::{SystemMonitor, MonitoringSummary};
+
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -34,6 +37,7 @@ pub struct SchedMcpServer {
     pub scheduler_manager: Arc<Mutex<SchedulerManager>>,
     pub workload_store: Arc<Mutex<WorkloadStore>>,
     pub storage: Arc<PersistentStorage>,
+    pub system_monitor: Arc<SystemMonitor>,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
@@ -140,18 +144,26 @@ pub struct CreateSchedulerRequest {
     pub performance_profile: String,
 }
 
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct SystemMonitorRequest {
+    #[schemars(description = "Command: 'start' to begin monitoring, 'stop' to end and get summary")]
+    pub command: String,
+}
+
 impl SchedMcpServer {
     /// Create a new server for testing with a custom storage path
     pub async fn new_with_storage(storage_path: String) -> Result<Self> {
         let storage = Arc::new(PersistentStorage::with_path(storage_path));
         let workload_store = Arc::new(Mutex::new(storage.load()?));
         let scheduler_manager = Arc::new(Mutex::new(SchedulerManager::new()?));
-        
+        let system_monitor = Arc::new(SystemMonitor::new());
+
         let server = Self {
             tool_router: ToolRouter::new(),
             scheduler_manager,
             workload_store: workload_store.clone(),
             storage: storage.clone(),
+            system_monitor,
         };
 
         Ok(server)
@@ -551,6 +563,64 @@ impl SchedMcpServer {
             ))?;
 
         self.get_workload_history_impl(workload_id).await
+    }
+
+    /// Core implementation for system_monitor
+    pub async fn system_monitor_impl(&self, request: SystemMonitorRequest) -> Result<String, McpError> {
+        match request.command.as_str() {
+            "start" => {
+                let session_id = self.system_monitor.start_monitoring().await
+                    .map_err(|e| McpError::invalid_params(
+                        e.to_string(),
+                        None,
+                    ))?;
+
+                Ok(json!({
+                    "session_id": session_id,
+                    "status": "started",
+                    "message": format!("System monitoring started with session ID: {}", session_id)
+                }).to_string())
+            },
+            "stop" => {
+                let summary = self.system_monitor.stop_monitoring().await
+                    .map_err(|e| McpError::invalid_params(
+                        e.to_string(),
+                        None,
+                    ))?;
+
+                Ok(json!({
+                    "status": "stopped",
+                    "summary": {
+                        "session_id": summary.session_id,
+                        "duration_secs": summary.duration_secs,
+                        "sample_count": summary.sample_count,
+                        "cpu": {
+                            "avg_percent": format!("{:.2}", summary.cpu_avg_percent),
+                            "max_percent": format!("{:.2}", summary.cpu_max_percent),
+                        },
+                        "memory": {
+                            "avg_percent": format!("{:.2}", summary.memory_avg_percent),
+                            "max_percent": format!("{:.2}", summary.memory_max_percent),
+                            "avg_used_mb": format!("{:.2}", summary.memory_avg_used_mb),
+                        },
+                        "scheduler": {
+                            "total_timeslices": summary.sched_total_timeslices,
+                            "avg_run_time_ns": summary.sched_avg_run_time_ns,
+                        }
+                    },
+                    "message": format!("Monitoring session {} completed. Duration: {}s, Samples: {}",
+                        summary.session_id, summary.duration_secs, summary.sample_count)
+                }).to_string())
+            },
+            _ => Err(McpError::invalid_params(
+                format!("Unknown command: {}. Use 'start' or 'stop'", request.command),
+                None,
+            ))
+        }
+    }
+
+    pub async fn system_monitor(&self, request: SystemMonitorRequest) -> Result<String, McpError> {
+        self.system_monitor_impl(request).await
     }
 }
 

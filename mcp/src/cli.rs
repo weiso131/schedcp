@@ -5,7 +5,9 @@ use std::collections::HashMap;
 
 mod scheduler_manager;
 mod scheduler_generator;
+mod system_monitor;
 use scheduler_manager::{SchedulerManager, SchedulerInfo};
+use system_monitor::SystemMonitor;
 
 #[derive(Parser)]
 #[command(name = "schedcp-cli")]
@@ -41,6 +43,12 @@ enum Commands {
     CreateAndRun {
         /// Path to the BPF C source file (.bpf.c)
         source: String,
+    },
+    /// Monitor system metrics (CPU, memory, scheduler) for a specified duration
+    Monitor {
+        /// Duration in seconds to monitor the system
+        #[arg(short, long, default_value = "10")]
+        duration: u64,
     },
 }
 
@@ -149,6 +157,44 @@ async fn main() -> Result<()> {
             println!("\nStopping scheduler...");
             manager.stop_scheduler(&execution_id).await?;
             println!("Scheduler stopped");
+        }
+
+        Commands::Monitor { duration } => {
+            println!("Starting system monitoring for {} seconds...", duration);
+            println!("Collecting CPU, memory, and scheduler metrics every second.\n");
+
+            let monitor = SystemMonitor::new();
+
+            // Start monitoring
+            let session_id = monitor.start_monitoring().await?;
+            println!("Monitoring session started: {}\n", session_id);
+
+            // Wait for the specified duration
+            tokio::time::sleep(tokio::time::Duration::from_secs(duration)).await;
+
+            // Stop and get summary
+            println!("Stopping monitoring...\n");
+            let summary = monitor.stop_monitoring().await?;
+
+            // Display summary
+            println!("=== System Monitoring Summary ===");
+            println!("Session ID: {}", summary.session_id);
+            println!("Duration: {} seconds", summary.duration_secs);
+            println!("Samples collected: {}", summary.sample_count);
+            println!();
+            println!("CPU Utilization:");
+            println!("  Average: {:.2}%", summary.cpu_avg_percent);
+            println!("  Maximum: {:.2}%", summary.cpu_max_percent);
+            println!();
+            println!("Memory Usage:");
+            println!("  Average: {:.2}%", summary.memory_avg_percent);
+            println!("  Maximum: {:.2}%", summary.memory_max_percent);
+            println!("  Average Used: {:.2} MB", summary.memory_avg_used_mb);
+            println!();
+            println!("Scheduler Statistics:");
+            println!("  Total Timeslices: {}", summary.sched_total_timeslices);
+            println!("  Avg Run Time: {} ns", summary.sched_avg_run_time_ns);
+            println!();
         }
     }
 
