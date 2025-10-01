@@ -6,6 +6,8 @@ SchedCP is an `experimental` project that enables AI optimization of Linux kerne
 
 Paper: [SchedCP: Towards Agentic OS](https://arxiv.org/abs/2509.18256)
 
+*The future is not just about letting AI write code for you; the AI agent should act as your system administrator, able to optimize anything for you automatically, without requiring any manual intervention!*
+
 It includes the following tools:
 
 - **autotune** - AI Agent-powered automatic OS optimization
