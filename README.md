@@ -27,7 +27,7 @@ autotune/target/release/autotune cc  workloads/basic/schbench/schbench
 
 Allow LLM Agent to auto select and config the best scheduler:
 
-![document/schbench-optimize.gif](document/schbench-optimize.gif)
+![document/schbench-optimize.gif](https://github.com/eunomia-bpf/schedcp/blob/master/document/schbench-optimize.gif?raw=true)
 
 Allow LLM Agents to write new schedulers:
 
@@ -38,7 +38,7 @@ Allow LLM Agents to write new schedulers:
 - Performance tracking across different schedulers
 - Real-time scheduler management and generation
 
-![document/design.png](document/design.png)
+![document/design.png](https://github.com/eunomia-bpf/schedcp/blob/master/document/design.png?raw=true)
 
 The current MCP tools include:
 
@@ -93,7 +93,7 @@ export SCHEDCP_SUDO_PASSWORD="your_password"
 
 ### MCP Server
 
-check the [.mcp.json](.mcp.json) for more details. You can just open the claude-code on the 
+check the [.mcp.json](https://github.com/eunomia-bpf/schedcp/blob/master/.mcp.json) for more details. You can just open the claude-code on the 
 
 ### CLI Tool
 
@@ -117,4 +117,4 @@ export SCHEDCP_SUDO_PASSWORD="your_password"
 
 ## License
 
-See [LICENSE](LICENSE) for details.
+See [LICENSE](https://github.com/eunomia-bpf/schedcp/blob/master/LICENSE) for details.
