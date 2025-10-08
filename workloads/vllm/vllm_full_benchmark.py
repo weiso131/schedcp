@@ -2,6 +2,9 @@
 """
 vLLM benchmark wrapper using vllm bench serve CLI.
 Supports scheduler testing and parses benchmark metrics.
+
+NOTE: For multi-scheduler testing with automated result comparison and visualization,
+use vllm_bench_start.py instead. This script is for single scheduler runs.
 """
 
 import subprocess
