@@ -195,4 +195,5 @@ get_memory_info: [warning] ext_intel_free_memory is not supported (export/set ZE
 
 build: 5aa1105da (6082)
 
-./llama-server -hf mradermacher/Qwen3-42B-A3B-2507-Thinking-Abliterated-uncensored-TOTAL-RECALL-v2-Medium-MASTER-CODER-i1-GGUF:Q4_K_M
+llama.cpp/build/bin/llama-server  -hf mradermacher/Qwen3-42B-A3B-2507-Thinking-Abliterated-uncensored-TOTAL-RECALL-v2-Medium-MASTER-CODER-i1-GGUF:Q4_K_M
+
