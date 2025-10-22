@@ -46,28 +46,36 @@ def run_openai_benchmark(server_url, prompts, model="local-model", max_tokens=50
         try:
             request_start = time.time()
             first_token_time = None
-            tokens = []
+            input_tokens = 0
+            output_tokens = 0
 
             stream = client.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=max_tokens,
                 temperature=0.7,
-                stream=True
+                stream=True,
+                stream_options={"include_usage": True}
             )
 
             for chunk in stream:
-                if first_token_time is None:
-                    first_token_time = time.time()
-                if chunk.choices[0].delta.content:
-                    tokens.append(chunk.choices[0].delta.content)
+                # Track first token time
+                if first_token_time is None and chunk.choices and len(chunk.choices) > 0:
+                    delta = chunk.choices[0].delta
+                    has_content = (delta.content or
+                                 getattr(delta, 'reasoning_content', None))
+                    if has_content:
+                        first_token_time = time.time()
+
+                # Get actual token counts from the last chunk
+                if chunk.usage:
+                    input_tokens = chunk.usage.prompt_tokens
+                    output_tokens = chunk.usage.completion_tokens
 
             request_end = time.time()
 
             ttft_ms = (first_token_time - request_start) * 1000 if first_token_time else 0
             total_time_ms = (request_end - request_start) * 1000
-            output_tokens = len(tokens)
-            input_tokens = len(prompt.split())  # Approximate
 
             results.append({
                 'ttft_ms': ttft_ms,
@@ -150,13 +158,13 @@ def main():
     )
     parser.add_argument('--server-url', type=str, default='http://localhost:8080',
                         help='llama.cpp server URL (default: http://localhost:8080)')
-    parser.add_argument('--num-prompts', type=int, default=100,
-                        help='Number of prompts to test (default: 100)')
+    parser.add_argument('--num-prompts', type=int, default=10,
+                        help='Number of prompts to test (default: 10)')
     parser.add_argument('--dataset-path', type=str,
                         default='/home/yunwei37/workspace/schedcp/workloads/vllm/datasets/ShareGPT_V3_unfiltered_cleaned_split.json',
                         help='Path to ShareGPT dataset')
-    parser.add_argument('--max-tokens', type=int, default=512,
-                        help='Max tokens per response (default: 512)')
+    parser.add_argument('--max-tokens', type=int, default=4000,
+                        help='Max tokens per response (default: 4000)')
     parser.add_argument('--model', type=str, default='local-model',
                         help='Model name (default: local-model)')
 
