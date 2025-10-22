@@ -116,3 +116,77 @@ Median ITL (ms):                         566.91
 P99 ITL (ms):                            603.44    
 ```
 
+## Run with Nsight systems， graph level
+
+nsys profile --trace=cuda,nvtx,osrt vllm serve Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8  --cpu-offload-gb 30
+
+
+First time without cache:
+
+```bash
+Mean TTFT (ms):                          26869.03  
+Median TTFT (ms):                        28862.87  
+P99 TTFT (ms):                           48154.56  
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          1013.33   
+Median TPOT (ms):                        671.86    
+P99 TPOT (ms):                           4106.31   
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           607.11    
+Median ITL (ms):                         562.30    
+P99 ITL (ms):                            4105.58   
+```
+Second time with cache:
+
+```bash   
+---------------Time to First Token----------------
+Mean TTFT (ms):                          2116.34   
+Median TTFT (ms):                        2133.06   
+P99 TTFT (ms):                           2147.45   
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          557.04    
+Median TPOT (ms):                        572.35    
+P99 TPOT (ms):                           584.09    
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           527.81    
+Median ITL (ms):                         565.16    
+P99 ITL (ms):                            601.60   
+```
+
+## Run with Nsight systems， node level
+
+nsys profile --trace=cuda,nvtx,osrt --cuda-graph=node vllm serve Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8  --cpu-offload-gb 30
+
+First time without cache:
+
+```bash
+---------------Time to First Token----------------
+Mean TTFT (ms):                          26917.42  
+Median TTFT (ms):                        24808.93  
+P99 TTFT (ms):                           48309.66  
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          1022.32   
+Median TPOT (ms):                        674.86    
+P99 TPOT (ms):                           4131.08   
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           609.46    
+Median ITL (ms):                         564.78    
+P99 ITL (ms):                            4103.13   
+```
+
+Second time with cache:
+
+```bash
+---------------Time to First Token----------------
+Mean TTFT (ms):                          2115.85   
+Median TTFT (ms):                        2132.31   
+P99 TTFT (ms):                           2147.75   
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          569.89    
+Median TPOT (ms):                        574.45    
+P99 TPOT (ms):                           585.72    
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           564.27    
+Median ITL (ms):                         574.86    
+P99 ITL (ms):                            607.39   
+```
