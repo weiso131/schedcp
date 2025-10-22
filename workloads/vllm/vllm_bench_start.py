@@ -24,6 +24,8 @@ def main():
                         help='Specific schedulers to test (default: all)')
     parser.add_argument('--repeat', type=int, default=1,
                         help='Number of times to repeat each test (default: 1)')
+    parser.add_argument('--bench-cmd', type=str, default=None,
+                        help='Custom benchmark command (e.g., for llama.cpp). If not specified, uses vLLM.')
 
     args = parser.parse_args()
 
@@ -32,13 +34,18 @@ def main():
         num_prompts=args.num_prompts,
         dataset_path=args.dataset_path,
         output_file=args.output,
-        repeat=args.repeat
+        repeat=args.repeat,
+        bench_cmd=args.bench_cmd
     )
 
     # Run tests
-    print(f"Starting vLLM benchmark...")
-    print(f"Prompts: {args.num_prompts}")
-    print(f"Dataset: {args.dataset_path}")
+    bench_type = "custom" if args.bench_cmd else "vLLM"
+    print(f"Starting {bench_type} benchmark...")
+    if args.bench_cmd:
+        print(f"Command: {args.bench_cmd}")
+    else:
+        print(f"Prompts: {args.num_prompts}")
+        print(f"Dataset: {args.dataset_path}")
     print(f"Repeat count: {args.repeat}")
     print("-" * 60)
 

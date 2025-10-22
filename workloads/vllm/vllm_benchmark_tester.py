@@ -16,7 +16,7 @@ from scheduler_runner import SchedulerRunner, SchedulerBenchmark
 
 class VLLMBenchmarkTester(SchedulerBenchmark):
     def __init__(self, num_prompts=100, dataset_path=None,
-                 output_file='results/vllm_results.json', repeat=1):
+                 output_file='results/vllm_results.json', repeat=1, bench_cmd=None):
         super().__init__()
         self.num_prompts = num_prompts
         self.dataset_path = dataset_path or "/home/yunwei37/workspace/schedcp/workloads/vllm/datasets/ShareGPT_V3_unfiltered_cleaned_split.json"
@@ -24,12 +24,13 @@ class VLLMBenchmarkTester(SchedulerBenchmark):
         self.repeat = repeat
         self.results = {}
         self.venv_activate = "~/workspace/.venv/bin/activate"
+        self.bench_cmd = bench_cmd  # Custom benchmark command
 
         # Create results directory if it doesn't exist
         os.makedirs(os.path.dirname(self.output_file), exist_ok=True)
 
-        # Check if dataset exists
-        if not os.path.exists(self.dataset_path):
+        # Check if dataset exists (only for default vLLM mode)
+        if not bench_cmd and not os.path.exists(self.dataset_path):
             raise FileNotFoundError(f"Dataset not found: {self.dataset_path}")
 
     def parse_benchmark_output(self, output):
@@ -82,7 +83,7 @@ class VLLMBenchmarkTester(SchedulerBenchmark):
             print(f"Warning during scheduler cleanup: {e}")
 
     def run_vllm_benchmark(self, scheduler_name=None):
-        """Run vLLM benchmark with optional scheduler"""
+        """Run benchmark with optional scheduler"""
         scheduler = None
 
         try:
@@ -103,14 +104,17 @@ class VLLMBenchmarkTester(SchedulerBenchmark):
                     self._cleanup_schedulers()  # Clean up on error
                     return None
 
-            # Run vLLM benchmark
-            cmd = f". {self.venv_activate} && vllm bench serve " \
-                  f"--model Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8 " \
-                  f"--dataset-name sharegpt " \
-                  f"--num-prompts {self.num_prompts} " \
-                  f"--dataset-path {self.dataset_path}"
-
-            print(f"Running: vllm bench serve with {self.num_prompts} prompts")
+            # Use custom command if provided, otherwise default to vLLM
+            if self.bench_cmd:
+                cmd = self.bench_cmd
+                print(f"Running: {cmd}")
+            else:
+                cmd = f". {self.venv_activate} && vllm bench serve " \
+                      f"--model Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8 " \
+                      f"--dataset-name sharegpt " \
+                      f"--num-prompts {self.num_prompts} " \
+                      f"--dataset-path {self.dataset_path}"
+                print(f"Running: vllm bench serve with {self.num_prompts} prompts")
 
             # Run benchmark and capture output
             start_time = time.time()

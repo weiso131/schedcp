@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+"""
+Minimal OpenAI client wrapper for llama.cpp server.
+Makes llama.cpp server look like vLLM's output format.
+"""
+
+import json
+import time
+import sys
+import argparse
+import numpy as np
+from openai import OpenAI
+
+
+def load_sharegpt_dataset(dataset_path, num_prompts):
+    """Load ShareGPT dataset and extract prompts"""
+    with open(dataset_path, 'r') as f:
+        data = json.load(f)
+
+    prompts = []
+    for item in data[:num_prompts]:
+        if 'conversations' in item:
+            for conv in item['conversations']:
+                if conv.get('from') == 'human':
+                    prompts.append(conv['value'])
+                    break
+
+    return prompts[:num_prompts]
+
+
+def run_openai_benchmark(server_url, prompts, model="local-model", max_tokens=50000):
+    """
+    Run benchmark using OpenAI-compatible API.
+    Returns metrics in vLLM-compatible format.
+    """
+    client = OpenAI(base_url=f"{server_url}/v1", api_key="dummy")
+
+    results = []
+    total_input_tokens = 0
+    total_output_tokens = 0
+
+    print(f"Running benchmark with {len(prompts)} prompts...")
+    start_time = time.time()
+
+    for idx, prompt in enumerate(prompts):
+        try:
+            request_start = time.time()
+            first_token_time = None
+            tokens = []
+
+            stream = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=max_tokens,
+                temperature=0.7,
+                stream=True
+            )
+
+            for chunk in stream:
+                if first_token_time is None:
+                    first_token_time = time.time()
+                if chunk.choices[0].delta.content:
+                    tokens.append(chunk.choices[0].delta.content)
+
+            request_end = time.time()
+
+            ttft_ms = (first_token_time - request_start) * 1000 if first_token_time else 0
+            total_time_ms = (request_end - request_start) * 1000
+            output_tokens = len(tokens)
+            input_tokens = len(prompt.split())  # Approximate
+
+            results.append({
+                'ttft_ms': ttft_ms,
+                'total_time_ms': total_time_ms,
+                'input_tokens': input_tokens,
+                'output_tokens': output_tokens,
+                'success': True
+            })
+
+            total_input_tokens += input_tokens
+            total_output_tokens += output_tokens
+
+            if (idx + 1) % 10 == 0:
+                print(f"  Completed {idx + 1}/{len(prompts)} requests")
+
+        except Exception as e:
+            print(f"  Request {idx + 1} failed: {e}", file=sys.stderr)
+            results.append({'success': False})
+
+    end_time = time.time()
+    benchmark_duration = end_time - start_time
+
+    # Calculate metrics
+    successful_results = [r for r in results if r.get('success', False)]
+    if not successful_results:
+        print("Error: No successful requests", file=sys.stderr)
+        return None
+
+    successful_requests = len(successful_results)
+    ttfts = [r['ttft_ms'] for r in successful_results]
+    tpots = [(r['total_time_ms'] - r['ttft_ms']) / r['output_tokens']
+             if r['output_tokens'] > 0 else 0 for r in successful_results]
+
+    # Return vLLM-compatible metrics
+    return {
+        'successful_requests': successful_requests,
+        'benchmark_duration': benchmark_duration,
+        'total_input_tokens': total_input_tokens,
+        'total_generated_tokens': total_output_tokens,
+        'request_throughput': successful_requests / benchmark_duration,
+        'output_token_throughput': total_output_tokens / benchmark_duration,
+        'total_token_throughput': (total_input_tokens + total_output_tokens) / benchmark_duration,
+        'mean_ttft': float(np.mean(ttfts)),
+        'median_ttft': float(np.median(ttfts)),
+        'p99_ttft': float(np.percentile(ttfts, 99)),
+        'mean_tpot': float(np.mean(tpots)),
+        'median_tpot': float(np.median(tpots)),
+        'p99_tpot': float(np.percentile(tpots, 99)),
+        'mean_itl': float(np.mean(tpots)),
+        'median_itl': float(np.median(tpots)),
+        'p99_itl': float(np.percentile(tpots, 99)),
+    }
+
+
+def format_as_vllm_output(metrics):
+    """Format metrics as vLLM benchmark output for parsing"""
+    output = []
+    output.append(f"Successful requests: {metrics['successful_requests']}")
+    output.append(f"Benchmark duration (s): {metrics['benchmark_duration']:.2f}")
+    output.append(f"Total input tokens: {metrics['total_input_tokens']}")
+    output.append(f"Total generated tokens: {metrics['total_generated_tokens']}")
+    output.append(f"Request throughput (req/s): {metrics['request_throughput']:.2f}")
+    output.append(f"Output token throughput (tok/s): {metrics['output_token_throughput']:.2f}")
+    output.append(f"Total Token throughput (tok/s): {metrics['total_token_throughput']:.2f}")
+    output.append(f"Mean TTFT (ms): {metrics['mean_ttft']:.2f}")
+    output.append(f"Median TTFT (ms): {metrics['median_ttft']:.2f}")
+    output.append(f"P99 TTFT (ms): {metrics['p99_ttft']:.2f}")
+    output.append(f"Mean TPOT (ms): {metrics['mean_tpot']:.2f}")
+    output.append(f"Median TPOT (ms): {metrics['median_tpot']:.2f}")
+    output.append(f"P99 TPOT (ms): {metrics['p99_tpot']:.2f}")
+    output.append(f"Mean ITL (ms): {metrics['mean_itl']:.2f}")
+    output.append(f"Median ITL (ms): {metrics['median_itl']:.2f}")
+    output.append(f"P99 ITL (ms): {metrics['p99_itl']:.2f}")
+    return "\n".join(output)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='llama.cpp benchmark client with vLLM-compatible output'
+    )
+    parser.add_argument('--server-url', type=str, default='http://localhost:8080',
+                        help='llama.cpp server URL (default: http://localhost:8080)')
+    parser.add_argument('--num-prompts', type=int, default=100,
+                        help='Number of prompts to test (default: 100)')
+    parser.add_argument('--dataset-path', type=str,
+                        default='/home/yunwei37/workspace/schedcp/workloads/vllm/datasets/ShareGPT_V3_unfiltered_cleaned_split.json',
+                        help='Path to ShareGPT dataset')
+    parser.add_argument('--max-tokens', type=int, default=512,
+                        help='Max tokens per response (default: 512)')
+    parser.add_argument('--model', type=str, default='local-model',
+                        help='Model name (default: local-model)')
+
+    args = parser.parse_args()
+
+    # Load dataset
+    print(f"Loading dataset from {args.dataset_path}...")
+    try:
+        prompts = load_sharegpt_dataset(args.dataset_path, args.num_prompts)
+        print(f"Loaded {len(prompts)} prompts\n")
+    except Exception as e:
+        print(f"Error loading dataset: {e}", file=sys.stderr)
+        return 1
+
+    # Run benchmark
+    print(f"Connecting to llama.cpp server at {args.server_url}...")
+    metrics = run_openai_benchmark(
+        args.server_url,
+        prompts,
+        model=args.model,
+        max_tokens=args.max_tokens
+    )
+
+    if not metrics:
+        return 1
+
+    # Print results in vLLM format
+    print("\n" + "="*60)
+    print(format_as_vllm_output(metrics))
+    print("="*60)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+

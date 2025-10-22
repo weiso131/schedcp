@@ -1,5 +1,96 @@
-# run vllm on different scheduler
+# Benchmark Framework for vLLM, llama.cpp, and Custom Tools
 
+This directory contains a generic benchmarking framework for testing **any benchmark tool** with different Linux schedulers.
+
+## Quick Start
+
+### vLLM Benchmark (Default)
+
+```bash
+# Run vLLM benchmark with all schedulers
+python3 vllm_bench_start.py --num-prompts 100
+
+# Run with specific schedulers
+python3 vllm_bench_start.py --schedulers scx_lavd scx_rusty --num-prompts 50
+```
+
+### llama.cpp Benchmark
+
+**Prerequisites**: Start llama.cpp server first (in a separate terminal):
+
+```bash
+/path/to/llama-server -m /path/to/model.gguf --port 8080
+```
+
+Then run the benchmark:
+
+```bash
+# Run llama.cpp benchmark with scheduler testing
+python3 vllm_bench_start.py \
+  --bench-cmd "python3 llamacpp_openai_client.py --num-prompts 100" \
+  --output results/llamacpp_results.json \
+  --schedulers scx_lavd scx_rusty
+```
+
+### Custom Benchmark Command
+
+You can use any benchmark script that outputs vLLM-compatible metrics:
+
+```bash
+python3 vllm_bench_start.py \
+  --bench-cmd "python3 /path/to/your/benchmark.py" \
+  --output results/custom_results.json
+```
+
+## Usage
+
+### Detailed Examples
+
+**vLLM with multiple runs:**
+```bash
+python3 vllm_bench_start.py \
+  --num-prompts 100 \
+  --output results/vllm_results.json \
+  --repeat 3 \
+  --schedulers scx_lavd scx_rusty
+```
+
+**llama.cpp with multiple runs:**
+```bash
+# Make sure llama-server is running first!
+python3 vllm_bench_start.py \
+  --bench-cmd "python3 llamacpp_openai_client.py --num-prompts 100" \
+  --output results/llamacpp_results.json \
+  --repeat 3 \
+  --schedulers scx_lavd scx_rusty
+```
+
+**llama.cpp standalone (no scheduler testing):**
+```bash
+# Direct run without scheduler framework (activate venv first)
+source ~/workspace/.venv/bin/activate && \
+  python3 llamacpp_openai_client.py --num-prompts 100 --server-url http://localhost:8080
+```
+
+### Requirements for Custom Benchmark Commands
+
+Your benchmark command should output metrics in vLLM-compatible format:
+
+```
+Successful requests: 100
+Benchmark duration (s): 45.2
+Request throughput (req/s): 2.21
+Output token throughput (tok/s): 123.4
+Mean TTFT (ms): 1234.5
+Median TTFT (ms): 1200.0
+P99 TTFT (ms): 2000.0
+Mean TPOT (ms): 10.5
+...
+```
+
+The framework will automatically parse these metrics.
+
+## Original vLLM Commands
 
 vllm serve Qwen/Qwen3-Next-80B-A3B-Instruct-FP8  --cpu-offload-gb 30
 
