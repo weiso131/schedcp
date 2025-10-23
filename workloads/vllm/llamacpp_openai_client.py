@@ -9,6 +9,8 @@ import time
 import sys
 import argparse
 import numpy as np
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from openai import OpenAI
 
 
@@ -28,10 +30,62 @@ def load_sharegpt_dataset(dataset_path, num_prompts):
     return prompts[:num_prompts]
 
 
-def run_openai_benchmark(server_url, prompts, model="local-model", max_tokens=50000):
+def process_single_request(client, prompt, idx, model, max_tokens):
+    """Process a single request and return result"""
+    try:
+        request_start = time.time()
+        first_token_time = None
+        input_tokens = 0
+        output_tokens = 0
+
+        stream = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=max_tokens,
+            temperature=0.7,
+            stream=True,
+            stream_options={"include_usage": True}
+        )
+
+        for chunk in stream:
+            # Track first token time
+            if first_token_time is None and chunk.choices and len(chunk.choices) > 0:
+                delta = chunk.choices[0].delta
+                has_content = (delta.content or
+                             getattr(delta, 'reasoning_content', None))
+                if has_content:
+                    first_token_time = time.time()
+
+            # Get actual token counts from the last chunk
+            if chunk.usage:
+                input_tokens = chunk.usage.prompt_tokens
+                output_tokens = chunk.usage.completion_tokens
+
+        request_end = time.time()
+
+        ttft_ms = (first_token_time - request_start) * 1000 if first_token_time else 0
+        total_time_ms = (request_end - request_start) * 1000
+
+        return {
+            'ttft_ms': ttft_ms,
+            'total_time_ms': total_time_ms,
+            'input_tokens': input_tokens,
+            'output_tokens': output_tokens,
+            'success': True
+        }
+
+    except Exception as e:
+        print(f"  Request {idx + 1} failed: {e}", file=sys.stderr)
+        return {'success': False}
+
+
+def run_openai_benchmark(server_url, prompts, model="local-model", max_tokens=50000, parallel=1):
     """
     Run benchmark using OpenAI-compatible API.
     Returns metrics in vLLM-compatible format.
+
+    Args:
+        parallel: Number of parallel requests (1 = sequential, >1 = concurrent)
     """
     client = OpenAI(base_url=f"{server_url}/v1", api_key="dummy")
 
@@ -39,61 +93,39 @@ def run_openai_benchmark(server_url, prompts, model="local-model", max_tokens=50
     total_input_tokens = 0
     total_output_tokens = 0
 
-    print(f"Running benchmark with {len(prompts)} prompts...")
+    print(f"Running benchmark with {len(prompts)} prompts (parallelism={parallel})...")
     start_time = time.time()
 
-    for idx, prompt in enumerate(prompts):
-        try:
-            request_start = time.time()
-            first_token_time = None
-            input_tokens = 0
-            output_tokens = 0
+    if parallel == 1:
+        # Sequential execution (original behavior)
+        for idx, prompt in enumerate(prompts):
+            result = process_single_request(client, prompt, idx, model, max_tokens)
+            results.append(result)
 
-            stream = client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=max_tokens,
-                temperature=0.7,
-                stream=True,
-                stream_options={"include_usage": True}
-            )
-
-            for chunk in stream:
-                # Track first token time
-                if first_token_time is None and chunk.choices and len(chunk.choices) > 0:
-                    delta = chunk.choices[0].delta
-                    has_content = (delta.content or
-                                 getattr(delta, 'reasoning_content', None))
-                    if has_content:
-                        first_token_time = time.time()
-
-                # Get actual token counts from the last chunk
-                if chunk.usage:
-                    input_tokens = chunk.usage.prompt_tokens
-                    output_tokens = chunk.usage.completion_tokens
-
-            request_end = time.time()
-
-            ttft_ms = (first_token_time - request_start) * 1000 if first_token_time else 0
-            total_time_ms = (request_end - request_start) * 1000
-
-            results.append({
-                'ttft_ms': ttft_ms,
-                'total_time_ms': total_time_ms,
-                'input_tokens': input_tokens,
-                'output_tokens': output_tokens,
-                'success': True
-            })
-
-            total_input_tokens += input_tokens
-            total_output_tokens += output_tokens
+            if result.get('success', False):
+                total_input_tokens += result['input_tokens']
+                total_output_tokens += result['output_tokens']
 
             if (idx + 1) % 10 == 0:
                 print(f"  Completed {idx + 1}/{len(prompts)} requests")
+    else:
+        # Parallel execution
+        with ThreadPoolExecutor(max_workers=parallel) as executor:
+            futures = [
+                executor.submit(process_single_request, client, prompt, idx, model, max_tokens)
+                for idx, prompt in enumerate(prompts)
+            ]
 
-        except Exception as e:
-            print(f"  Request {idx + 1} failed: {e}", file=sys.stderr)
-            results.append({'success': False})
+            for idx, future in enumerate(futures):
+                result = future.result()
+                results.append(result)
+
+                if result.get('success', False):
+                    total_input_tokens += result['input_tokens']
+                    total_output_tokens += result['output_tokens']
+
+                if (idx + 1) % 10 == 0:
+                    print(f"  Completed {idx + 1}/{len(prompts)} requests")
 
     end_time = time.time()
     benchmark_duration = end_time - start_time
@@ -156,7 +188,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='llama.cpp benchmark client with vLLM-compatible output'
     )
-    parser.add_argument('--server-url', type=str, default='http://localhost:8080',
+    parser.add_argument('--server-url', type=str, default='http://localhost:8013',
                         help='llama.cpp server URL (default: http://localhost:8080)')
     parser.add_argument('--num-prompts', type=int, default=10,
                         help='Number of prompts to test (default: 10)')
@@ -167,6 +199,8 @@ def main():
                         help='Max tokens per response (default: 4000)')
     parser.add_argument('--model', type=str, default='local-model',
                         help='Model name (default: local-model)')
+    parser.add_argument('--parallel', type=int, default=1,
+                        help='Number of parallel requests (default: 1 for sequential)')
 
     args = parser.parse_args()
 
@@ -185,7 +219,8 @@ def main():
         args.server_url,
         prompts,
         model=args.model,
-        max_tokens=args.max_tokens
+        max_tokens=args.max_tokens,
+        parallel=args.parallel
     )
 
     if not metrics:
