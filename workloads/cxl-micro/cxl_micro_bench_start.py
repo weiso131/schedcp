@@ -17,8 +17,9 @@ from pathlib import Path
 import argparse
 import re
 
-# Add the scheduler module to the path
-sys.path.insert(0, '/root/yunwei37/ai-os/')
+# Add the scheduler module to the path (relative to repository root)
+repo_root = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(repo_root))
 
 from scheduler import SchedulerRunner, SchedulerBenchmark
 

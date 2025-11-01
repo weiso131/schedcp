@@ -10,8 +10,11 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 from typing import Dict, List, Tuple
+from pathlib import Path
 
-sys.path.insert(0, '/home/yunwei37/ai-os')
+# Add the scheduler module to the path (relative to repository root)
+repo_root = Path(__file__).resolve().parent.parent.parent.parent
+sys.path.insert(0, str(repo_root))
 
 from scheduler import SchedulerRunner, SchedulerBenchmark
 

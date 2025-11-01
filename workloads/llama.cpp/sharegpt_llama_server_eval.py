@@ -25,8 +25,10 @@ import platform
 import psutil
 import socket
 
-# Add the scheduler module to the path
-sys.path.insert(0, '../../')
+# Add the scheduler module to the path (relative to repository root)
+from pathlib import Path
+repo_root = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(repo_root))
 from scheduler import SchedulerRunner, SchedulerBenchmark
 
 

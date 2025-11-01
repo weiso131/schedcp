@@ -14,9 +14,9 @@ import re
 import json
 from pathlib import Path
 
-# Add parent directory to path for scheduler runner
-parent_dir = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(parent_dir))
+# Add parent directory to path for scheduler runner (relative to repository root)
+repo_root = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(repo_root))
 
 try:
     from scheduler.scheduler_runner import SchedulerRunner

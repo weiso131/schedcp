@@ -17,8 +17,9 @@ import argparse
 import psutil
 import GPUtil
 
-# Add the scheduler module to the path
-sys.path.insert(0, '../../')
+# Add the scheduler module to the path (relative to repository root)
+repo_root = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(repo_root))
 from scheduler import SchedulerRunner, SchedulerBenchmark
 
 

@@ -7,9 +7,11 @@ Tests all available schedulers in the schedcp project and generates performance 
 import os
 import sys
 import argparse
+from pathlib import Path
 
-# Add the scheduler module to the path
-sys.path.insert(0, '/home/yunwei37/ai-os')
+# Add the scheduler module to the path (relative to repository root)
+repo_root = Path(__file__).resolve().parent.parent.parent.parent
+sys.path.insert(0, str(repo_root))
 
 from schbench_tester import SchbenchTester
 
