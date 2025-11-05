@@ -331,15 +331,18 @@ class SchedulerTestRunner:
             print(f"  Custom scheduler: {counts['custom']['success']} successful, {counts['custom']['failed']} failed")
 
 def main():
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    PROCESSING_DIR = os.path.join(BASE_DIR, '..')
+
     parser = argparse.ArgumentParser(description='Run scheduler tests')
     parser.add_argument('--test-cases', 
-                        default='/home/yunwei37/ai-os/workloads/processing/test_cases_parallel.json',
+                        default=f'{PROCESSING_DIR}/test_cases_parallel.json',
                         help='Path to test cases JSON file')
     parser.add_argument('--schedulers-dir',
-                        default='/home/yunwei37/ai-os/workloads/processing/schedulers',
+                        default=f'{PROCESSING_DIR}/schedulers',
                         help='Path to schedulers directory')
     parser.add_argument('--output-dir',
-                        default='/home/yunwei37/ai-os/workloads/processing/scripts/scheduler_test_results',
+                        default=f'{PROCESSING_DIR}/scripts/scheduler_test_results',
                         help='Directory to save results')
     parser.add_argument('--no-default', action='store_true',
                         help='Skip tests with default scheduler')
@@ -351,8 +354,7 @@ def main():
     args = parser.parse_args()
     
     # Change to processing directory
-    os.chdir('/home/yunwei37/ai-os/workloads/processing')
-    
+    os.chdir(PROCESSING_DIR)
     runner = SchedulerTestRunner(
         args.test_cases,
         args.schedulers_dir,
