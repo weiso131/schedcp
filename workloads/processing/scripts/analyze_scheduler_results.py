@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def load_json_results(directory):
     """Load all JSON result files from the specified directory."""
     results = defaultdict(lambda: defaultdict(list))
@@ -132,12 +134,11 @@ def plot_results(averages):
     autolabel(bars2)
     
     plt.tight_layout()
-    plt.savefig('/home/yunwei37/ai-os/workloads/processing/scripts/scheduler_performance_comparison.pdf', dpi=300, format='pdf')
+    plt.savefig(f'{BASE_DIR}/scheduler_performance_comparison.pdf', dpi=300, format='pdf')
     plt.close()
 
 def main():
-    results_dir = '/home/yunwei37/ai-os/workloads/processing/scripts/scheduler_test_results'
-    
+    results_dir = f'{BASE_DIR}/scheduler_test_results'
     print("Loading scheduler test results...")
     results = load_json_results(results_dir)
     
