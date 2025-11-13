@@ -18,9 +18,10 @@ PROJECT_ROOT = $(shell git rev-parse --show-toplevel)
 SCX_INCLUDES = \
 	-I$(PROJECT_ROOT)/scheduler/scx/scheds/include \
 	-I$(PROJECT_ROOT)/scheduler/scx/scheds/include/scx \
-	-I$(PROJECT_ROOT)/scheduler/scx/scheds/include/arch/x86 \
 	-I$(PROJECT_ROOT)/scheduler/scx/scheds/include/bpf-compat \
-	-I$(PROJECT_ROOT)/scheduler/scx/scheds/include/lib
+	-I$(PROJECT_ROOT)/scheduler/scx/scheds/include/lib \
+	-I$(PROJECT_ROOT)/scheduler/scx/scheds/vmlinux \
+	-I$(PROJECT_ROOT)/scheduler/scx/scheds/vmlinux/arch/x86
 
 # System includes
 SYS_INCLUDES = \
