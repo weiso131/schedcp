@@ -80,6 +80,32 @@ build-cuda:
 	@echo "Built binaries:"
 	@ls -lh $(BUILD_DIR)/bin/ 2>/dev/null | grep -E '^-rwx' || true
 
+# CUDA build without VMM (for UVM compatibility)
+build-cuda-no-vmm:
+	@echo "Building llama.cpp with CUDA support (VMM DISABLED for UVM)..."
+	@echo "Note: Using GCC-12 to avoid compatibility issues with CUDA 12.9"
+	@rm -rf $(BUILD_DIR)
+	@mkdir -p $(BUILD_DIR)
+	@cd $(LLAMA_DIR) && CC=gcc-12 CXX=g++-12 CMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
+		cmake -B ../$(BUILD_DIR) . \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DGGML_CUDA=ON \
+		-DGGML_CUDA_NO_VMM=ON \
+		-DCMAKE_CUDA_HOST_COMPILER=g++-12 \
+		-DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc
+	@cd $(BUILD_DIR) && make -j$(shell nproc)
+	@echo ""
+	@echo "Build complete (NO VMM)!"
+	@echo "Binaries available in: $(BUILD_DIR)/bin/"
+	@echo ""
+	@echo "Testing CUDA support..."
+	@if [ -f "$(BUILD_DIR)/bin/llama-cli" ]; then \
+		$(BUILD_DIR)/bin/llama-cli --version; \
+	fi
+	@echo ""
+	@echo "Built binaries:"
+	@ls -lh $(BUILD_DIR)/bin/ 2>/dev/null | grep -E '^-rwx' || true
+
 clean:
 	@echo "Cleaning build artifacts..."
 	@rm -rf $(BUILD_DIR)
@@ -180,6 +206,47 @@ bench-1b: build download-models $(DATASET_DIR) $(RESULTS_DIR)
 		--max-concurrent 4 \
 		--server-logs
 
+# Benchmark GPT-OSS-120B with UVM (60GB model on 32GB GPU)
+bench-120b-uvm: build-cuda
+	@echo "=== Benchmarking GPT-OSS-120B with UVM ==="
+	@echo "Model: GPT-OSS-120B (116.83B params, 59.02 GiB)"
+	@echo "GPU: RTX 5090 (32GB VRAM)"
+	@echo "Method: CUDA Unified Memory with CPU-preferred location"
+	@echo ""
+	@echo "Running llama-bench with UVM enabled..."
+	@mkdir -p $(RESULTS_DIR)
+	GGML_CUDA_ENABLE_UNIFIED_MEMORY=1 $(BUILD_DIR)/bin/llama-bench \
+		-m $(MODEL_120B_CACHE) \
+		2>&1 | tee $(RESULTS_DIR)/gpt-oss-120b-uvm-bench.log
+	@echo ""
+	@echo "Benchmark complete! Results saved to: $(RESULTS_DIR)/gpt-oss-120b-uvm-bench.log"
+	@echo ""
+	@echo "Key metrics:"
+	@grep -E "pp |tg " $(RESULTS_DIR)/gpt-oss-120b-uvm-bench.log || true
+
+# Run GPT-OSS-120B server with UVM
+run-120b-uvm: build-cuda
+	@echo "=== Starting GPT-OSS-120B Server with UVM ==="
+	@echo "Model: GPT-OSS-120B (116.83B params, 59.02 GiB)"
+	@echo "Context: 4096 tokens (reduced from default 262144)"
+	@echo "Total memory: ~60GB (model 59GB + KV cache 288MB)"
+	@echo ""
+	GGML_CUDA_ENABLE_UNIFIED_MEMORY=1 $(BUILD_DIR)/bin/llama-server \
+		--gpt-oss-120b-default 
+
+# Quick test GPT-OSS-120B with UVM (single inference)
+test-120b-uvm: build-cuda
+	@echo "=== Quick Test: GPT-OSS-120B with UVM ==="
+	@echo "Running single inference to verify UVM is working..."
+	@echo ""
+	GGML_CUDA_ENABLE_UNIFIED_MEMORY=1 $(BUILD_DIR)/bin/llama-cli \
+		-m $(MODEL_120B_CACHE) \
+		-p "Explain what unified memory is in CUDA:" \
+		-n 256 \
+		-ngl 37 \
+		-c 4096 \
+		--log-disable
+
 # Model and dataset paths
 MODEL_DIR := models
 DATASET_DIR := datasets
@@ -187,6 +254,7 @@ RESULTS_DIR := results
 LLAMA_SERVER := $(BUILD_DIR)/bin/llama-server
 MODEL_3B := $(MODEL_DIR)/Llama-3.2-3B-Instruct-Q4_K_M.gguf
 MODEL_1B := $(MODEL_DIR)/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+MODEL_120B_CACHE := /home/yunwei37/.cache/llama.cpp/ggml-org_gpt-oss-120b-GGUF_gpt-oss-120b-mxfp4-00001-of-00003.gguf
 SHAREGPT_VICUNA := $(DATASET_DIR)/sharegpt_vicuna.json
 SHAREGPT_BENCH := $(DATASET_DIR)/sharegpt_benchmark.json
 
@@ -214,6 +282,7 @@ help:
 	@echo "  "
 	@echo "  Run targets:"
 	@echo "    make run-1b       - Run TinyLlama 1.1B model interactively"
+	@echo "    make run-120b-uvm - Run GPT-OSS-120B server with UVM (60GB on 32GB GPU)"
 	@echo "  "
 	@echo "  Benchmark targets:"
 	@echo "    make test-quick   - Quick test with 5 samples, 2 concurrent"
@@ -221,8 +290,13 @@ help:
 	@echo "    make test-sharegpt - Test ShareGPT server benchmark"
 	@echo "    make bench-schedulers - Benchmark all production schedulers"
 	@echo "    make bench-1b     - Benchmark with TinyLlama 1.1B model"
+	@echo "    make bench-120b-uvm - Benchmark GPT-OSS-120B with UVM (3 runs)"
+	@echo "    make test-120b-uvm  - Quick test GPT-OSS-120B with UVM (single inference)"
 	@echo "  "
 	@echo "  Maintenance targets:"
 	@echo "    make clean        - Remove build artifacts"
 	@echo "    make update       - Update llama.cpp submodule"
 	@echo "    make help         - Show this help message"
+	@echo "  "
+	@echo "UVM (Unified Virtual Memory) enables running models larger than GPU VRAM"
+	@echo "by paging to system RAM. See UVM_FIX_SUMMARY.md for details."
