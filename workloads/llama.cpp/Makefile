@@ -1,4 +1,4 @@
-.PHONY: all build clean update help download-models test-quick test-full test-sharegpt bench-schedulers
+.PHONY: all build build-llama build-cuda clean update help download-models test-quick test-full test-sharegpt bench-schedulers
 
 BUILD_DIR := build
 LLAMA_DIR := llama.cpp
@@ -20,13 +20,65 @@ build: $(BUILD_DIR)
 	@cd $(BUILD_DIR) && make -j$(shell nproc)
 	@echo "Build complete. Binary available at: $(BINARY)"
 
-build-cuda: $(BUILD_DIR)
-	@echo "Building llama.cpp with CUDA support..."
+# Flexible build target matching build_llama.sh
+# Usage: make build-llama [BUILD_TYPE=Release|Debug] [CUDA=ON|OFF] [METAL=ON|OFF] [VULKAN=ON|OFF] [JOBS=N]
+BUILD_TYPE ?= Release
+CUDA ?= OFF
+METAL ?= OFF
+VULKAN ?= OFF
+JOBS ?= $(shell nproc)
+
+build-llama: $(BUILD_DIR)
+	@echo "Building llama.cpp..."
+	@echo "  Build type: $(BUILD_TYPE)"
+	@echo "  CUDA support: $(CUDA)"
+	@echo "  Metal support: $(METAL)"
+	@echo "  Vulkan support: $(VULKAN)"
+	@echo "  Parallel jobs: $(JOBS)"
 	@cd $(LLAMA_DIR) && cmake -B ../$(BUILD_DIR) . \
+		-DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
+		-DGGML_CUDA=$(CUDA) \
+		-DGGML_METAL=$(METAL) \
+		-DGGML_VULKAN=$(VULKAN) \
+		-DGGML_SYCL=OFF
+	@cd $(BUILD_DIR) && make -j$(JOBS)
+	@echo "Build complete!"
+	@echo "Binaries available in: $(BUILD_DIR)"
+	@if [ -f "$(BUILD_DIR)/bin/llama-cli" ]; then \
+		echo "Testing binary..."; \
+		$(BUILD_DIR)/bin/llama-cli --version; \
+	elif [ -f "$(BINARY)" ]; then \
+		echo "Testing binary..."; \
+		$(BINARY) --version; \
+	fi
+
+# CUDA build target matching build_cuda.sh (using GCC-12 for compatibility)
+build-cuda:
+	@echo "Building llama.cpp with CUDA support..."
+	@echo "Note: Using GCC-12 to avoid compatibility issues with CUDA 12.9"
+	@rm -rf $(BUILD_DIR)
+	@mkdir -p $(BUILD_DIR)
+	@cd $(LLAMA_DIR) && CC=gcc-12 CXX=g++-12 CMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
+		cmake -B ../$(BUILD_DIR) . \
 		-DCMAKE_BUILD_TYPE=Release \
-		-DGGML_CUDA=ON
+		-DGGML_CUDA=ON \
+		-DGGML_METAL=OFF \
+		-DGGML_VULKAN=OFF \
+		-DGGML_SYCL=OFF \
+		-DCMAKE_CUDA_HOST_COMPILER=g++-12 \
+		-DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc
 	@cd $(BUILD_DIR) && make -j$(shell nproc)
-	@echo "Build complete with CUDA. Binary available at: $(BINARY)"
+	@echo ""
+	@echo "Build complete!"
+	@echo "Binaries available in: $(BUILD_DIR)/bin/"
+	@echo ""
+	@echo "Testing CUDA support..."
+	@if [ -f "$(BUILD_DIR)/bin/llama-cli" ]; then \
+		$(BUILD_DIR)/bin/llama-cli --version; \
+	fi
+	@echo ""
+	@echo "Built binaries:"
+	@ls -lh $(BUILD_DIR)/bin/ 2>/dev/null | grep -E '^-rwx' || true
 
 clean:
 	@echo "Cleaning build artifacts..."
@@ -148,7 +200,14 @@ help:
 	@echo "Available targets:"
 	@echo "  Build targets:"
 	@echo "    make build        - Build llama.cpp (CPU only)"
-	@echo "    make build-cuda   - Build llama.cpp with CUDA support"
+	@echo "    make build-cuda   - Build llama.cpp with CUDA support (GCC-12, CUDA 12.9)"
+	@echo "    make build-llama  - Flexible build with options:"
+	@echo "                        BUILD_TYPE=Release|Debug (default: Release)"
+	@echo "                        CUDA=ON|OFF (default: OFF)"
+	@echo "                        METAL=ON|OFF (default: OFF)"
+	@echo "                        VULKAN=ON|OFF (default: OFF)"
+	@echo "                        JOBS=N (default: nproc)"
+	@echo "                        Example: make build-llama CUDA=ON BUILD_TYPE=Debug JOBS=8"
 	@echo "  "
 	@echo "  Setup targets:"
 	@echo "    make download-models - Download all required models"
