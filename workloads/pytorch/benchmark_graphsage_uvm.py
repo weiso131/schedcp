@@ -58,20 +58,36 @@ class GraphSAGE(nn.Module):
 
 
 def generate_random_graph(num_nodes, num_edges, num_features, device='cuda'):
-    """Generate a random graph in PyG format"""
+    """
+    Generate a random graph in PyG format
+
+    For large graphs, we generate on CPU first to avoid OOM,
+    then move to GPU. PyG's Data object will handle the device placement.
+    """
     print(f"  Generating graph with {num_nodes:,} nodes and {num_edges:,} edges...")
 
+    # For large graphs, generate on CPU first to avoid initial OOM
+    # The data will be moved to GPU in chunks during training via NeighborLoader
+    # Use CPU for graphs > 500K nodes to be safe
+    gen_device = 'cpu' if num_nodes > 500_000 else device
+
+    print(f"    Generating on {gen_device}...")
+
     # Random edges (COO format for PyG)
-    edge_index = torch.randint(0, num_nodes, (2, num_edges), device=device)
+    edge_index = torch.randint(0, num_nodes, (2, num_edges), device=gen_device)
 
     # Random node features
-    x = torch.randn(num_nodes, num_features, device=device)
+    x = torch.randn(num_nodes, num_features, device=gen_device)
 
     # Random labels
-    y = torch.randint(0, 10, (num_nodes,), device=device)
+    y = torch.randint(0, 10, (num_nodes,), device=gen_device)
 
-    # Create PyG Data object
+    # Create PyG Data object (stays on CPU for large graphs)
     data = Data(x=x, edge_index=edge_index, y=y)
+
+    # Keep data on CPU for large graphs - NeighborLoader will handle GPU transfer
+    if gen_device == 'cpu':
+        print(f"    Keeping on CPU (NeighborLoader will transfer batches to GPU)")
 
     return data
 
@@ -247,10 +263,13 @@ def main():
     # Step 2: Create train mask
     print("\n[Step 2/5] Preparing training split...")
     num_train = args.nodes // 10
-    train_mask = torch.zeros(args.nodes, dtype=torch.bool, device=device)
+    # Create mask on the same device as data to avoid device mismatch
+    data_device = data.x.device
+    train_mask = torch.zeros(args.nodes, dtype=torch.bool, device=data_device)
     train_mask[:num_train] = True
     data.train_mask = train_mask
     print(f"  Training nodes: {num_train:,} ({num_train/args.nodes*100:.1f}%)")
+    print(f"  Data device: {data_device}")
 
     # Step 3: Create neighbor sampler
     print("\n[Step 3/5] Creating neighbor sampler...")
