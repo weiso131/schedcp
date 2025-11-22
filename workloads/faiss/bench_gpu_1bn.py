@@ -532,25 +532,31 @@ def compute_populated_index(preproc):
     # Use single GPU with optional UVM
     res = gpu_resources[0]
 
-    if use_uvm:
-        # Create GPU index directly with UVM support
-        from faiss import GpuIndexIVFFlatConfig
+    # Unified logic for both UVM and non-UVM
+    if pqflat_str == 'Flat':
+        from faiss import GpuIndexIVFFlatConfig, GpuIndexIVFFlat
         config = GpuIndexIVFFlatConfig()
-        config.device = 0
-        config.memorySpace = 2  # MEMORY_SPACE_UNIFIED
-
-        # Create GPU IVF index with UVM
-        gpu_index = faiss.GpuIndexIVFFlat(res, indexall, config)
+        if use_float16:
+            config.useFloat16 = True
     else:
-        # Use standard cloner for device memory
-        co = faiss.GpuClonerOptions()
-        co.useFloat16 = use_float16
-        co.useFloat16CoarseQuantizer = False
-        co.usePrecomputed = use_precomputed_tables
-        co.indicesOptions = faiss.INDICES_CPU
-        co.verbose = True
+        from faiss import GpuIndexIVFPQConfig, GpuIndexIVFPQ
+        config = GpuIndexIVFPQConfig()
+        if use_float16:
+            config.useFloat16LookupTables = True
+        config.usePrecomputedTables = use_precomputed_tables
 
-        gpu_index = faiss.index_cpu_to_gpu(res, 0, indexall, co)
+    config.device = 0
+    config.indicesOptions = 0  # INDICES_64_BIT
+
+    if use_uvm:
+        config.memorySpace = 2  # MEMORY_SPACE_UNIFIED
+    else:
+        config.memorySpace = 1  # MEMORY_SPACE_DEVICE
+
+    if pqflat_str == 'Flat':
+        gpu_index = GpuIndexIVFFlat(res, indexall, config)
+    else:
+        gpu_index = GpuIndexIVFPQ(res, indexall, config)
 
     print("add...")
     t0 = time.time()
@@ -564,118 +570,24 @@ def compute_populated_index(preproc):
         sys.stdout.flush()
     print("Add time: %.3f s" % (time.time() - t0))
 
-    print("Aggregate indexes to CPU")
-    t0 = time.time()
-
-    if use_uvm:
-        print("  Skipping aggregation to CPU for UVM mode to save memory")
-        # Manually update ntotal to reflect that vectors were added, 
-        # even though we didn't copy the data back
-        indexall.ntotal = gpu_index.ntotal
-    else:
-        # Single GPU - copy back to CPU
-        index_src = faiss.index_gpu_to_cpu(gpu_index)
-        index_src.copy_subset_to(indexall, 0, 0, nb)
-
-        print("  done in %.3f s" % (time.time() - t0))
-
-    return gpu_index, indexall
+    # No CPU aggregation needed - index stays on GPU
+    return gpu_index
 
 
 def compute_populated_index_2(preproc):
-
-    indexall = prepare_trained_index(preproc)
-
-    # set up a 3-stage pipeline that does:
-    # - stage 1: load + preproc
-    # - stage 2: assign on GPU
-    # - stage 3: add to index
-
-    stage1 = dataset_iterator(xb, preproc, add_batch_size)
-
-    vres, vdev = make_vres_vdev()
-    coarse_quantizer_gpu = faiss.index_cpu_to_gpu_multiple(
-        vres, vdev, indexall.quantizer)
-
-    def quantize(args):
-        (i0, xs) = args
-        _, assign = coarse_quantizer_gpu.search(xs, 1)
-        return i0, xs, assign.ravel()
-
-    stage2 = rate_limited_imap(quantize, stage1)
-
-    print("add...")
-    t0 = time.time()
-    nb = xb.shape[0]
-
-    for i0, xs, assign in stage2:
-        i1 = i0 + xs.shape[0]
-        if indexall.__class__ == faiss.IndexIVFPQ:
-            indexall.add_core_o(i1 - i0, faiss.swig_ptr(xs),
-                                None, None, faiss.swig_ptr(assign))
-        elif indexall.__class__ == faiss.IndexIVFFlat:
-            indexall.add_core(i1 - i0, faiss.swig_ptr(xs), None,
-                              faiss.swig_ptr(assign))
-        else:
-            assert False
-
-        print('\r%d/%d (%.3f s)  ' % (
-            i0, nb, time.time() - t0), end=' ')
-        sys.stdout.flush()
-    print("Add time: %.3f s" % (time.time() - t0))
-
-    return None, indexall
+    # Alternative add method - use same GPU approach as compute_populated_index
+    # For simplicity, just use the standard method
+    return compute_populated_index(preproc)
 
 
 def get_populated_index(preproc):
-
-    if not index_cachefile or not os.path.exists(index_cachefile):
-        if not altadd:
-            gpu_index, indexall = compute_populated_index(preproc)
-        else:
-            gpu_index, indexall = compute_populated_index_2(preproc)
-        if index_cachefile:
-            if use_uvm:
-                print("Skipping write_index for UVM mode to avoid OOM/Empty index")
-            else:
-                print("store", index_cachefile)
-                faiss.write_index(indexall, index_cachefile)
+    # No caching - always create fresh GPU index
+    if not altadd:
+        gpu_index = compute_populated_index(preproc)
     else:
-        print("load", index_cachefile)
-        indexall = faiss.read_index(index_cachefile)
-        gpu_index = None
+        gpu_index = compute_populated_index_2(preproc)
 
-    t0 = time.time()
-    print("CPU index contains %d vectors, move to GPU" % indexall.ntotal)
-
-    if not gpu_index:
-        print("copying loaded index to GPU")
-        res = gpu_resources[0]
-
-        if use_uvm:
-            # Create GPU index with UVM support
-            from faiss import GpuIndexIVFFlatConfig
-            config = GpuIndexIVFFlatConfig()
-            config.device = 0
-            config.memorySpace = 2  # MEMORY_SPACE_UNIFIED
-
-            index = faiss.GpuIndexIVFFlat(res, indexall, config)
-        else:
-            # Use standard cloner
-            co = faiss.GpuClonerOptions()
-            co.useFloat16 = use_float16
-            co.useFloat16CoarseQuantizer = False
-            co.usePrecomputed = use_precomputed_tables
-            co.indicesOptions = 0
-            co.verbose = True
-
-            index = faiss.index_cpu_to_gpu(res, 0, indexall, co)
-    else:
-        index = gpu_index
-
-    del indexall
-    print("move to GPU done in %.3f s" % (time.time() - t0))
-    return index
+    return gpu_index
 
 
 
