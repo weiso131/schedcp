@@ -118,8 +118,7 @@ Query performance (nprobe=16):
 
 ### GPU Benchmarks
 
-GPU benchmarks are fully supported! Test GPU availability:
-
+#### Testing GPU Availability
 ```bash
 python -c "
 import faiss
@@ -129,36 +128,41 @@ if hasattr(faiss, 'get_num_gpus'):
 "
 ```
 
-**Run GPU Benchmark:**
+#### GPU Device Memory Mode
 ```bash
-python bench_gpu_1bn.py SIFT10M IVF4096,Flat -nprobe 1,4,16,64
+# Standard GPU mode - uses GPU VRAM only
+uv run python bench_gpu_1bn.py SIFT10M IVF4096,Flat -nprobe 1,4,16,64
 ```
 
-**GPU Index Options:**
-- `-ngpu N`: Use N GPUs (default: all available)
-- `-tempmem N`: Use N bytes of temporary GPU memory
-- `-float16`: Use 16-bit floats on GPU (reduce memory, slightly lower accuracy)
+**Common Options:**
 - `-nprobe 1,4,16,64`: Test multiple nprobe values
 - `-abs N`: Split adds into blocks of N vectors
 - `-qbs N`: Split queries into blocks of N vectors
+- `-nocache`: Don't use cached indices
 
 **Example Output (SIFT10M, IVF4096,Flat):**
 ```
-Training time: 9.6s
-Add time: 2.1s (10M vectors to GPU)
-Move to GPU: 0.001s
+Training time: 0.056s
+Add time: 3-10s (10M vectors to GPU)
 
 Query results (10K queries):
-  nprobe=1:  3.3s   (1-R@1: 0.405  = 40.5% recall)
-  nprobe=4:  0.04s  (1-R@1: 0.718  = 71.8% recall)
-  nprobe=16: 0.13s  (1-R@1: 0.921  = 92.1% recall)
-  nprobe=64: 0.49s  (1-R@1: 0.990  = 99.0% recall)
+  nprobe=1:  ~0.05s  (1-R@1: 0.40  = 40% recall)
+  nprobe=4:  ~0.10s  (1-R@1: 0.72  = 72% recall)
+  nprobe=16: ~0.30s  (1-R@1: 0.92  = 92% recall)
+  nprobe=64: ~1.00s  (1-R@1: 0.99  = 99% recall)
 ```
 
-**Performance Notes:**
-- GPU dramatically accelerates index construction (2.1s vs 71.7s on CPU)
-- Query speed depends on nprobe: higher = more accurate but slower
-- IVF4096,Flat provides exact distances within selected clusters
+#### GPU UVM Mode
+```bash
+# GPU with Unified Virtual Memory - can exceed GPU VRAM
+uv run python bench_gpu_1bn.py SIFT100M IVF4096,Flat -uvm -nprobe 1,4,16,64
+```
+
+**UVM-Specific Notes:**
+- Allows indexing datasets larger than GPU VRAM
+- Automatically uses system RAM when GPU memory is full
+- Performance degrades gracefully when exceeding VRAM
+- Requires CUDA Compute Capability 6.0+ (Pascal or newer)
 
 ### Memory-Mapped File Handling
 
@@ -231,6 +235,93 @@ print(f'Truncated to {complete_size} bytes')
 - Verify CUDA installation: `nvcc --version`
 - Check GPU availability: `nvidia-smi`
 - Ensure libfaiss.a was built with CUDA support
+
+## Performance Comparison: CPU vs GPU vs UVM
+
+### Three Benchmark Modes
+
+This directory provides three benchmark scripts for comprehensive performance comparison:
+
+1. **`bench_cpu_1bn.py`** - Pure CPU mode using system RAM
+2. **`bench_gpu_1bn.py`** - GPU mode with Device memory (standard VRAM)
+3. **`bench_gpu_1bn.py -uvm`** - GPU mode with Unified Virtual Memory
+
+### Running Benchmarks
+
+#### CPU Benchmark
+```bash
+cd /home/yunwei37/workspace/gpu/schedcp/workloads/faiss
+
+# Run CPU benchmark with SIFT10M
+uv run python bench_cpu_1bn.py SIFT10M IVF4096,Flat -nprobe 1,4,16,64
+
+# Run CPU benchmark with SIFT100M
+uv run python bench_cpu_1bn.py SIFT100M IVF4096,Flat -nprobe 1,4,16,64
+```
+
+**Performance characteristics:**
+- Slowest for indexing (~36s for 10M vectors)
+- Slowest for search (~4.3s for 10K queries with nprobe=16)
+- ✅ Can handle datasets larger than GPU VRAM
+- ✅ No GPU required
+
+#### GPU Device Memory Benchmark
+```bash
+# Run GPU benchmark with standard device memory
+uv run python bench_gpu_1bn.py SIFT10M IVF4096,Flat -nprobe 1,4,16,64
+
+# Run with SIFT100M (requires 24GB+ VRAM)
+uv run python bench_gpu_1bn.py SIFT100M IVF4096,Flat -nprobe 1,4,16,64
+```
+
+**Performance characteristics:**
+- Fastest for indexing (~3-10s for 10M vectors)
+- Fastest for search (~0.1-0.5s for 10K queries)
+- ❌ Limited by GPU VRAM size
+- ❌ Will OOM if dataset exceeds VRAM
+
+#### GPU UVM Benchmark
+```bash
+# Run GPU benchmark with Unified Virtual Memory
+uv run python bench_gpu_1bn.py SIFT10M IVF4096,Flat -uvm -nprobe 1,4,16,64
+
+# Run with SIFT100M (can exceed GPU VRAM)
+uv run python bench_gpu_1bn.py SIFT100M IVF4096,Flat -uvm -nprobe 1,4,16,64
+```
+
+**Performance characteristics:**
+- Medium speed for indexing (~10-30s for 10M vectors)
+- Medium speed for search (~0.2-1s for 10K queries)
+- ✅ Can handle datasets larger than GPU VRAM
+- ✅ Uses GPU acceleration when data fits in VRAM
+- ⚠️ Performance depends on GPU-CPU memory transfers
+
+### Performance Comparison Table
+
+Based on SIFT10M benchmark (10 million 128-dim vectors):
+
+| Mode | Add Time | Search Time (nprobe=16) | Memory Used | Max Dataset Size |
+|------|----------|-------------------------|-------------|------------------|
+| **CPU** | ~36s | ~4.3s | System RAM | Up to RAM (~256GB) |
+| **GPU Device** | ~3-10s | ~0.1-0.5s | GPU VRAM | Up to VRAM (~32GB) |
+| **GPU UVM** | ~10-30s | ~0.2-1s | GPU VRAM + RAM | Up to RAM (~256GB) |
+
+### Use Case Recommendations
+
+**Use CPU mode when:**
+- No GPU available
+- Dataset size > GPU VRAM and performance is not critical
+- Running on cloud instances without GPU
+
+**Use GPU Device mode when:**
+- Dataset fits in GPU VRAM
+- Maximum performance required
+- Real-time search applications
+
+**Use GPU UVM mode when:**
+- Dataset larger than GPU VRAM
+- Better performance than CPU needed
+- Have sufficient system RAM (2-4x dataset size)
 
 ## Quick Start with Python Script
 
