@@ -567,11 +567,17 @@ def compute_populated_index(preproc):
     print("Aggregate indexes to CPU")
     t0 = time.time()
 
-    # Single GPU - copy back to CPU
-    index_src = faiss.index_gpu_to_cpu(gpu_index)
-    index_src.copy_subset_to(indexall, 0, 0, nb)
+    if use_uvm:
+        print("  Skipping aggregation to CPU for UVM mode to save memory")
+        # Manually update ntotal to reflect that vectors were added, 
+        # even though we didn't copy the data back
+        indexall.ntotal = gpu_index.ntotal
+    else:
+        # Single GPU - copy back to CPU
+        index_src = faiss.index_gpu_to_cpu(gpu_index)
+        index_src.copy_subset_to(indexall, 0, 0, nb)
 
-    print("  done in %.3f s" % (time.time() - t0))
+        print("  done in %.3f s" % (time.time() - t0))
 
     return gpu_index, indexall
 
@@ -629,8 +635,11 @@ def get_populated_index(preproc):
         else:
             gpu_index, indexall = compute_populated_index_2(preproc)
         if index_cachefile:
-            print("store", index_cachefile)
-            faiss.write_index(indexall, index_cachefile)
+            if use_uvm:
+                print("Skipping write_index for UVM mode to avoid OOM/Empty index")
+            else:
+                print("store", index_cachefile)
+                faiss.write_index(indexall, index_cachefile)
     else:
         print("load", index_cachefile)
         indexall = faiss.read_index(index_cachefile)
