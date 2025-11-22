@@ -42,15 +42,15 @@ void* uvm_malloc(ssize_t size, int device, cudaStream_t stream) {
     }
 
     // Log large allocations
-    if (size > 100 * 1024 * 1024) { // > 100MB
+    if (size > 1000 * 1024 * 1024) { // > 1GB
         fprintf(stderr, "[UVM] Alloc #%zu: %.2f GB (total: %.2f GB, peak: %.2f GB)\n",
                 alloc_count, size / 1e9, current / 1e9, atomic_load(&peak_allocated) / 1e9);
     }
 
     // Prefetch to the specified device
-    if (device >= 0 && ptr != NULL) {
-        cudaMemPrefetchAsync(ptr, size, device, stream);
-    }
+    // if (device >= 0 && ptr != NULL) {
+    //     cudaMemPrefetchAsync(ptr, size, device, stream);
+    // }
 
     return ptr;
 }

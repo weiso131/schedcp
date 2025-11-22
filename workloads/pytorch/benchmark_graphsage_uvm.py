@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
 """
-GNN Training Benchmark with UVM
+GraphSAGE Training Benchmark with UVM and Mini-batch Sampling
 
-Tests whether UVM allows training larger graphs that would OOM with traditional PyTorch.
+Implements 3-layer GraphSAGE with neighbor sampling, following SALIENT paper setup.
+Tests whether UVM allows training larger graphs with mini-batch approach.
 
 Usage:
-    # Without UVM (expect OOM for large graphs)
-    python benchmark_gnn_uvm.py --nodes=50000000
+    # Without UVM
+    python benchmark_graphsage_uvm.py --nodes=10000000
 
-    # With UVM (expect success)
-    python benchmark_gnn_uvm.py --nodes=50000000 --use_uvm
+    # With UVM
+    CUDA_MANAGED_FORCE_DEVICE_ALLOC=1 python benchmark_graphsage_uvm.py --nodes=10000000 --use_uvm
 
 Configuration:
     --nodes: Number of nodes (default: 10M)
     --edges_per_node: Average edges per node (default: 10)
     --features: Feature dimension (default: 128)
     --hidden: Hidden dimension (default: 256)
+    --batch_size: Training batch size (default: 1024)
+    --fanout: Neighbor sampling fanout per layer (default: [15,10,5])
     --epochs: Number of epochs (default: 3)
     --use_uvm: Enable UVM allocator
 """
@@ -23,6 +26,9 @@ Configuration:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch_geometric.nn import SAGEConv
+from torch_geometric.data import Data
+from torch_geometric.loader import NeighborLoader
 import time
 import argparse
 import psutil
@@ -30,125 +36,32 @@ import os
 import ctypes
 
 
-# Chunked index_add autograd function to avoid O(E*d) memory
-class ChunkedIndexAddFunction(torch.autograd.Function):
-    """
-    Custom autograd function that performs index_add in chunks to avoid
-    creating massive [E, hidden] intermediate tensors.
-
-    This is the key optimization that allows training larger graphs without UVM.
-    """
-    @staticmethod
-    def forward(ctx, x, src_indices, dst_indices, chunk_size):
-        """
-        Forward pass: x[dst] += x[src] in chunks
-
-        Args:
-            x: [N, F] node features
-            src_indices: [E] source node indices
-            dst_indices: [E] destination node indices
-            chunk_size: number of edges to process at once
-        """
-        num_nodes, num_features = x.size()
-        num_edges = src_indices.size(0)
-
-        # Output accumulator
-        out = x.new_zeros((num_nodes, num_features))
-
-        # Process edges in chunks to avoid creating [E, F] tensor
-        for start in range(0, num_edges, chunk_size):
-            end = min(start + chunk_size, num_edges)
-            src_chunk = src_indices[start:end]
-            dst_chunk = dst_indices[start:end]
-
-            # Only create [chunk_size, F] tensor instead of [E, F]
-            msg_chunk = x[src_chunk]  # [chunk_size, F]
-            out.index_add_(0, dst_chunk, msg_chunk)
-
-        # Save for backward
-        ctx.save_for_backward(src_indices, dst_indices)
-        ctx.chunk_size = chunk_size
-        ctx.num_nodes = num_nodes
-
-        return out
-
-    @staticmethod
-    def backward(ctx, grad_out):
-        """
-        Backward pass: also chunked to avoid [E, F] tensor
-        """
-        src_indices, dst_indices = ctx.saved_tensors
-        chunk_size = ctx.chunk_size
-        num_nodes = ctx.num_nodes
-        num_edges = src_indices.size(0)
-
-        # Gradient wrt x
-        grad_x = grad_out.new_zeros((num_nodes, grad_out.size(1)))
-
-        # Process in chunks
-        for start in range(0, num_edges, chunk_size):
-            end = min(start + chunk_size, num_edges)
-            src_chunk = src_indices[start:end]
-            dst_chunk = dst_indices[start:end]
-
-            # Gradient flows back through the aggregation
-            grad_msg_chunk = grad_out[dst_chunk]  # [chunk_size, F]
-            grad_x.index_add_(0, src_chunk, grad_msg_chunk)
-
-        return grad_x, None, None, None
-
-
-# Simple GCN layer with chunked aggregation
-class SimpleGCNLayer(nn.Module):
-    """
-    Simplified GCN layer with chunked message passing
-
-    Key improvement: Uses chunked index_add to avoid O(E*d) memory overhead.
-    Memory usage: O(N*d + chunk_size*d) instead of O(E*d)
-    """
-    def __init__(self, in_features, out_features, chunk_size=2_000_000):
+class GraphSAGE(nn.Module):
+    """3-layer GraphSAGE model following SALIENT/PyG examples"""
+    def __init__(self, in_channels, hidden_channels, out_channels):
         super().__init__()
-        self.linear = nn.Linear(in_features, out_features)
-        self.chunk_size = chunk_size
-
-    def forward(self, x, edge_index):
-        """
-        Forward pass with chunked aggregation
-
-        Args:
-            x: [N, F] node features
-            edge_index: [2, E] edge indices (src, dst)
-        """
-        # Apply linear transformation
-        x = self.linear(x)
-
-        # Chunked aggregation (avoids creating [E, hidden] tensor)
-        src, dst = edge_index
-        aggregated = ChunkedIndexAddFunction.apply(x, src, dst, self.chunk_size)
-
-        return aggregated
-
-
-class GCN(nn.Module):
-    """2-layer GCN model"""
-    def __init__(self, in_dim, hidden_dim, out_dim):
-        super().__init__()
-        self.conv1 = SimpleGCNLayer(in_dim, hidden_dim)
-        self.conv2 = SimpleGCNLayer(hidden_dim, out_dim)
+        self.conv1 = SAGEConv(in_channels, hidden_channels)
+        self.conv2 = SAGEConv(hidden_channels, hidden_channels)
+        self.conv3 = SAGEConv(hidden_channels, out_channels)
 
     def forward(self, x, edge_index):
         x = self.conv1(x, edge_index)
         x = F.relu(x)
         x = F.dropout(x, p=0.5, training=self.training)
+
         x = self.conv2(x, edge_index)
+        x = F.relu(x)
+        x = F.dropout(x, p=0.5, training=self.training)
+
+        x = self.conv3(x, edge_index)
         return x
 
 
 def generate_random_graph(num_nodes, num_edges, num_features, device='cuda'):
-    """Generate a random graph"""
+    """Generate a random graph in PyG format"""
     print(f"  Generating graph with {num_nodes:,} nodes and {num_edges:,} edges...")
 
-    # Random edges
+    # Random edges (COO format for PyG)
     edge_index = torch.randint(0, num_nodes, (2, num_edges), device=device)
 
     # Random node features
@@ -157,7 +70,10 @@ def generate_random_graph(num_nodes, num_edges, num_features, device='cuda'):
     # Random labels
     y = torch.randint(0, 10, (num_nodes,), device=device)
 
-    return x, edge_index, y
+    # Create PyG Data object
+    data = Data(x=x, edge_index=edge_index, y=y)
+
+    return data
 
 
 def get_memory_stats(uvm_lib=None):
@@ -192,22 +108,31 @@ def print_memory(prefix="", uvm_lib=None):
           f"CPU: {mem['cpu_used']:.1f}GB, Total: {mem['total']:.1f}GB")
 
 
-def train_epoch(model, x, edge_index, y, optimizer, train_mask):
-    """Train for one epoch"""
+def train_epoch(model, loader, optimizer, device, uvm_lib=None):
+    """Train for one epoch using mini-batch"""
     model.train()
-    optimizer.zero_grad()
 
-    # Forward
-    out = model(x, edge_index)
+    total_loss = 0
+    total_batches = 0
 
-    # Loss on training nodes
-    loss = F.cross_entropy(out[train_mask], y[train_mask])
+    for batch in loader:
+        batch = batch.to(device)
+        optimizer.zero_grad()
 
-    # Backward
-    loss.backward()
-    optimizer.step()
+        # Forward
+        out = model(batch.x, batch.edge_index)
 
-    return loss.item()
+        # Loss on batch nodes only (exclude sampled neighbors)
+        loss = F.cross_entropy(out[:batch.batch_size], batch.y[:batch.batch_size])
+
+        # Backward
+        loss.backward()
+        optimizer.step()
+
+        total_loss += loss.item()
+        total_batches += 1
+
+    return total_loss / total_batches if total_batches > 0 else 0
 
 
 def enable_uvm_allocator():
@@ -249,7 +174,7 @@ def enable_uvm_allocator():
 
 
 def main():
-    parser = argparse.ArgumentParser(description='GNN Training Benchmark with UVM')
+    parser = argparse.ArgumentParser(description='GraphSAGE Training Benchmark with UVM')
     parser.add_argument('--nodes', type=int, default=10_000_000,
                        help='Number of nodes (default: 10M)')
     parser.add_argument('--edges_per_node', type=int, default=10,
@@ -258,11 +183,18 @@ def main():
                        help='Feature dimension (default: 128)')
     parser.add_argument('--hidden', type=int, default=256,
                        help='Hidden dimension (default: 256)')
+    parser.add_argument('--batch_size', type=int, default=1024,
+                       help='Training batch size (default: 1024)')
+    parser.add_argument('--fanout', type=str, default='15,10,5',
+                       help='Neighbor sampling fanout (default: 15,10,5)')
     parser.add_argument('--epochs', type=int, default=3,
                        help='Number of epochs (default: 3)')
     parser.add_argument('--use_uvm', action='store_true',
                        help='Enable UVM allocator')
     args = parser.parse_args()
+
+    # Parse fanout
+    fanout = [int(x) for x in args.fanout.split(',')]
 
     # Calculate number of edges
     num_edges = args.nodes * args.edges_per_node
@@ -271,32 +203,34 @@ def main():
     uvm_lib = None
     if args.use_uvm:
         print("=" * 70)
-        print("GNN Training Benchmark with UVM")
+        print("GraphSAGE Training Benchmark with UVM")
         print("=" * 70)
         print("[Step 0] Enabling UVM allocator...")
         uvm_lib = enable_uvm_allocator()
 
     # Print configuration
     print("=" * 70)
-    print("GNN Training Benchmark with UVM")
+    print("GraphSAGE Training Benchmark with UVM")
     print("=" * 70)
     print("Configuration:")
     print(f"  Nodes: {args.nodes:,}")
     print(f"  Edges: {num_edges:,}")
     print(f"  Features: {args.features}")
     print(f"  Hidden dim: {args.hidden}")
+    print(f"  Batch size: {args.batch_size}")
+    print(f"  Fanout: {fanout}")
     print(f"  Epochs: {args.epochs}")
     print(f"  UVM: {'Yes' if args.use_uvm else 'No'}")
     print(f"  GPU: {torch.cuda.get_device_name(0)}")
     print(f"  GPU Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f}GB")
     print("=" * 70)
 
+    device = torch.device('cuda')
+
     # Step 1: Generate graph
-    print("\n[Step 1/4] Generating random graph...")
+    print("\n[Step 1/5] Generating random graph...")
     try:
-        x, edge_index, y = generate_random_graph(
-            args.nodes, num_edges, args.features
-        )
+        data = generate_random_graph(args.nodes, num_edges, args.features, device=device)
         print("  ✓ Graph generated successfully")
         print_memory(uvm_lib=uvm_lib)
     except RuntimeError as e:
@@ -310,10 +244,33 @@ def main():
             return
         raise
 
-    # Step 2: Create model
-    print("\n[Step 2/4] Creating GCN model...")
+    # Step 2: Create train mask
+    print("\n[Step 2/5] Preparing training split...")
+    num_train = args.nodes // 10
+    train_mask = torch.zeros(args.nodes, dtype=torch.bool, device=device)
+    train_mask[:num_train] = True
+    data.train_mask = train_mask
+    print(f"  Training nodes: {num_train:,} ({num_train/args.nodes*100:.1f}%)")
+
+    # Step 3: Create neighbor sampler
+    print("\n[Step 3/5] Creating neighbor sampler...")
+    train_loader = NeighborLoader(
+        data,
+        num_neighbors=fanout,
+        batch_size=args.batch_size,
+        input_nodes=train_mask,
+        shuffle=True,
+        num_workers=0,  # Avoid multiprocessing with UVM
+    )
+    num_batches = len(train_loader)
+    print(f"  ✓ Sampler created")
+    print(f"    Batches per epoch: {num_batches}")
+    print_memory(uvm_lib=uvm_lib)
+
+    # Step 4: Create model
+    print("\n[Step 4/5] Creating GraphSAGE model...")
     try:
-        model = GCN(args.features, args.hidden, 10).cuda()
+        model = GraphSAGE(args.features, args.hidden, 10).to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
         num_params = sum(p.numel() for p in model.parameters())
@@ -327,23 +284,15 @@ def main():
             return
         raise
 
-    # Step 3: Prepare training
-    print("\n[Step 3/4] Preparing training...")
-    # Use 10% of nodes for training
-    num_train = args.nodes // 10
-    train_mask = torch.zeros(args.nodes, dtype=torch.bool, device='cuda')
-    train_mask[:num_train] = True
-    print(f"  Training nodes: {num_train:,} ({num_train/args.nodes*100:.1f}%)")
-
-    # Step 4: Training loop
-    print(f"\n[Step 4/4] Training for {args.epochs} epochs...")
+    # Step 5: Training loop
+    print(f"\n[Step 5/5] Training for {args.epochs} epochs...")
     epoch_times = []
 
     try:
         for epoch in range(args.epochs):
             start_time = time.time()
 
-            loss = train_epoch(model, x, edge_index, y, optimizer, train_mask)
+            loss = train_epoch(model, train_loader, optimizer, device, uvm_lib)
 
             epoch_time = time.time() - start_time
             epoch_times.append(epoch_time)
@@ -362,7 +311,7 @@ def main():
             print(f"    Error: {e}")
             print("\n" + "=" * 70)
             print("Result: FAILED (OOM during training)")
-            print("Suggestion: Try with --use_uvm flag")
+            print("Suggestion: Try with --use_uvm flag or reduce --batch_size")
             print("=" * 70)
             return
         raise
