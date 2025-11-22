@@ -9,6 +9,11 @@ import numpy as np
 import time
 import os
 import sys
+
+# Add faiss module path
+sys.path.insert(0, 'faiss/build/faiss/python')
+sys.path.insert(0, 'faiss/benchs')
+
 import faiss
 import re
 
@@ -36,6 +41,7 @@ indextype: any index type supported by index_factory that runs on GPU.
 -tempmem N         use N bytes of temporary GPU memory
 -nocache           do not read or write intermediate files
 -float16           use 16-bit floats on the GPU side
+-uvm               use CUDA Unified Virtual Memory
 
     Add options
 
@@ -69,7 +75,7 @@ indextype: any index type supported by index_factory that runs on GPU.
 dbname = None
 index_key = None
 
-ngpu = faiss.get_num_gpus()
+ngpu = 1  # Force single GPU
 
 replicas = 1  # nb of replicas of sharded dataset
 add_batch_size = 32768
@@ -81,6 +87,7 @@ tempmem = -1  # if -1, use system default
 max_add = -1
 use_float16 = False
 use_cache = True
+use_uvm = False
 nnn = 10
 altadd = False
 I_fname = None
@@ -114,6 +121,8 @@ while args:
         altadd = True
     elif a == '-float16':
         use_float16 = True
+    elif a == '-uvm':
+        use_uvm = True
     elif a == '-nprobe':
         nprobes = [int(x) for x in args.pop(0).split(',')]
     elif a == '-max_add':
@@ -216,22 +225,22 @@ print("Preparing dataset", dbname)
 if dbname.startswith('SIFT'):
     # SIFT1M to SIFT1000M
     dbsize = int(dbname[4:-1])
-    xb = mmap_bvecs('bigann/bigann_base.bvecs')
-    xq = mmap_bvecs('bigann/bigann_query.bvecs')
-    xt = mmap_bvecs('bigann/bigann_learn.bvecs')
+    xb = mmap_bvecs('faiss/benchs/bigann/bigann_base.bvecs')
+    xq = mmap_bvecs('faiss/benchs/bigann/bigann_query.bvecs')
+    xt = mmap_bvecs('faiss/benchs/bigann/bigann_learn.bvecs')
 
     # trim xb to correct size
     xb = xb[:dbsize * 1000 * 1000]
 
-    gt_I = ivecs_read('bigann/gnd/idx_%dM.ivecs' % dbsize)
+    gt_I = ivecs_read('faiss/benchs/bigann/gnd/idx_%dM.ivecs' % dbsize)
 
 elif dbname == 'Deep1B':
-    xb = mmap_fvecs('deep1b/base.fvecs')
-    xq = mmap_fvecs('deep1b/deep1B_queries.fvecs')
-    xt = mmap_fvecs('deep1b/learn.fvecs')
+    xb = mmap_fvecs('faiss/benchs/deep1b/base.fvecs')
+    xq = mmap_fvecs('faiss/benchs/deep1b/deep1B_queries.fvecs')
+    xt = mmap_fvecs('faiss/benchs/deep1b/learn.fvecs')
     # deep1B's train is is outrageously big
     xt = xt[:10 * 1000 * 1000]
-    gt_I = ivecs_read('deep1b/deep1B_groundtruth.ivecs')
+    gt_I = ivecs_read('faiss/benchs/deep1b/deep1B_groundtruth.ivecs')
 
 else:
     print('unknown dataset', dbname, file=sys.stderr)
@@ -515,23 +524,33 @@ def prepare_trained_index(preproc):
 
 
 def compute_populated_index(preproc):
-    """Add elements to a sharded index. Return the index and if available
-    a sharded gpu_index that contains the same data. """
+    """Add elements to a single GPU index. Return the index and if available
+    a gpu_index that contains the same data. """
 
     indexall = prepare_trained_index(preproc)
 
-    co = faiss.GpuMultipleClonerOptions()
-    co.useFloat16 = use_float16
-    co.useFloat16CoarseQuantizer = False
-    co.usePrecomputed = use_precomputed_tables
-    co.indicesOptions = faiss.INDICES_CPU
-    co.verbose = True
-    co.reserveVecs = max_add if max_add > 0 else xb.shape[0]
-    co.shard = True
-    assert co.shard_type in (0, 1, 2)
-    vres, vdev = make_vres_vdev()
-    gpu_index = faiss.index_cpu_to_gpu_multiple(
-        vres, vdev, indexall, co)
+    # Use single GPU with optional UVM
+    res = gpu_resources[0]
+
+    if use_uvm:
+        # Create GPU index directly with UVM support
+        from faiss import GpuIndexIVFFlatConfig
+        config = GpuIndexIVFFlatConfig()
+        config.device = 0
+        config.memorySpace = 2  # MEMORY_SPACE_UNIFIED
+
+        # Create GPU IVF index with UVM
+        gpu_index = faiss.GpuIndexIVFFlat(res, indexall, config)
+    else:
+        # Use standard cloner for device memory
+        co = faiss.GpuClonerOptions()
+        co.useFloat16 = use_float16
+        co.useFloat16CoarseQuantizer = False
+        co.usePrecomputed = use_precomputed_tables
+        co.indicesOptions = faiss.INDICES_CPU
+        co.verbose = True
+
+        gpu_index = faiss.index_cpu_to_gpu(res, 0, indexall, co)
 
     print("add...")
     t0 = time.time()
@@ -539,16 +558,6 @@ def compute_populated_index(preproc):
     for i0, xs in dataset_iterator(xb, preproc, add_batch_size):
         i1 = i0 + xs.shape[0]
         gpu_index.add_with_ids(xs, np.arange(i0, i1))
-        if max_add > 0 and gpu_index.ntotal > max_add:
-            print("Flush indexes to CPU")
-            for i in range(ngpu):
-                index_src_gpu = faiss.downcast_index(gpu_index.at(i))
-                index_src = faiss.index_gpu_to_cpu(index_src_gpu)
-                print("  index %d size %d" % (i, index_src.ntotal))
-                index_src.copy_subset_to(indexall, 0, 0, nb)
-                index_src_gpu.reset()
-                index_src_gpu.reserveMemory(max_add)
-            gpu_index.sync_with_shard_indexes()
 
         print('\r%d/%d (%.3f s)  ' % (
             i0, nb, time.time() - t0), end=' ')
@@ -558,22 +567,11 @@ def compute_populated_index(preproc):
     print("Aggregate indexes to CPU")
     t0 = time.time()
 
-    if hasattr(gpu_index, 'at'):
-        # it is a sharded index
-        for i in range(ngpu):
-            index_src = faiss.index_gpu_to_cpu(gpu_index.at(i))
-            print("  index %d size %d" % (i, index_src.ntotal))
-            index_src.copy_subset_to(indexall, 0, 0, nb)
-    else:
-        # simple index
-        index_src = faiss.index_gpu_to_cpu(gpu_index)
-        index_src.copy_subset_to(indexall, 0, 0, nb)
+    # Single GPU - copy back to CPU
+    index_src = faiss.index_gpu_to_cpu(gpu_index)
+    index_src.copy_subset_to(indexall, 0, 0, nb)
 
     print("  done in %.3f s" % (time.time() - t0))
-
-    if max_add > 0:
-        # it does not contain all the vectors
-        gpu_index = None
 
     return gpu_index, indexall
 
@@ -638,44 +636,34 @@ def get_populated_index(preproc):
         indexall = faiss.read_index(index_cachefile)
         gpu_index = None
 
-    co = faiss.GpuMultipleClonerOptions()
-    co.useFloat16 = use_float16
-    co.useFloat16CoarseQuantizer = False
-    co.usePrecomputed = use_precomputed_tables
-    co.indicesOptions = 0
-    co.verbose = True
-    co.shard = True    # the replicas will be made "manually"
     t0 = time.time()
     print("CPU index contains %d vectors, move to GPU" % indexall.ntotal)
-    if replicas == 1:
 
-        if not gpu_index:
-            print("copying loaded index to GPUs")
-            vres, vdev = make_vres_vdev()
-            index = faiss.index_cpu_to_gpu_multiple(
-                vres, vdev, indexall, co)
+    if not gpu_index:
+        print("copying loaded index to GPU")
+        res = gpu_resources[0]
+
+        if use_uvm:
+            # Create GPU index with UVM support
+            from faiss import GpuIndexIVFFlatConfig
+            config = GpuIndexIVFFlatConfig()
+            config.device = 0
+            config.memorySpace = 2  # MEMORY_SPACE_UNIFIED
+
+            index = faiss.GpuIndexIVFFlat(res, indexall, config)
         else:
-            index = gpu_index
+            # Use standard cloner
+            co = faiss.GpuClonerOptions()
+            co.useFloat16 = use_float16
+            co.useFloat16CoarseQuantizer = False
+            co.usePrecomputed = use_precomputed_tables
+            co.indicesOptions = 0
+            co.verbose = True
 
+            index = faiss.index_cpu_to_gpu(res, 0, indexall, co)
     else:
-        del gpu_index  # We override the GPU index
+        index = gpu_index
 
-        print("Copy CPU index to %d sharded GPU indexes" % replicas)
-
-        index = faiss.IndexReplicas()
-
-        for i in range(replicas):
-            gpu0 = ngpu * i / replicas
-            gpu1 = ngpu * (i + 1) / replicas
-            vres, vdev = make_vres_vdev(gpu0, gpu1)
-
-            print("   dispatch to GPUs %d:%d" % (gpu0, gpu1))
-
-            index1 = faiss.index_cpu_to_gpu_multiple(
-                vres, vdev, indexall, co)
-            index1.this.disown()
-            index.addIndex(index1)
-        index.own_fields = True
     del indexall
     print("move to GPU done in %.3f s" % (time.time() - t0))
     return index
