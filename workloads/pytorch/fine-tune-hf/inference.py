@@ -7,7 +7,7 @@ base = AutoModelForCausalLM.from_pretrained(m_id, device_map="auto", torch_dtype
 model = PeftModel.from_pretrained(base, "out-qwen2.5-1.5b-qlora")
 
 # Example inference
-prompt = "What is machine learning?"
+prompt = "fish in my computer?"
 inputs = tok(prompt, return_tensors="pt").to(model.device)
 outputs = model.generate(**inputs, max_new_tokens=100)
 print(tok.decode(outputs[0], skip_special_tokens=True))

@@ -6,7 +6,7 @@ build/
 *.a
 *.pyc
 __pycache__/
-
+/fine-tune-hf/out-qwen2.5-1.5b-qlora
 # Python virtual environments
 venv/
 env/
