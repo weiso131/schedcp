@@ -509,14 +509,15 @@ impl SchedulerGenerator {
 
     /// Build scx-specific include paths
     fn build_scx_includes(&self) -> Result<Vec<String>> {
-        let scx_base = self.project_root.join("scheduler/scx/scheds/include");
+        let scx_base = self.project_root.join("scheduler/scx/scheds");
 
         let includes = vec![
-            scx_base.clone(),
-            scx_base.join("scx"),
-            scx_base.join("arch/x86"),
-            scx_base.join("bpf-compat"),
-            scx_base.join("lib"),
+            scx_base.join("include"),
+            scx_base.join("include/scx"),
+            scx_base.join("include/bpf-compat"),
+            scx_base.join("include/lib"),
+            scx_base.join("vmlinux"),
+            scx_base.join("vmlinux/arch/x86")
         ];
 
         // Verify paths exist
