@@ -7,7 +7,52 @@ uv run python bench_gpu_1bn.py SIFT100M IVF4096,Flat -nprobe 1,4,16
 
 ## Test on 5090
 
+baseline
 
+```
+$ uv run python bench_gpu_1bn.py SIFT100M IVF4096,Flat -nprobe 1,4,16 -uvm
+Preparing dataset SIFT100M
+sizes: B (100000000, 128) Q (10000, 128) T (100000000, 128) gt (10000, 1000)
+cachefiles:
+None
+/tmp/bench_gpu_1bn/cent_SIFT100M_IVF4096.npy
+/tmp/bench_gpu_1bn/SIFT100M_IVF4096,Flat.index
+preparing resources for 1 GPUs
+load centroids /tmp/bench_gpu_1bn/cent_SIFT100M_IVF4096.npy
+making an IVFFlat index
+Training vector codes
+  done 0.058 s
+add...
+99975168/100000000 (68.407 s)   Add time: 68.407 s
+search...
+0/10000 (0.003 s)      probe=1  : 5.135 s 1-R@1: 0.4486 1-R@10: 0.4488 
+0/10000 (0.003 s)      probe=4  : 14.393 s 1-R@1: 0.7655 1-R@10: 0.7659 
+0/10000 (0.003 s)      probe=16 : 56.511 s 1-R@1: 0.9476 1-R@10: 0.9477
+```
+
+tree iter
+
+```
+ uv run python bench_gpu_1bn.py SIFT100M IVF4096,Flat -nprobe 1,4,16 -uvm
+Preparing dataset SIFT100M
+sizes: B (100000000, 128) Q (10000, 128) T (100000000, 128) gt (10000, 1000)
+cachefiles:
+None
+/tmp/bench_gpu_1bn/cent_SIFT100M_IVF4096.npy
+/tmp/bench_gpu_1bn/SIFT100M_IVF4096,Flat.index
+preparing resources for 1 GPUs
+load centroids /tmp/bench_gpu_1bn/cent_SIFT100M_IVF4096.npy
+making an IVFFlat index
+Training vector codes
+  done 0.053 s
+add...
+99975168/100000000 (49.307 s)   Add time: 49.309 s
+search...
+0/10000 (0.003 s)      probe=1  : 4.532 s 1-R@1: 0.4486 1-R@10: 0.4488 
+0/10000 (0.003 s)      probe=4  : 13.106 s 1-R@1: 0.7655 1-R@10: 0.7659 
+0/10000 (0.004 s)      probe=16 : 51.440 s 1-R@1: 0.9476 1-R@10: 0.9477 
+yunwei37@lab:~/workspace/gpu/schedcp/workloads/faiss$ 
+```
 
 ## Directory Structure
 
