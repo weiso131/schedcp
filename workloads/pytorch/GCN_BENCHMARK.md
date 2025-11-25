@@ -1,5 +1,57 @@
 # GCN Benchmark
 
+
+baseline
+
+```
+
+======================================================================
+Results Summary
+======================================================================
+Avg epoch time: 71.000s
+Median epoch time: 71.000s
+Total training time: 71.00s
+
+Accuracy:
+  train: 0.1001
+
+Memory Usage:
+  GPU allocated: 11.03 GB
+  CPU used: 1.61 GB
+  Total: 12.64 GB
+
+UVM Statistics:
+  Peak allocated: 45.11 GB
+  Allocations: 1611
+  Frees: 1368
+======================================================================
+```
+
+uvm
+
+```
+======================================================================
+Results Summary
+======================================================================
+Avg epoch time: 27.429s
+Median epoch time: 27.429s
+Total training time: 27.43s
+
+Accuracy:
+  train: 0.1001
+
+Memory Usage:
+  GPU allocated: 11.03 GB
+  CPU used: 1.62 GB
+  Total: 12.64 GB
+
+UVM Statistics:
+  Peak allocated: 45.11 GB
+  Allocations: 1611
+  Frees: 1368
+======================================================================
+```
+
 ## Overview
 
 This benchmark implements a standard GCN (Graph Convolutional Network) with symmetric normalization following the canonical formulation: **D^{-1/2}(A + I)D^{-1/2}**.

@@ -2,6 +2,13 @@
 
 This directory contains the FAISS (Facebook AI Similarity Search) library setup for benchmarking vector similarity search on CPU and GPU.
 
+uv run python bench_gpu_1bn.py SIFT100M IVF4096,Flat -nprobe 1,4,16 -uvm
+uv run python bench_gpu_1bn.py SIFT100M IVF4096,Flat -nprobe 1,4,16 
+
+## Test on 5090
+
+
+
 ## Directory Structure
 
 ```

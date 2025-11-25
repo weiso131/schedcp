@@ -95,6 +95,22 @@ ggml_cuda_init: found 1 CUDA devices:
 build: 10e97801 (7099)
 ```
 
+With max prefetching
+
+```
+ GGML_CUDA_ENABLE_UNIFIED_MEMORY=1 build/bin/llama-bench         -m /home/yunwei37/.cache/llama.cpp/ggml-org_gpt-oss-120b-GGUF_gpt-oss-120b-mxfp4-00001-of-00003.gguf         2>&1 | tee results/gpt-oss-120b-uvm-bench.log
+ggml_cuda_init: GGML_CUDA_FORCE_MMQ:    no
+ggml_cuda_init: GGML_CUDA_FORCE_CUBLAS: no
+ggml_cuda_init: found 1 CUDA devices:
+  Device 0: NVIDIA GeForce RTX 5090, compute capability 12.0, VMM: yes
+| model                          |       size |     params | backend    | ngl |            test |                  t/s |
+| ------------------------------ | ---------: | ---------: | ---------- | --: | --------------: | -------------------: |
+| gpt-oss 120B MXFP4 MoE         |  59.02 GiB |   116.83 B | CUDA       |  99 |           pp512 |        229.67 ± 1.35 |
+| gpt-oss 120B MXFP4 MoE         |  59.02 GiB |   116.83 B | CUDA       |  99 |           tg128 |         86.89 ± 5.22 |
+
+build: 10e97801 (7099)
+yunwei37@lab:~/workspace/gpu/schedcp/workloads
+```
 
 ## on my laptop, test with intel gpu backend
 
