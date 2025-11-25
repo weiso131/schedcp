@@ -14,11 +14,6 @@ Total training time: 15.72s
 Accuracy:
   train: 0.0998
 
-Memory Usage:
-  GPU allocated: 6.62 GB
-  CPU used: 1.61 GB
-  Total: 8.24 GB
-
 UVM Statistics:
   Peak allocated: 27.07 GB
   Allocations: 1015
@@ -40,11 +35,6 @@ Total training time: 71.00s
 Accuracy:
   train: 0.1001
 
-Memory Usage:
-  GPU allocated: 11.03 GB
-  CPU used: 1.61 GB
-  Total: 12.64 GB
-
 UVM Statistics:
   Peak allocated: 45.11 GB
   Allocations: 1611
@@ -64,11 +54,6 @@ Total training time: 27.43s
 
 Accuracy:
   train: 0.1001
-
-Memory Usage:
-  GPU allocated: 11.03 GB
-  CPU used: 1.62 GB
-  Total: 12.64 GB
 
 UVM Statistics:
   Peak allocated: 45.11 GB

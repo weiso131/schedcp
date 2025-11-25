@@ -53,6 +53,8 @@ import argparse
 import psutil
 import os
 import ctypes
+import json
+from datetime import datetime
 
 
 # =============================================================================
@@ -662,34 +664,64 @@ def main():
     print("=" * 70)
 
     # =============================================================================
-    # Step 9: Save JSON Report (optional)
+    # Step 9: Save JSON Report (always save to result folder)
     # =============================================================================
-    if args.report_json:
-        import json
+    report = {
+        'dataset': args.dataset,
+        'propagation': args.prop,
+        'epochs': args.epochs,
+        'warmup': args.warmup,
+        'hidden_dim': args.hidden,
+        'chunk_size': args.chunk_size if args.prop == 'chunked' else None,
+        'num_nodes': num_nodes,
+        'num_features': num_features,
+        'num_classes': num_classes,
+        'num_edges': src.size(0),
+        'avg_epoch_time_s': avg_time,
+        'median_epoch_time_s': median_time,
+        'total_time_s': sum(epoch_times),
+        'epoch_times_s': epoch_times,
+        'accuracy': {k: (v if v == v else None) for k, v in accs.items()},
+        'memory': {
+            'gpu_allocated_GB': final_mem['gpu_allocated'],
+            'cpu_used_GB': final_mem['cpu_used'],
+            'total_GB': final_mem['total']
+        },
+        'use_uvm': args.use_uvm,
+        'seed': args.seed,
+        'gpu_name': torch.cuda.get_device_name(0),
+        'gpu_memory_GB': torch.cuda.get_device_properties(0).total_memory / 1e9,
+        'timestamp': datetime.now().isoformat()
+    }
 
-        report = {
-            'dataset': args.dataset,
-            'propagation': args.prop,
-            'epochs': args.epochs,
-            'warmup': args.warmup,
-            'hidden_dim': args.hidden,
-            'avg_epoch_time_s': avg_time,
-            'median_epoch_time_s': median_time,
-            'total_time_s': sum(epoch_times),
-            'accuracy': {k: (v if v == v else None) for k, v in accs.items()},
-            'memory': {
-                'gpu_allocated_GB': final_mem['gpu_allocated'],
-                'cpu_used_GB': final_mem['cpu_used'],
-                'total_GB': final_mem['total']
-            },
-            'use_uvm': args.use_uvm,
-            'seed': args.seed
+    if args.use_uvm and uvm_lib:
+        report['uvm_stats'] = {
+            'peak_allocated_GB': uvm_lib.uvm_get_peak_allocated_bytes() / 1e9,
+            'num_allocs': uvm_lib.uvm_get_num_allocs(),
+            'num_frees': uvm_lib.uvm_get_num_frees()
         }
 
+    # Create result directory if it doesn't exist
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    result_dir = os.path.join(script_dir, 'result')
+    os.makedirs(result_dir, exist_ok=True)
+
+    # Generate filename based on configuration
+    uvm_suffix = '_uvm' if args.use_uvm else ''
+    timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+    result_filename = f"gcn_{args.dataset}_{args.prop}{uvm_suffix}_{timestamp_str}.json"
+    result_path = os.path.join(result_dir, result_filename)
+
+    with open(result_path, 'w') as f:
+        json.dump(report, f, indent=2)
+
+    print(f"\n[Report] Saved to {result_path}")
+
+    # Also save to user-specified path if provided
+    if args.report_json:
         with open(args.report_json, 'w') as f:
             json.dump(report, f, indent=2)
-
-        print(f"\n[Report] Saved to {os.path.abspath(args.report_json)}")
+        print(f"[Report] Also saved to {os.path.abspath(args.report_json)}")
 
 
 if __name__ == '__main__':

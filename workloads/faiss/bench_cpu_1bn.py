@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python3
 # Copyright (c) Meta Platforms, Inc. and affiliates.
 #
 # This source code is licensed under the MIT license found in the
@@ -9,6 +9,8 @@ import numpy as np
 import time
 import os
 import sys
+import json
+from datetime import datetime
 
 # Add faiss module path
 sys.path.insert(0, 'faiss/build/faiss/python')
@@ -19,6 +21,26 @@ import re
 
 from multiprocessing.pool import ThreadPool
 from datasets import ivecs_read
+
+####################################################################
+# Results tracking
+####################################################################
+
+results = {
+    "metadata": {
+        "timestamp": datetime.now().isoformat(),
+        "command": " ".join(sys.argv),
+    },
+    "config": {},
+    "preprocessing": {},
+    "coarse_quantizer": {},
+    "index_training": {},
+    "index_add": {
+        "total_time": 0,
+        "progress": []  # List of {"percent": X, "time": Y, "vectors_added": Z}
+    },
+    "search": []  # List of results per nprobe
+}
 
 ####################################################################
 # Parse command line
@@ -112,6 +134,25 @@ cacheroot = '/tmp/bench_gpu_1bn'
 if not os.path.isdir(cacheroot):
     print("%s does not exist, creating it" % cacheroot)
     os.mkdir(cacheroot)
+
+# Create results directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+results_dir = os.path.join(script_dir, 'results')
+if not os.path.isdir(results_dir):
+    print("Creating results directory: %s" % results_dir)
+    os.makedirs(results_dir)
+
+# Store config in results
+results["config"] = {
+    "dbname": dbname,
+    "index_key": index_key,
+    "add_batch_size": add_batch_size,
+    "query_batch_size": query_batch_size,
+    "nprobes": nprobes,
+    "use_precomputed_tables": use_precomputed_tables,
+    "nnn": nnn,
+    "mode": "cpu",
+}
 
 #################################################################
 # Small Utility Functions
@@ -371,7 +412,12 @@ def train_preprocessor():
     else:
         assert False
     preproc.train(sanitize(xt[:1000000]))
-    print("preproc train done in %.3f s" % (time.time() - t0))
+    train_time = time.time() - t0
+    print("preproc train done in %.3f s" % train_time)
+    results["preprocessing"] = {
+        "type": preproc_str,
+        "train_time": train_time,
+    }
     return preproc
 
 
@@ -406,14 +452,23 @@ def train_coarse_quantizer(x, k, preproc):
     print("apply preproc on shape", x.shape, 'k=', k)
     t0 = time.time()
     x = preproc.apply_py(sanitize(x))
-    print("   preproc %.3f s output shape %s" % (
-        time.time() - t0, x.shape))
+    preproc_time = time.time() - t0
+    print("   preproc %.3f s output shape %s" % (preproc_time, x.shape))
 
     # Use CPU index for training
     index = faiss.IndexFlatL2(d)
 
+    t1 = time.time()
     clus.train(x, index)
+    cluster_time = time.time() - t1
     centroids = faiss.vector_float_to_array(clus.centroids)
+
+    results["coarse_quantizer"] = {
+        "num_centroids": k,
+        "preproc_time": preproc_time,
+        "cluster_time": cluster_time,
+        "total_time": preproc_time + cluster_time,
+    }
 
     return centroids.reshape(k, d)
 
@@ -454,7 +509,6 @@ def prepare_trained_index(preproc):
                                        faiss.METRIC_L2)
     else:
         m = int(pqflat_str[2:])
-        assert m < 56 or use_float16, "PQ%d will work only with -float16" % m
         print("making an IVFPQ index, m = ", m)
         idx_model = faiss.IndexIVFPQ(coarse_quantizer, d, ncent, m, 8)
 
@@ -466,7 +520,13 @@ def prepare_trained_index(preproc):
     print("Training vector codes")
     x = preproc.apply_py(sanitize(xt[:1000000]))
     idx_model.train(x)
-    print("  done %.3f s" % (time.time() - t0))
+    train_time = time.time() - t0
+    print("  done %.3f s" % train_time)
+
+    results["index_training"] = {
+        "index_type": pqflat_str,
+        "train_time": train_time,
+    }
 
     return idx_model
 
@@ -479,14 +539,39 @@ def compute_populated_index(preproc):
     print("add...")
     t0 = time.time()
     nb = xb.shape[0]
+    last_progress_pct = 0
+    results["index_add"]["progress"] = []
+    results["index_add"]["total_vectors"] = nb
+
     for i0, xs in dataset_iterator(xb, preproc, add_batch_size):
         i1 = i0 + xs.shape[0]
         index.add_with_ids(xs, np.arange(i0, i1))
 
+        # Record progress every 5%
+        current_pct = int((i1 / nb) * 100)
+        if current_pct >= last_progress_pct + 5:
+            elapsed = time.time() - t0
+            results["index_add"]["progress"].append({
+                "percent": current_pct,
+                "time": elapsed,
+                "vectors_added": i1,
+            })
+            last_progress_pct = (current_pct // 5) * 5
+
         print('\r%d/%d (%.3f s)  ' % (
             i0, nb, time.time() - t0), end=' ')
         sys.stdout.flush()
-    print("Add time: %.3f s" % (time.time() - t0))
+
+    total_add_time = time.time() - t0
+    print("Add time: %.3f s" % total_add_time)
+
+    # Record final progress
+    results["index_add"]["progress"].append({
+        "percent": 100,
+        "time": total_add_time,
+        "vectors_added": nb,
+    })
+    results["index_add"]["total_time"] = total_add_time
 
     return index
 
@@ -509,10 +594,18 @@ def eval_dataset(index, preproc):
     print("search...")
     sl = query_batch_size
     nq = xq.shape[0]
+
+    results["search"] = []
+
     for nprobe in nprobes:
         # Set nprobe directly for CPU index
         index.nprobe = nprobe
         t0 = time.time()
+
+        search_result = {
+            "nprobe": nprobe,
+            "num_queries": nq,
+        }
 
         if sl == 0:
             D, I = index.search(preproc.apply_py(sanitize(xq)), nnn)
@@ -539,20 +632,32 @@ def eval_dataset(index, preproc):
                     inter_res = ', %.4f' % ires
 
         t1 = time.time()
+        search_time = t1 - t0
+        search_result["search_time"] = search_time
+        search_result["qps"] = nq / search_time  # queries per second
+
         if knngraph:
             ires = eval_intersection_measure(gt_I[:, :nnn], I[:nq_gt])
             print("  probe=%-3d: %.3f s rank-%d intersection results: %.4f" % (
-                nprobe, t1 - t0, nnn, ires))
+                nprobe, search_time, nnn, ires))
+            search_result["intersection_measure"] = ires
         else:
-            print("  probe=%-3d: %.3f s" % (nprobe, t1 - t0), end=' ')
+            print("  probe=%-3d: %.3f s" % (nprobe, search_time), end=' ')
             gtc = gt_I[:, :1]
             nq = xq.shape[0]
+            recall_results = {}
             for rank in (1, 10, 100):
                 if rank > nnn:
                     continue
                 nok = (I[:, :rank] == gtc).sum()
-                print("1-R@%d: %.4f" % (rank, nok / float(nq)), end=' ')
+                recall = nok / float(nq)
+                print("1-R@%d: %.4f" % (rank, recall), end=' ')
+                recall_results["1-R@%d" % rank] = recall
             print()
+            search_result["recall"] = recall_results
+
+        results["search"].append(search_result)
+
         if I_fname:
             I_fname_i = I_fname % I
             print("storing", I_fname_i)
@@ -576,3 +681,47 @@ eval_dataset(index, preproc)
 
 # make sure index is deleted before the resources
 del index
+
+#################################################################
+# Save results to JSON
+#################################################################
+
+# Generate result filename with config
+result_filename = f"{dbname}_{index_key.replace(',', '_')}_cpu.json"
+result_filepath = os.path.join(results_dir, result_filename)
+
+# Calculate summary statistics
+results["summary"] = {
+    "total_build_time": (
+        results.get("preprocessing", {}).get("train_time", 0) +
+        results.get("coarse_quantizer", {}).get("total_time", 0) +
+        results.get("index_training", {}).get("train_time", 0) +
+        results.get("index_add", {}).get("total_time", 0)
+    ),
+    "best_search": None,
+}
+
+# Find best search result (highest recall at rank 1 or best intersection measure)
+if results["search"]:
+    if knngraph:
+        best = max(results["search"], key=lambda x: x.get("intersection_measure", 0))
+        results["summary"]["best_search"] = {
+            "nprobe": best["nprobe"],
+            "intersection_measure": best.get("intersection_measure"),
+            "qps": best["qps"],
+        }
+    else:
+        best = max(results["search"], key=lambda x: x.get("recall", {}).get("1-R@1", 0))
+        results["summary"]["best_search"] = {
+            "nprobe": best["nprobe"],
+            "recall_1R1": best.get("recall", {}).get("1-R@1"),
+            "qps": best["qps"],
+        }
+
+# Save results
+with open(result_filepath, 'w') as f:
+    json.dump(results, f, indent=2)
+
+print("\n" + "="*60)
+print("Results saved to: %s" % result_filepath)
+print("="*60)
