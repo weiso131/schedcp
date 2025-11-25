@@ -1,5 +1,31 @@
 # GCN Benchmark
 
+No overscription (
+
+```
+
+======================================================================
+Results Summary
+======================================================================
+Avg epoch time: 15.719s
+Median epoch time: 15.719s
+Total training time: 15.72s
+
+Accuracy:
+  train: 0.0998
+
+Memory Usage:
+  GPU allocated: 6.62 GB
+  CPU used: 1.61 GB
+  Total: 8.24 GB
+
+UVM Statistics:
+  Peak allocated: 27.07 GB
+  Allocations: 1015
+  Frees: 856
+======================================================================
+```
+
 
 baseline
 
