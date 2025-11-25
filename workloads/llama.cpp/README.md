@@ -2,12 +2,15 @@
 
 ## Test under 5090 platform
 
- /home/yunwei37/workspace/gpu/schedcp/workloads/llama.cpp/build/bin/llama-server --gpt-oss-120b-default -ncmoe 64 -c 65536
+/home/yunwei37/workspace/gpu/schedcp/workloads/llama.cpp/build/bin/llama-server --gpt-oss-120b-default -ncmoe 64 -c 65536
 
+GGML_CUDA_ENABLE_UNIFIED_MEMORY=1 /home/yunwei37/workspace/gpu/schedcp/workloads/llama.cpp/build/bin/llama-server --gpt-oss-120b-default -c 65536
 
- GGML_CUDA_ENABLE_UNIFIED_MEMORY=1 /home/yunwei37/workspace/gpu/schedcp/workloads/llama.cpp/build/bin/llama-server --gpt-oss-120b-default -c 65536
+In vllm dir, run
 
-with UVM set to CPU first and unset it:
+uv run /home/yunwei37/workspace/gpu/schedcp/workloads/vllm/llamacpp_openai_client.py
+
+with UVM memory set to CPU first and unset it:
 
                 // SetPreferredLocation(CPU): Pages stay in system RAM, fetched on demand
                 advise_err = cudaMemAdvise(*ptr, size, cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId);
@@ -49,6 +52,7 @@ ggml_cuda_init: found 1 CUDA devices:
 build: 10e97801 (7099)
 ```
 
+
 Set CPU first then set to GPU first:
 
 ```
@@ -60,6 +64,7 @@ ggml_cuda_init: found 1 CUDA devices:
 | gpt-oss 120B MXFP4 MoE         |  59.02 GiB |   116.83 B | CUDA       |  99 |           pp512 |        144.00 ± 1.18 |
 | gpt-oss 120B MXFP4 MoE         |  59.02 GiB |   116.83 B | CUDA       |  99 |           tg128 |         49.31 ± 3.82 |
 ```
+
 
 with ncmoe64
 
@@ -95,7 +100,7 @@ ggml_cuda_init: found 1 CUDA devices:
 build: 10e97801 (7099)
 ```
 
-With max prefetching
+With prefetching
 
 ```
  GGML_CUDA_ENABLE_UNIFIED_MEMORY=1 build/bin/llama-bench         -m /home/yunwei37/.cache/llama.cpp/ggml-org_gpt-oss-120b-GGUF_gpt-oss-120b-mxfp4-00001-of-00003.gguf         2>&1 | tee results/gpt-oss-120b-uvm-bench.log

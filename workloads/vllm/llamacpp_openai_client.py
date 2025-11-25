@@ -193,7 +193,7 @@ def main():
     parser.add_argument('--num-prompts', type=int, default=10,
                         help='Number of prompts to test (default: 10)')
     parser.add_argument('--dataset-path', type=str,
-                        default='/home/yunwei37/workspace/schedcp/workloads/vllm/datasets/ShareGPT_V3_unfiltered_cleaned_split.json',
+                        default='datasets/ShareGPT_V3_unfiltered_cleaned_split.json',
                         help='Path to ShareGPT dataset')
     parser.add_argument('--max-tokens', type=int, default=4000,
                         help='Max tokens per response (default: 4000)')

@@ -30,7 +30,7 @@ search...
 0/10000 (0.003 s)      probe=16 : 56.511 s 1-R@1: 0.9476 1-R@10: 0.9477
 ```
 
-tree iter
+sudo /home/yunwei37/workspace/gpu/co-processor-demo/gpu_ext_policy/src/prefetch_adaptive_tree_iter -M 50 -b 4096
 
 ```
  uv run python bench_gpu_1bn.py SIFT100M IVF4096,Flat -nprobe 1,4,16 -uvm
