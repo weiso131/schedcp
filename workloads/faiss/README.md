@@ -5,6 +5,8 @@ This directory contains the FAISS (Facebook AI Similarity Search) library setup 
 uv run python bench_gpu_1bn.py SIFT100M IVF4096,Flat -nprobe 1,4,16 -uvm
 uv run python bench_gpu_1bn.py SIFT100M IVF4096,Flat -nprobe 1,4,16 
 
+ sudo /home/yunwei37/workspace/gpu/co-processor-demo/gpu_ext_policy/src/prefetch_adaptive_tree_iter -m 50 -b 4096
+
 ## Test on 5090
 
 baseline

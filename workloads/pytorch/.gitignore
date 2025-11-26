@@ -36,4 +36,4 @@ benchmark_results/
 # Distribution/packaging
 dist/
 *.egg-info/
-*.json
+results_*.json

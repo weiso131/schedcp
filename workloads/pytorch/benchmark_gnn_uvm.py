@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OSDI-Compliant GCN Training Benchmark with UVM Support
+GCN Training Benchmark with UVM Support
 
 Implements standard GCN with symmetric normalization (D^{-1/2}AD^{-1/2}) on
 both OGB datasets and synthetic graphs, with optional UVM for extreme scale.
