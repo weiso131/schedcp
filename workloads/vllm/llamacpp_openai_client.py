@@ -188,7 +188,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='llama.cpp benchmark client with vLLM-compatible output'
     )
-    parser.add_argument('--server-url', type=str, default='http://localhost:8013',
+    parser.add_argument('--server-url', type=str, default='http://localhost:8000',
                         help='llama.cpp server URL (default: http://localhost:8080)')
     parser.add_argument('--num-prompts', type=int, default=10,
                         help='Number of prompts to test (default: 10)')
@@ -197,8 +197,8 @@ def main():
                         help='Path to ShareGPT dataset')
     parser.add_argument('--max-tokens', type=int, default=4000,
                         help='Max tokens per response (default: 4000)')
-    parser.add_argument('--model', type=str, default='local-model',
-                        help='Model name (default: local-model)')
+    parser.add_argument('--model', type=str, default='Qwen/Qwen3-30B-A3B-FP8',
+                        help='Model name (default: Qwen/Qwen3-30B-A3B-FP8)')
     parser.add_argument('--parallel', type=int, default=1,
                         help='Number of parallel requests (default: 1 for sequential)')
 

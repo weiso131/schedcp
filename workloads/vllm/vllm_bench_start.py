@@ -14,7 +14,7 @@ def main():
     parser.add_argument('--num-prompts', type=int, default=100,
                         help='Number of prompts to test (default: 100)')
     parser.add_argument('--dataset-path', type=str,
-                        default='/home/yunwei37/workspace/schedcp/workloads/vllm/datasets/ShareGPT_V3_unfiltered_cleaned_split.json',
+                        default='datasets/ShareGPT_V3_unfiltered_cleaned_split.json',
                         help='Path to ShareGPT dataset')
     parser.add_argument('--output', type=str, default='results/vllm_results.json',
                         help='Output file for results (default: results/vllm_results.json)')
